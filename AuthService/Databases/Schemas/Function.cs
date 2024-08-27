@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AuthService.Databases.Schemas
 {
@@ -10,11 +9,12 @@ namespace AuthService.Databases.Schemas
 
         public int ScreenId { get; set; }
 
-        public string? FunctionName { get; set; }
+        public string FunctionName { get; set; }
 
-        public string? Description { get; set; }
+        public string Description { get; set; }
 
-        public Screen? Screen { get; set; }
-        public ICollection<Permission>? Permissions { get; set; }
+        public Screen Screen { get; set; }
+
+        public ICollection<Permission> Permissions { get; set; }
     }
 }

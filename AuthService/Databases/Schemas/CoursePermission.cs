@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace AuthService.Databases.Schemas
 {
     public class CoursePermission

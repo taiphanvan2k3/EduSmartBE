@@ -1,9 +1,6 @@
-using System.Reflection.Metadata;
 using AuthService.Commons;
-using AuthService.Databases;
 using AuthService.Databases.InitDb;
 using AuthService.Extensions;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
