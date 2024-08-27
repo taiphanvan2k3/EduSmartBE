@@ -2,12 +2,25 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build",
+            "label": "AuthService",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/edusmartbe.generated.sln",
+                "${workspaceFolder}/AuthService/AuthService.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            // TODO: Đây là sample, cần đổi lại label và args cho phù hợp
+            "label": "...Service",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/AuthService/AuthService.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary;ForceNoAlign"
             ],
@@ -19,7 +32,7 @@
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/edusmartbe.generated.sln",
+                "${workspaceFolder}/edusmartbe.sln",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary;ForceNoAlign"
             ],
@@ -33,7 +46,7 @@
                 "watch",
                 "run",
                 "--project",
-                "${workspaceFolder}/edusmartbe.generated.sln"
+                "${workspaceFolder}/edusmartbe.sln"
             ],
             "problemMatcher": "$msCompile"
         }
