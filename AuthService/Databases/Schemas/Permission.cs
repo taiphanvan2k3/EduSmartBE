@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace AuthService.Databases.Schemas
 {
     public class Permission
@@ -8,7 +6,6 @@ namespace AuthService.Databases.Schemas
 
         public int FunctionId { get; set; }
 
-        public Role? Role { get; set; }
-        public Function? Function { get; set; }
+        public Function Function { get; set; }
     }
 }
