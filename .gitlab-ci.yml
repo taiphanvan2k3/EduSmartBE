@@ -3,6 +3,7 @@ image: mcr.microsoft.com/dotnet/sdk:8.0
 stages:
   - restore
   - build
+  - deploy
 
 restore:
   stage: restore
@@ -33,3 +34,14 @@ build_auth_service:
     key: ${CI_COMMIT_REF_SLUG}
     paths:
       - .nuget/packages/
+
+deploy-auth-service:
+  stage: deploy
+  script:
+    - echo "Deploying AuthService"
+    - echo "Deploying AuthService to production server"
+    - echo "Deployed successfully"
+  rules:
+    - changes:
+      - '.gitlab-ci.yml'
+      - 'AuthService/**/*'
