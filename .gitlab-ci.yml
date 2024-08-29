@@ -1,0 +1,35 @@
+image: mcr.microsoft.com/dotnet/sdk:8.0
+
+stages:
+  - restore
+  - build
+
+restore:
+  stage: restore
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - .nuget/packages/
+      - AuthService/obj/
+  script:
+    - dotnet restore edusmartbe.sln --packages .nuget/packages # Restore all NuGet packages for the solution
+    - ls -la .nuget/packages/  # List directory contents to verify packages have been restored
+  rules:
+    - changes:
+      - '.gitlab-ci.yml'
+      - '**/*.csproj'
+      - 'edusmartbe.sln'
+
+build_auth_service:
+  stage: build
+  script:
+    - dotnet build AuthService/AuthService.csproj --configuration Release --no-restore  # Build project without restoring packages again
+  rules:
+    - changes:
+      - '.gitlab-ci.yml'
+      - 'AuthService/**/*'
+  # Cần cache thư mục .nuget/packages/ để giảm thời gian restore packages
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - .nuget/packages/
