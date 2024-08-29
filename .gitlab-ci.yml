@@ -37,8 +37,9 @@ build_auth_service:
 
 deploy-auth-service:
   stage: deploy
+  # It will deploy to the environment: production which created in GitLab UI
+  environment: production
   script:
-    - echo "Deploying AuthService"
     - echo "Deploying AuthService to production server"
     - echo "Deployed successfully"
   rules:
