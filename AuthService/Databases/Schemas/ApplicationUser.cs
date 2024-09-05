@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace AuthService.Databases.Schemas
 {
-    public class User : IdentityUser<int>
+    public class ApplicationUser : IdentityUser<int>
     {
         public string FirstName { get; set; }
 
