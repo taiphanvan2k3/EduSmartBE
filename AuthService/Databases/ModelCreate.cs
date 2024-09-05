@@ -7,7 +7,7 @@ namespace AuthService.Databases
     {
         public static ModelBuilder OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<User>(entity =>
+            modelBuilder.Entity<ApplicationUser>(entity =>
             {
                 entity.ToTable("Users");
                 entity.HasKey(e => e.Id);

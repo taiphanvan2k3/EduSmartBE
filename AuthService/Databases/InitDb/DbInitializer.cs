@@ -5,17 +5,13 @@ namespace AuthService.Databases.InitDb
     public interface IDbInitializer
     {
         void Migrate();
+
         void Initialize();
     }
 
-    public partial class DbInitializer : IDbInitializer
+    public partial class DbInitializer(DataContext context) : IDbInitializer
     {
-        private readonly DataContext _context;
-
-        public DbInitializer(DataContext context)
-        {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
-        }
+        private readonly DataContext _context = context ?? throw new ArgumentNullException(nameof(context));
 
         public void Initialize()
         {
