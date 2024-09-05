@@ -23,7 +23,7 @@ namespace AuthService.Databases.InitDb
             // Thêm dữ liệu vào bảng Users
             if (!context.Users.Any())
             {
-                var defaultUsers = new List<User>
+                var defaultUsers = new List<ApplicationUser>
                 {
                     new()
                     {
