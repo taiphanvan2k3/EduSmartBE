@@ -1,3 +1,4 @@
+using System.Reflection;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Serilog;
@@ -10,19 +11,10 @@ namespace AuthService.Extensions
         {
             try
             {
-                builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
-                builder.Logging.AddConsole();
-                builder.Logging.AddDebug();
-
-                var logger = new LoggerConfiguration()
-                    .MinimumLevel.Warning()
-                    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", Serilog.Events.LogEventLevel.Warning)
-                    .Enrich.WithProperty("ApplicationContext", serviceName)
-                    .Enrich.FromLogContext()
-                    .WriteTo.Console()
-                    .WriteTo.File(Path.Combine("Logs", $"{serviceName}.log"), rollingInterval: RollingInterval.Day, retainedFileCountLimit: 14, rollOnFileSizeLimit: true)
-                    .CreateLogger();
-                builder.Logging.AddSerilog(logger);
+                builder.Host.UseSerilog((hostingContext, loggerConfig) =>
+                {
+                    loggerConfig.ReadFrom.Configuration(hostingContext.Configuration);
+                });
             }
             catch (Exception ex)
             {
@@ -36,9 +28,14 @@ namespace AuthService.Extensions
             try
             {
                 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
-                builder.Host.ConfigureContainer<ContainerBuilder>(builder =>
+                builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
                 {
-                    // builder.RegisterType<UserModel>().As<IUserModel>();
+                    // Tự động đăng ký các Model nằm trong thư mục Models
+                    var assembly = Assembly.GetExecutingAssembly();
+                    containerBuilder.RegisterAssemblyTypes(assembly)
+                        .Where(t => t.Name.EndsWith("Service") && t.Namespace.Contains("Services"))
+                        .AsImplementedInterfaces()
+                        .InstancePerLifetimeScope(); // lifetime scope
                 });
             }
             catch (Exception ex)

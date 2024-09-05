@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace AuthService.Databases
 {
     // Mặc định User của Identity sử dụng key kiểu string, ta cần custom lại để sử dụng key kiểu int
-    public class DataContext : IdentityDbContext<User, IdentityRole<int>, int>
+    public class DataContext : IdentityDbContext<ApplicationUser, IdentityRole<int>, int>
     {
         private readonly IHttpContextAccessor _context;
 

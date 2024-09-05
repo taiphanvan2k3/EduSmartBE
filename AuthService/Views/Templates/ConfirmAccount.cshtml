@@ -1,0 +1,19 @@
+@using AuthService.Services.MailSender.Schemas
+@model ConfirmMailBody
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <h1>Hello @Model.ToUserName!</h1>
+    <p>Please confirm your email address by clicking the following link:</p>
+    <a href="@Model.ConfirmLink">Confirm your email</a>
+</body>
+
+</html>
