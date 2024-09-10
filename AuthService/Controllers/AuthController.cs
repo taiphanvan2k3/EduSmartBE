@@ -33,7 +33,7 @@ namespace AuthService.Controllers
             }
 
             var responseInfo = await _authService.CheckLogin(request);
-            if (responseInfo.StatusCode == HttpStatusCode.OK)
+            if (responseInfo.StatusCode == StatusCodes.Status200OK)
             {
                 // Set cookie token
                 Response.Cookies.Append("access_token", responseInfo.Data["meta"].accessToken.ToString(), new CookieOptions
@@ -91,7 +91,7 @@ namespace AuthService.Controllers
             try
             {
                 ResponseInfo response = await _authService.ConfirmAccount(token, userId);
-                if (response.StatusCode == HttpStatusCode.OK)
+                if (response.StatusCode == StatusCodes.Status200OK)
                 {
                     return Ok(new
                     {
@@ -108,7 +108,7 @@ namespace AuthService.Controllers
             }
             catch (Exception e)
             {
-                return StatusCode(HttpStatusCode.INTERNAL_SERVER_ERROR, new
+                return StatusCode(StatusCodes.Status500InternalServerError, new
                 {
                     status = false,
                     message = e.Message

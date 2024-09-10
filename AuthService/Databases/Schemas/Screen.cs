@@ -4,14 +4,16 @@ namespace AuthService.Databases.Schemas
 {
     public class Screen
     {
-        [Key]
-        public int Id { get; set; }
+        [MaxLength(20)]
+        public string Id { get; set; }
 
-        public string Name { get; set; }
-
+        [MaxLength(100)]
         public string Code { get; set; }
 
-        public string Description { get; set; }
+        [MaxLength(150)]
+        public string Name { get; set; }
+
+        public int Order { get; set; }
 
         public ICollection<Function> Functions { get; set; }
     }
