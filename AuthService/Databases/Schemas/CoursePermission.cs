@@ -6,6 +6,10 @@ namespace AuthService.Databases.Schemas
 
         public int AssistantId { get; set; }
 
-        public int FunctionId { get; set; }
+        public string FunctionId { get; set; }
+
+        public bool IsEnable { get; set; }
+
+        public Function Function { get; set; }
     }
 }

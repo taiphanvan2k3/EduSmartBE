@@ -69,7 +69,7 @@ namespace AuthService.Services.Auth
         {
             try
             {
-                _logger.LogInformation("CheckLogin start");
+                _logger.LogInformation("[AuthService][CheckLogin] Start");
                 var responseInfo = new ResponseInfo();
                 var userName = loginRequest.UserName;
                 var user = await _userManager.FindByEmailAsync(loginRequest.Email)
@@ -77,10 +77,10 @@ namespace AuthService.Services.Auth
 
                 if (user == null)
                 {
-                    responseInfo.StatusCode = HttpStatusCode.NOT_FOUND;
+                    responseInfo.StatusCode = StatusCodes.Status404NotFound;
                     responseInfo.Message = "User not found";
 
-                    _logger.LogInformation("CheckLogin end");
+                    _logger.LogInformation("[AuthService][CheckLogin] End");
                     return responseInfo;
                 }
                 userName = user.UserName;
@@ -91,26 +91,26 @@ namespace AuthService.Services.Auth
                 {
                     if (result.IsLockedOut)
                     {
-                        responseInfo.StatusCode = HttpStatusCode.FORBIDDEN;
+                        responseInfo.StatusCode = StatusCodes.Status403Forbidden;
                         responseInfo.Message = "Account is locked out";
                     }
                     else if (result.IsNotAllowed)
                     {
-                        responseInfo.StatusCode = HttpStatusCode.FORBIDDEN;
+                        responseInfo.StatusCode = StatusCodes.Status403Forbidden;
                         responseInfo.Message = "Account is not allowed";
                     }
                     else if (result.RequiresTwoFactor)
                     {
-                        responseInfo.StatusCode = HttpStatusCode.FORBIDDEN;
+                        responseInfo.StatusCode = StatusCodes.Status403Forbidden;
                         responseInfo.Message = "Requires two factor";
                     }
                     else
                     {
-                        responseInfo.StatusCode = HttpStatusCode.UNAUTHORIZED;
+                        responseInfo.StatusCode = StatusCodes.Status401Unauthorized;
                         responseInfo.Message = "Invalid login";
                     }
 
-                    _logger.LogInformation("CheckLogin end");
+                    _logger.LogInformation("[AuthService][CheckLogin] End");
                     return responseInfo;
                 }
 
@@ -132,7 +132,7 @@ namespace AuthService.Services.Auth
                 });
 
                 responseInfo.Data.Add("userInfo", userInfo);
-                _logger.LogInformation("CheckLogin end");
+                _logger.LogInformation("[AuthService][CheckLogin] End");
                 return responseInfo;
             }
             catch (Exception e)
@@ -146,7 +146,7 @@ namespace AuthService.Services.Auth
         {
             try
             {
-                _logger.LogInformation("SignUp start");
+                _logger.LogInformation("[AuthService][SignUp] Start");
                 var user = new ApplicationUser()
                 {
                     Email = signUpRequest.Email,
@@ -172,12 +172,12 @@ namespace AuthService.Services.Auth
 
                 await SendMailConfirmAccount(user.Email, user.UserName, callbackUrl);
 
-                _logger.LogInformation("SignUp end");
+                _logger.LogInformation("[AuthService][SignUp] End");
                 return "";
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "SignUp");
+                _logger.LogError(e, "[AuthService][SignUp][{Error}]", e.Message);
                 throw;
             }
         }
@@ -186,29 +186,29 @@ namespace AuthService.Services.Auth
         {
             try
             {
-                _logger.LogInformation("ConfirmAccount start");
+                _logger.LogInformation("[AuthService][ConfirmAccount] Start");
                 var responseInfo = new ResponseInfo();
                 var user = await _userManager.FindByIdAsync(userId);
 
                 if (user == null)
                 {
-                    responseInfo.StatusCode = HttpStatusCode.NOT_FOUND;
+                    responseInfo.StatusCode = StatusCodes.Status404NotFound;
                     responseInfo.Message = "User not found";
                 }
 
                 var confirmResult = await _userManager.ConfirmEmailAsync(user, token);
                 if (!confirmResult.Succeeded)
                 {
-                    responseInfo.StatusCode = HttpStatusCode.BAD_REQUEST;
+                    responseInfo.StatusCode = StatusCodes.Status400BadRequest;
                     responseInfo.Message = confirmResult.Errors.Select(e => e.Description).Aggregate((a, b) => $"{a}\n{b}");
                 }
 
-                _logger.LogInformation("ConfirmAccount end");
+                _logger.LogInformation("[AuthService][ConfirmAccount] End");
                 return responseInfo;
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "ConfirmAccount");
+                _logger.LogError(e, "[AuthService][ConfirmAccount][{Error}]", e.Message);
                 throw;
             }
         }
