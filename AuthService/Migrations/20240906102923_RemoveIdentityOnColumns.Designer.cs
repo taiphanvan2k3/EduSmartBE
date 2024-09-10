@@ -3,6 +3,7 @@ using System;
 using AuthService.Databases;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AuthService.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20240906102923_RemoveIdentityOnColumns")]
+    partial class RemoveIdentityOnColumns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -115,81 +118,55 @@ namespace AuthService.Migrations
                     b.Property<int>("AssistantId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("FunctionId")
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<bool>("IsEnable")
-                        .HasColumnType("boolean");
+                    b.Property<int>("FunctionId")
+                        .HasColumnType("integer");
 
                     b.HasKey("CourseId", "AssistantId", "FunctionId");
-
-                    b.HasIndex("FunctionId");
 
                     b.ToTable("CoursePermissions", (string)null);
                 });
 
             modelBuilder.Entity("AuthService.Databases.Schemas.Function", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
                     b.Property<string>("Code")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("text");
+
+                    b.Property<int>("Id")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
+                        .HasColumnType("text");
 
                     b.Property<int>("Order")
                         .HasColumnType("integer");
 
-                    b.Property<string>("ScreenId")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ScreenId");
+                    b.Property<int>("ScreenId")
+                        .HasColumnType("integer");
 
                     b.ToTable("Functions", (string)null);
                 });
 
             modelBuilder.Entity("AuthService.Databases.Schemas.Permission", b =>
                 {
-                    b.Property<int>("RoleId")
+                    b.Property<int>("FunctionId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("FunctionId")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.HasKey("RoleId", "FunctionId");
-
-                    b.HasIndex("FunctionId");
+                    b.Property<int>("RoleId")
+                        .HasColumnType("integer");
 
                     b.ToTable("Permissions", (string)null);
                 });
 
             modelBuilder.Entity("AuthService.Databases.Schemas.Screen", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
                     b.Property<string>("Code")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("text");
 
-                    b.Property<string>("Name")
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
-
-                    b.Property<int>("Order")
+                    b.Property<int>("Id")
                         .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
 
                     b.ToTable("Screens", (string)null);
                 });
@@ -326,38 +303,6 @@ namespace AuthService.Migrations
                     b.ToTable("UserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("AuthService.Databases.Schemas.CoursePermission", b =>
-                {
-                    b.HasOne("AuthService.Databases.Schemas.Function", "Function")
-                        .WithMany("CoursePermissions")
-                        .HasForeignKey("FunctionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Function");
-                });
-
-            modelBuilder.Entity("AuthService.Databases.Schemas.Function", b =>
-                {
-                    b.HasOne("AuthService.Databases.Schemas.Screen", "Screen")
-                        .WithMany("Functions")
-                        .HasForeignKey("ScreenId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.Navigation("Screen");
-                });
-
-            modelBuilder.Entity("AuthService.Databases.Schemas.Permission", b =>
-                {
-                    b.HasOne("AuthService.Databases.Schemas.Function", "Function")
-                        .WithMany("Permissions")
-                        .HasForeignKey("FunctionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Function");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
@@ -407,18 +352,6 @@ namespace AuthService.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("AuthService.Databases.Schemas.Function", b =>
-                {
-                    b.Navigation("CoursePermissions");
-
-                    b.Navigation("Permissions");
-                });
-
-            modelBuilder.Entity("AuthService.Databases.Schemas.Screen", b =>
-                {
-                    b.Navigation("Functions");
                 });
 #pragma warning restore 612, 618
         }

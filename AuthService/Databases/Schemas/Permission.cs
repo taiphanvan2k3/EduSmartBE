@@ -1,10 +1,13 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace AuthService.Databases.Schemas
 {
     public class Permission
     {
         public int RoleId { get; set; }
 
-        public int FunctionId { get; set; }
+        [MaxLength(20)]
+        public string FunctionId { get; set; }
 
         public Function Function { get; set; }
     }

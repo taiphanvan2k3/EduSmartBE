@@ -13,22 +13,14 @@ namespace AuthService.Databases
                 entity.HasKey(e => e.Id);
             });
 
-            modelBuilder.Entity<Permission>(entity =>
-            {
-                entity.ToTable("Permissions");
-                entity.HasKey(p => new { p.RoleId, p.FunctionId });
-                entity.HasOne(p => p.Function)
-                    .WithMany(f => f.Permissions)
-                    .HasForeignKey(p => p.FunctionId);
-            });
-
             modelBuilder.Entity<Screen>(entity =>
             {
                 entity.ToTable("Screens");
                 entity.HasKey(s => s.Id);
                 entity.HasMany(s => s.Functions)
                     .WithOne(f => f.Screen)
-                    .HasForeignKey(f => f.ScreenId);
+                    .HasForeignKey(f => f.ScreenId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<Function>(entity =>
@@ -37,10 +29,24 @@ namespace AuthService.Databases
                 entity.HasKey(f => f.Id);
             });
 
+            modelBuilder.Entity<Permission>(entity =>
+            {
+                entity.ToTable("Permissions");
+                entity.HasKey(p => new { p.RoleId, p.FunctionId });
+                entity.HasOne(p => p.Function)
+                    .WithMany(f => f.Permissions)
+                    .HasForeignKey(p => p.FunctionId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
             modelBuilder.Entity<CoursePermission>(entity =>
             {
                 entity.ToTable("CoursePermissions");
                 entity.HasKey(cp => new { cp.CourseId, cp.AssistantId, cp.FunctionId });
+                entity.HasOne(cp => cp.Function)
+                    .WithMany(f => f.CoursePermissions)
+                    .HasForeignKey(cp => cp.FunctionId)
+                    .OnDelete(DeleteBehavior.Restrict); // Không cho phép xóa Function nếu có CoursePermission
             });
 
             return modelBuilder;

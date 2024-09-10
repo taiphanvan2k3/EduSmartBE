@@ -10,7 +10,7 @@ namespace AuthService.Commons
 
         public ResponseInfo()
         {
-            StatusCode = HttpStatusCode.OK;
+            StatusCode = StatusCodes.Status200OK;
             Message = "Success";
             Data = [];
         }

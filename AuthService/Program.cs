@@ -1,6 +1,7 @@
 using AuthService.Commons;
 using AuthService.Databases.InitDb;
 using AuthService.Extensions;
+using AuthService.Middlewares;
 using AuthService.Services.MailSender;
 using AuthService.Settings;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
@@ -63,6 +64,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseMiddleware<CustomUnauthorizedMiddleware>();
 app.UseHttpsRedirection();
 
 app.UseRouting();
