@@ -54,9 +54,10 @@ var app = builder.Build();
 var dbInit = app.Services.GetRequiredService<IDbInitializer>();
 if (app.Environment.IsProduction())
 {
-    dbInit.Migrate();
+    await dbInit.Migrate();
 }
-dbInit.Initialize();
+
+await dbInit.Initialize();
 
 if (app.Environment.IsDevelopment())
 {
