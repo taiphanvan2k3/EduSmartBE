@@ -1,27 +1,30 @@
+using AuthService.Databases.Schemas;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace AuthService.Databases.InitDb
 {
     public interface IDbInitializer
     {
-        void Migrate();
+        Task Migrate();
 
-        void Initialize();
+        Task Initialize();
     }
 
-    public partial class DbInitializer(DataContext context) : IDbInitializer
+    public partial class DbInitializer(DataContext context,
+        UserManager<ApplicationUser> userManager) : IDbInitializer
     {
         private readonly DataContext _context = context ?? throw new ArgumentNullException(nameof(context));
 
-        public void Initialize()
+        public async Task Migrate()
         {
-            _context.Database.EnsureCreated();
-            SeedDataDefault(_context);
+            await _context.Database.MigrateAsync();
         }
 
-        public void Migrate()
+        public async Task Initialize()
         {
-            _context.Database.Migrate();
+            _context.Database.EnsureCreated();
+            await SeedDataDefault(_context, userManager);
         }
     }
 }

@@ -1,13 +1,15 @@
+using AuthService.Commons;
 using AuthService.Databases.Schemas;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace AuthService.Databases.InitDb
 {
     public partial class DbInitializer
     {
-        public void SeedDataDefault(DataContext context)
+        public async Task SeedDataDefault(DataContext context, UserManager<ApplicationUser> userManager)
         {
-            if (!context.Roles.Any())
+            if (!await context.Roles.AnyAsync())
             {
                 var defaultRoles = new List<IdentityRole<int>>
                 {
@@ -16,44 +18,38 @@ namespace AuthService.Databases.InitDb
                     new() { Name = "Student", NormalizedName = "STUDENT" }
                 };
 
-                context.Roles.AddRange(defaultRoles);
-                context.SaveChanges();
+                await context.Roles.AddRangeAsync(defaultRoles);
+                await context.SaveChangesAsync();
             }
 
             // Thêm dữ liệu vào bảng Users
-            if (!context.Users.Any())
+            if (!await context.Users.AnyAsync())
             {
-                var defaultUsers = new List<ApplicationUser>
-                {
-                    new()
-                    {
-                        UserName = "admin",
-                        Email = "admin@example.com",
-                        FirstName = "Admin",
-                        LastName = "User",
-                        IsOnline = false,
-                        IsActive = true
-                    },
-                };
-                context.Users.AddRange(defaultUsers);
-                context.SaveChanges();
+                await CreateDefaultAdminAccount(userManager);
             }
+        }
 
-            // Thêm dữ liệu vào bảng UserRoles
-            var admin = context.Users.FirstOrDefault(u => u.UserName == "admin");
-            var adminRole = context.Roles.FirstOrDefault(r => r.Name == "Admin");
-            if (!context.UserRoles.Any() && admin != null && adminRole != null)
+        private static async Task CreateDefaultAdminAccount(UserManager<ApplicationUser> userManager)
+        {
+            bool isExistDefaultAccount = (await userManager.FindByEmailAsync(Constants.ADMIN_EMAIL)) != null;
+            if (!isExistDefaultAccount)
             {
-                var defaultUserRoles = new List<IdentityUserRole<int>>
+                var adminUser = new ApplicationUser
                 {
-                    new()
-                    {
-                        UserId = admin.Id,
-                        RoleId = adminRole.Id
-                    },
+                    UserName = "smartedu_admin",
+                    Email = Constants.ADMIN_EMAIL,
+                    FirstName = "Admin",
+                    LastName = "User",
+                    IsOnline = false,
+                    IsActive = true,
                 };
-                context.UserRoles.AddRange(defaultUserRoles);
-                context.SaveChanges();
+
+                var result = userManager.CreateAsync(adminUser, Constants.DEFAULT_ADMIN_PASSWORD).Result;
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(adminUser, "Admin");
+                    await userManager.ConfirmEmailAsync(adminUser, await userManager.GenerateEmailConfirmationTokenAsync(adminUser));
+                }
             }
         }
     }
