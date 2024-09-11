@@ -118,7 +118,7 @@ namespace AuthService.Services.Auth
                 {
                     Id = user.Id,
                     UserName = user.UserName,
-                    Email = loginRequest.Email,
+                    Email = user.Email,
                     Roles = [.. (await _userManager.GetRolesAsync(user))] // convert to list
                 };
 
