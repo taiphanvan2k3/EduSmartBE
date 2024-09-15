@@ -1,6 +1,6 @@
 namespace AuthService.Services.Auth.Schemas
 {
-    public class RefreshToken
+    public class RefreshTokenResponse
     {
         public string Token { get; set; }
 

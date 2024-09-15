@@ -23,6 +23,7 @@ builder.Services.Configure<JwtSetting>(builder.Configuration.GetSection("JWTSett
 // builder.Services.AddSingleton<IMessageBusClient, MessageBusClient>();
 // builder.Services.AddGrpc();
 
+builder.Services.AddHttpContextAccessor(); // Add IHttpContextAccessor for getting HttpContext in services
 builder.Services.AddDataContext(builder.Configuration);
 builder.Services.AddScoped<IDbInitializer, DbInitializer>();
 builder.Services.AddMyIdentityConfig();
