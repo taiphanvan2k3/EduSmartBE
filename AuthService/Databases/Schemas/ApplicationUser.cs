@@ -15,5 +15,7 @@ namespace AuthService.Databases.Schemas
         public bool IsOnline { get; set; }
 
         public bool IsActive { get; set; }
+
+        public List<RefreshToken> RefreshTokens { get; set; }
     }
 }

@@ -52,5 +52,6 @@ namespace AuthService.Databases
         public DbSet<Screen> Screens { get; set; }
         public DbSet<Function> Functions { get; set; }
         public DbSet<CoursePermission> CoursePermissions { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
     }
 }
