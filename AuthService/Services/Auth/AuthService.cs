@@ -46,6 +46,7 @@ namespace AuthService.Services.Auth
         IUrlHelper urlHelper,
         IOptions<ServerSetting> serverSetting,
         MailProducer mailProducer,
+        CommonProducer commonProducer,
         ITokenService tokenService,
         ILogger<AuthService> logger)
         : BaseService(serviceProvider, logger), IAuthService
@@ -58,6 +59,9 @@ namespace AuthService.Services.Auth
 
         private readonly MailProducer _mailProducer = mailProducer
             ?? throw new ArgumentNullException(nameof(mailProducer));
+
+        private readonly CommonProducer _commonProducer = commonProducer
+            ?? throw new ArgumentNullException(nameof(commonProducer));
 
         private readonly ServerSetting _serverSetting = serverSetting?.Value
             ?? throw new ArgumentNullException(nameof(serverSetting));
@@ -129,6 +133,18 @@ namespace AuthService.Services.Auth
                 {
                     accessToken = authTokens.AccessToken,
                     refreshToken = authTokens.RefreshToken
+                });
+
+                // Lưu refresh token vào db
+                await _commonProducer.EnqueueDataAsync(new BackgroundJobData()
+                {
+                    JobType = BackgroundJobType.SAVE_REFRESH_TOKEN,
+                    Data = new Dictionary<string, dynamic>()
+                    {
+                        { "refreshToken", authTokens.RefreshToken },
+                        { "userId", userInfo.Id },
+                        { "ipAddress", _httpContextAccessor.HttpContext.Connection?.RemoteIpAddress.ToString() ?? "::1" }
+                    }
                 });
 
                 responseInfo.Data.Add("userInfo", userInfo);

@@ -7,6 +7,7 @@ namespace AuthService.Services
     {
         protected readonly DataContext _context;
         protected ILogger _logger;
+        protected IHttpContextAccessor _httpContextAccessor;
 
         public BaseService() { }
 
@@ -14,13 +15,16 @@ namespace AuthService.Services
         {
             _context = serviceProvider.GetService<DataContext>()
                 ?? throw new InvalidOperationException("DataContext is null");
+            _httpContextAccessor = serviceProvider.GetService<IHttpContextAccessor>()
+                ?? throw new InvalidOperationException("HttpContextAccessor is null");
         }
 
         public BaseService(IServiceProvider serviceProvider, ILogger logger)
         {
             _context = serviceProvider.GetService<DataContext>()
                 ?? throw new InvalidOperationException("DataContext is null");
-
+            _httpContextAccessor = serviceProvider.GetService<IHttpContextAccessor>()
+                ?? throw new InvalidOperationException("HttpContextAccessor is null");
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 

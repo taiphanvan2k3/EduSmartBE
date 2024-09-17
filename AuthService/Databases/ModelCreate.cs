@@ -49,6 +49,18 @@ namespace AuthService.Databases
                     .OnDelete(DeleteBehavior.Restrict); // Không cho phép xóa Function nếu có CoursePermission
             });
 
+            modelBuilder.Entity<RefreshToken>(entity =>
+            {
+                entity.ToTable("RefreshTokens");
+                entity.HasKey(rt => rt.Id);
+                entity.HasIndex(rt => new { rt.Token, rt.IsRevoked });
+                entity.HasOne(rt => rt.User)
+                    .WithMany(u => u.RefreshTokens)
+                    .HasForeignKey(rt => rt.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.Property(rt => rt.IsRevoked).HasDefaultValue(false);
+            });
+
             return modelBuilder;
         }
     }
