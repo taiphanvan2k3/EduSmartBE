@@ -7,9 +7,10 @@ namespace AuthService.Controllers
 {
     [Route("api/auth")]
     [ApiController]
-    public class AuthController(IAuthService authService) : ControllerBase
+    public class AuthController(IAuthService authService, ITokenService tokenService) : ControllerBase
     {
         private readonly IAuthService _authService = authService ?? throw new ArgumentNullException(nameof(authService));
+        private readonly ITokenService _tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
@@ -18,7 +19,6 @@ namespace AuthService.Controllers
             {
                 return BadRequest(new
                 {
-                    status = false,
                     message = "Only one of UserName or Email is required"
                 });
             }
@@ -27,35 +27,89 @@ namespace AuthService.Controllers
             {
                 return BadRequest(new
                 {
-                    status = false,
                     message = "UserName or Email is required"
                 });
             }
 
-            var responseInfo = await _authService.CheckLogin(request);
-            if (responseInfo.StatusCode == StatusCodes.Status200OK)
+            try
             {
-                // Set cookie token
-                Response.Cookies.Append("access_token", responseInfo.Data["meta"].accessToken.ToString(), new CookieOptions
+                var responseInfo = await _authService.CheckLogin(request);
+                if (responseInfo.StatusCode == StatusCodes.Status200OK)
                 {
-                    HttpOnly = true,
-                    SameSite = SameSiteMode.None,
-                    Secure = true,
-                    Expires = DateTime.UtcNow.AddMinutes(responseInfo.Data["AccessTokenExpireIn"])
-                });
+                    // Set cookie token
+                    Response.Cookies.Append("access_token", responseInfo.Data["meta"].accessToken.ToString(), new CookieOptions
+                    {
+                        HttpOnly = true,
+                        SameSite = SameSiteMode.None,
+                        Secure = true,
+                        Expires = DateTime.UtcNow.AddMinutes(responseInfo.Data["AccessTokenExpireIn"])
+                    });
 
-                return Ok(new
+                    return Ok(new
+                    {
+                        userInfo = responseInfo.Data["userInfo"],
+                        meta = responseInfo.Data["meta"],
+                    });
+                }
+
+                return Unauthorized(new
                 {
-                    userInfo = responseInfo.Data["userInfo"],
-                    meta = responseInfo.Data["meta"],
+                    message = responseInfo.Message
+                });
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    message = e.Message
+                });
+            }
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new
+                {
+                    message = "RefreshToken is required"
                 });
             }
 
-            return Unauthorized(new
+            try
             {
-                status = false,
-                message = responseInfo.Message
-            });
+                var responseInfo = await _tokenService.DoRefreshToken(request.RefreshToken);
+
+                if (responseInfo.StatusCode == StatusCodes.Status200OK)
+                {
+                    // Set cookie token
+                    Response.Cookies.Append("access_token", responseInfo.Data["meta"].accessToken.ToString(), new CookieOptions
+                    {
+                        HttpOnly = true,
+                        SameSite = SameSiteMode.None,
+                        Secure = true,
+                        Expires = DateTime.UtcNow.AddMinutes(responseInfo.Data["AccessTokenExpireIn"])
+                    });
+
+                    return Ok(new
+                    {
+                        meta = responseInfo.Data["meta"],
+                    });
+                }
+
+                return Unauthorized(new
+                {
+                    message = responseInfo.Message
+                });
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    message = e.Message
+                });
+            }
         }
 
         [HttpPost("signup")]
@@ -64,14 +118,10 @@ namespace AuthService.Controllers
             string message = await _authService.SignUp(request);
             if (string.IsNullOrEmpty(message))
             {
-                return Ok(new
-                {
-                    status = true
-                });
+                return Ok(message);
             }
             return BadRequest(new
             {
-                status = false,
                 message
             });
         }
@@ -83,7 +133,6 @@ namespace AuthService.Controllers
             {
                 return BadRequest(new
                 {
-                    status = false,
                     message = "Token and Email are required"
                 });
             }
@@ -95,14 +144,12 @@ namespace AuthService.Controllers
                 {
                     return Ok(new
                     {
-                        status = true,
                         message = response.Message
                     });
                 }
 
                 return BadRequest(new
                 {
-                    status = false,
                     message = response.Message
                 });
             }
@@ -110,7 +157,6 @@ namespace AuthService.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, new
                 {
-                    status = false,
                     message = e.Message
                 });
             }
