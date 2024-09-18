@@ -1,12 +1,11 @@
-using AuthService.AsyncDataServices;
-using AuthService.Commons;
-using AuthService.Databases.InitDb;
-using AuthService.Extensions;
-using AuthService.Middlewares;
-using AuthService.Services.MailSender;
-using AuthService.Settings;
+using UserService.Commons;
+using UserService.Databases.InitDb;
+using UserService.Extensions;
+using UserService.Middlewares;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
+using UserService.EventProcessing;
+using UserService.AsyncDataServices;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.UseCustomLog(Constants.SERVICE_NAME);
@@ -15,27 +14,26 @@ builder.AddAutoFact();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGenWithAuth();
 
-builder.Services.Configure<ServerSetting>(builder.Configuration.GetSection("ServerSetting"));
-builder.Services.Configure<MailSetting>(builder.Configuration.GetSection("MailSetting"));
-builder.Services.Configure<JwtSetting>(builder.Configuration.GetSection("JWTSetting"));
+// builder.Services.Configure<ServerSetting>(builder.Configuration.GetSection("ServerSetting"));
+// builder.Services.Configure<MailSetting>(builder.Configuration.GetSection("MailSetting"));
+// builder.Services.Configure<JwtSetting>(builder.Configuration.GetSection("JWTSetting"));
 
 // Add services
 // builder.Services.AddHttpClient<ICommandDataClient, HttpCommandDataClient>();
-builder.Services.AddSingleton<IMessageBusClient, MessageBusClient>();
+builder.Services.AddSingleton<IEventProcessor, EventProcessor>();
+builder.Services.AddHostedService<MessageBusSubscriber>();
 // builder.Services.AddGrpc();
 
-builder.Services.AddHttpContextAccessor(); // Add IHttpContextAccessor for getting HttpContext in services
 builder.Services.AddDataContext(builder.Configuration);
 builder.Services.AddScoped<IDbInitializer, DbInitializer>();
-builder.Services.AddMyIdentityConfig();
 
-builder.Services.AddCustomAuthentication(builder.Configuration);
+// builder.Services.AddCustomAuthentication(builder.Configuration);
 
-builder.Services.AddCustomHostedServices();
+// builder.Services.AddCustomHostedServices();
 
 // Setting to use Razor view rendering
 builder.Services.AddRazorPages();
-builder.Services.AddScoped<RazorViewService>(); // Add scopes because RazorViewToStringRenderer has dependencies with scoped services
+// builder.Services.AddScoped<RazorViewService>(); // Add scopes because RazorViewToStringRenderer has dependencies with scoped services
 
 // Setting to use IUrlHelper in services
 builder.Services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
