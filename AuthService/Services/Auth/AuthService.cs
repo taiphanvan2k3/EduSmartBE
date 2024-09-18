@@ -29,7 +29,7 @@ namespace AuthService.Services.Auth
         /// </summary>
         /// <param name="loginRequest"></param>
         /// <returns></returns>
-        public Task<string> SignUp(SignUpRequest signUpRequest);
+        public Task<ResponseInfo> SignUp(SignUpRequest signUpRequest);
 
         /// <summary>
         /// Handle confirm account
@@ -158,11 +158,12 @@ namespace AuthService.Services.Auth
             }
         }
 
-        public async Task<string> SignUp(SignUpRequest signUpRequest)
+        public async Task<ResponseInfo> SignUp(SignUpRequest signUpRequest)
         {
             try
             {
                 _logger.LogInformation("[AuthService][SignUp] Start");
+                var responseInfo = new ResponseInfo();
                 var user = new ApplicationUser()
                 {
                     Email = signUpRequest.Email,
@@ -176,7 +177,9 @@ namespace AuthService.Services.Auth
                 var result = await _userManager.CreateAsync(user, signUpRequest.Password);
                 if (!result.Succeeded)
                 {
-                    return result.Errors.Select(e => e.Description).Aggregate((a, b) => $"{a}\n{b}");
+                    responseInfo.StatusCode = StatusCodes.Status401Unauthorized;
+                    responseInfo.Message = result.Errors.Select(e => e.Description).Aggregate((a, b) => $"{a}\n{b}");
+                    return responseInfo;
                 }
 
                 if (!string.IsNullOrEmpty(signUpRequest.Role))
@@ -188,8 +191,12 @@ namespace AuthService.Services.Auth
 
                 await SendMailConfirmAccount(user.Email, user.UserName, callbackUrl);
 
+                responseInfo.StatusCode = StatusCodes.Status201Created;
+                responseInfo.Message = "Login success!";
+                responseInfo.Data.Add("userRegister", user);
+
                 _logger.LogInformation("[AuthService][SignUp] End");
-                return "";
+                return responseInfo;
             }
             catch (Exception e)
             {
