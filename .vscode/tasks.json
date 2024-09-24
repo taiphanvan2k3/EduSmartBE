@@ -15,12 +15,12 @@
         },
         {
             // TODO: Đây là sample, cần đổi lại label và args cho phù hợp
-            "label": "...Service",
+            "label": "UserService",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/AuthService/AuthService.csproj",
+                "${workspaceFolder}/UserService/UserService.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary;ForceNoAlign"
             ],
