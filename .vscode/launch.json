@@ -24,13 +24,13 @@
             }
         },
         {
-            "name": "<abc>Service",
+            "name": "UserService",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "...Service",
-            "program": "${workspaceFolder}/AuthService/bin/Debug/net8.0/AuthService.dll",
+            "preLaunchTask": "UserService",
+            "program": "${workspaceFolder}/UserService/bin/Debug/net8.0/UserService.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/AuthService",
+            "cwd": "${workspaceFolder}/UserService",
             "stopAtEntry": false,
             "serverReadyAction": {
                 "action": "openExternally",
@@ -52,7 +52,7 @@
     "compounds": [
         {
             "name": "All Services",
-            "configurations": ["AuthService", "<abc>Service"],
+            "configurations": ["AuthService", "UserService"],
             "stopAll": true
         }
     ]
