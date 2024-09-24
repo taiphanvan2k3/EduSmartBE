@@ -12,6 +12,7 @@ restore:
     paths:
       - .nuget/packages/
       - AuthService/obj/
+      - UserService/obj/
   script:
     - dotnet restore edusmartbe.sln --packages .nuget/packages # Restore all NuGet packages for the solution
     - ls -la .nuget/packages/  # List directory contents to verify packages have been restored
@@ -21,14 +22,16 @@ restore:
       - '**/*.csproj'
       - 'edusmartbe.sln'
 
-build_auth_service:
+build_service:
   stage: build
   script:
     - dotnet build AuthService/AuthService.csproj --configuration Release --no-restore  # Build project without restoring packages again
+    - dotnet build UserService/UserService.csproj --configuration Release --no-restore
   rules:
     - changes:
       - '.gitlab-ci.yml'
       - 'AuthService/**/*'
+      - 'UserService/**/*'
   # Cần cache thư mục .nuget/packages/ để giảm thời gian restore packages
   cache:
     key: ${CI_COMMIT_REF_SLUG}
@@ -37,12 +40,38 @@ build_auth_service:
 
 deploy-auth-service:
   stage: deploy
-  # It will deploy to the environment: production which created in GitLab UI
+  image: mcr.microsoft.com/dotnet/sdk:8.0
   environment: production
+  before_script:
+    - apt-get update && apt-get install -y openssh-client  # Cài đặt SSH client bằng apt-get
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" | base64 --decode > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - ssh-keyscan -H $SSH_SERVER_IP >> ~/.ssh/known_hosts
   script:
     - echo "Deploying AuthService to production server"
-    - echo "Deployed successfully"
+    - ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_SERVER_IP "cd $PATH_TO_PROJECT && pwd && eval \"\$(ssh-agent -s)\" && ssh-add /root/.ssh/id_rsa_gitlab && pwd && git status && git pull && docker-compose build authservice && docker-compose up -d authservice"
+    - echo "AuthService deployed successfully"
   rules:
     - changes:
       - '.gitlab-ci.yml'
       - 'AuthService/**/*'
+
+deploy_user_service:
+  stage: deploy
+  image: mcr.microsoft.com/dotnet/sdk:8.0
+  environment: production
+  before_script:
+    - apt-get update && apt-get install -y openssh-client
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" | base64 --decode > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - ssh-keyscan -H $SSH_SERVER_IP >> ~/.ssh/known_hosts
+  script:
+    - echo "Deploying UserService to production server"
+    - ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_SERVER_IP "cd $PATH_TO_PROJECT && pwd && eval \"\$(ssh-agent -s)\" && ssh-add /root/.ssh/id_rsa_gitlab && pwd && git status && git pull && docker-compose build userservice && docker-compose up -d userservice"
+    - echo "UserService deployed successfully"
+  rules:
+    - changes:
+      - '.gitlab-ci.yml'
+      - 'UserService/**/*'
