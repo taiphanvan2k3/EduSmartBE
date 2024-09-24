@@ -1,4 +1,6 @@
+using AuthService.AsyncDataServices;
 using AuthService.Commons;
+using AuthService.Dtos;
 using AuthService.Services.Auth;
 using AuthService.Services.Auth.Schemas;
 using Microsoft.AspNetCore.Mvc;
@@ -7,10 +9,11 @@ namespace AuthService.Controllers
 {
     [Route("api/auth")]
     [ApiController]
-    public class AuthController(IAuthService authService, ITokenService tokenService) : ControllerBase
+    public class AuthController(IAuthService authService, ITokenService tokenService, IMessageBusClient messageBusClient) : ControllerBase
     {
         private readonly IAuthService _authService = authService ?? throw new ArgumentNullException(nameof(authService));
         private readonly ITokenService _tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
+        private readonly IMessageBusClient _messageBusClient = messageBusClient ?? throw new ArgumentNullException(nameof(messageBusClient));
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
@@ -115,14 +118,26 @@ namespace AuthService.Controllers
         [HttpPost("signup")]
         public async Task<IActionResult> SignUp([FromBody] SignUpRequest request)
         {
-            string message = await _authService.SignUp(request);
-            if (string.IsNullOrEmpty(message))
+            var response = await _authService.SignUp(request);
+            if(response.StatusCode == StatusCodes.Status201Created)
             {
-                return Ok(message);
+                var userRegister = response.Data["userRegister"];
+                _messageBusClient.PublishUserCreated(new UserCreatedDto
+                {
+                    UserId = userRegister.Id.ToString(),
+                    Email = userRegister.Email,
+                    UserName = userRegister.UserName,
+                    CreateAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                });
+                return Ok(new
+                {
+                    status = true
+                });
             }
             return BadRequest(new
             {
-                message
+                status = false,
+                message = response.Message
             });
         }
 
