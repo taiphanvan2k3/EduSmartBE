@@ -8,7 +8,8 @@ namespace AuthService.Services
         protected readonly DataContext _context;
         protected ILogger _logger;
         protected IHttpContextAccessor _httpContextAccessor;
-
+        protected static string GetActualAsyncMethodName([CallerMemberName] string name = null) => name;
+        
         public BaseService() { }
 
         public BaseService(IServiceProvider serviceProvider)

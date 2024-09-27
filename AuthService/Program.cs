@@ -18,10 +18,11 @@ builder.Services.AddSwaggerGenWithAuth();
 builder.Services.Configure<ServerSetting>(builder.Configuration.GetSection("ServerSetting"));
 builder.Services.Configure<MailSetting>(builder.Configuration.GetSection("MailSetting"));
 builder.Services.Configure<JwtSetting>(builder.Configuration.GetSection("JWTSetting"));
+builder.Services.Configure<GoogleAuthenticationSetting>(builder.Configuration.GetSection("Authentication:Google"));
 
 // Add services
 // builder.Services.AddHttpClient<ICommandDataClient, HttpCommandDataClient>();
-builder.Services.AddSingleton<IMessageBusClient, MessageBusClient>();
+builder.Services.AddSingleton<IMessagePublisher, MessageBusProvider>();
 // builder.Services.AddGrpc();
 
 builder.Services.AddHttpContextAccessor(); // Add IHttpContextAccessor for getting HttpContext in services
@@ -48,6 +49,8 @@ builder.Services.AddScoped(x =>
 });
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+builder.Services.AddHttpClient();
+builder.Services.AddCustomCorsConfig();
 
 builder.Services.AddControllers();
 builder.Services.AddAuthorization();
@@ -81,6 +84,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseCors("AllowSpecificOrigin");
 app.MapControllers();
 
 // app.MapGrpcService<GrpcPlatformService>();

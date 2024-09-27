@@ -9,11 +9,11 @@ namespace AuthService.Controllers
 {
     [Route("api/auth")]
     [ApiController]
-    public class AuthController(IAuthService authService, ITokenService tokenService, IMessageBusClient messageBusClient) : ControllerBase
+    public class AuthController(IAuthService authService, ITokenService tokenService, IMessagePublisher messageBusPublisher) : ControllerBase
     {
         private readonly IAuthService _authService = authService ?? throw new ArgumentNullException(nameof(authService));
         private readonly ITokenService _tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
-        private readonly IMessageBusClient _messageBusClient = messageBusClient ?? throw new ArgumentNullException(nameof(messageBusClient));
+        private readonly IMessagePublisher _messageBusPublisher = messageBusPublisher ?? throw new ArgumentNullException(nameof(messageBusPublisher));
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
@@ -37,6 +37,109 @@ namespace AuthService.Controllers
             try
             {
                 var responseInfo = await _authService.CheckLogin(request);
+                if (responseInfo.StatusCode == StatusCodes.Status200OK)
+                {
+                    // Set cookie token
+                    Response.Cookies.Append("access_token", responseInfo.Data["meta"].accessToken.ToString(), new CookieOptions
+                    {
+                        HttpOnly = true,
+                        SameSite = SameSiteMode.None,
+                        Secure = true,
+                        Expires = DateTime.UtcNow.AddMinutes(responseInfo.Data["AccessTokenExpireIn"])
+                    });
+
+                    return Ok(new
+                    {
+                        userInfo = responseInfo.Data["userInfo"],
+                        meta = responseInfo.Data["meta"],
+                    });
+                }
+
+                return Unauthorized(new
+                {
+                    message = responseInfo.Message
+                });
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    message = e.Message
+                });
+            }
+        }
+
+        /// <summary>
+        /// This function is used if the client side is using built-in Google Sign-In button
+        /// </summary>
+        /// <param name="request">IdToken which is contains user info from Google</param>
+        /// <returns></returns>
+        [HttpPost("login-google-by-token")]
+        public async Task<IActionResult> LoginGoogleByToken([FromBody] GoogleLoginRequest request)
+        {
+            if (string.IsNullOrEmpty(request.IdToken))
+            {
+                return BadRequest(new
+                {
+                    message = "IdToken is required"
+                });
+            }
+
+            try
+            {
+                var responseInfo = await _authService.LoginGoogleByToken(request);
+                if (responseInfo.StatusCode == StatusCodes.Status200OK)
+                {
+                    // Set cookie token
+                    Response.Cookies.Append("access_token", responseInfo.Data["meta"].accessToken.ToString(), new CookieOptions
+                    {
+                        HttpOnly = true,
+                        SameSite = SameSiteMode.None,
+                        Secure = true,
+                        Expires = DateTime.UtcNow.AddMinutes(responseInfo.Data["AccessTokenExpireIn"])
+                    });
+
+                    return Ok(new
+                    {
+                        userInfo = responseInfo.Data["userInfo"],
+                        meta = responseInfo.Data["meta"],
+                    });
+                }
+
+                return Unauthorized(new
+                {
+                    message = responseInfo.Message
+                });
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    message = e.Message
+                });
+            }
+        }
+
+        /// <summary>
+        /// This function is used if the client side is using custom Google Sign-In button
+        /// Server will receive the code from client side and exchange it for access token
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost("login-google-by-code")]
+        public async Task<IActionResult> LoginGoogleByCode([FromBody] GoogleLoginRequest request)
+        {
+            if (string.IsNullOrEmpty(request.Code))
+            {
+                return BadRequest(new
+                {
+                    message = "Code is required"
+                });
+            }
+
+            try
+            {
+                var responseInfo = await _authService.LoginGoogleByCode(request);
                 if (responseInfo.StatusCode == StatusCodes.Status200OK)
                 {
                     // Set cookie token
@@ -119,16 +222,18 @@ namespace AuthService.Controllers
         public async Task<IActionResult> SignUp([FromBody] SignUpRequest request)
         {
             var response = await _authService.SignUp(request);
-            if(response.StatusCode == StatusCodes.Status201Created)
+            if (response.StatusCode == StatusCodes.Status201Created)
             {
                 var userRegister = response.Data["userRegister"];
-                _messageBusClient.PublishUserCreated(new UserCreatedDto
+
+                _messageBusPublisher.PublishUserCreated(new UserCreatedDto
                 {
                     UserId = userRegister.Id.ToString(),
                     Email = userRegister.Email,
                     UserName = userRegister.UserName,
                     CreateAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
                 });
+
                 return Ok(new
                 {
                     status = true
