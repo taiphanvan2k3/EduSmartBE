@@ -50,7 +50,17 @@ deploy-auth-service:
     - ssh-keyscan -H $SSH_SERVER_IP >> ~/.ssh/known_hosts
   script:
     - echo "Deploying AuthService to production server"
-    - ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_SERVER_IP "cd $PATH_TO_PROJECT && pwd && eval \"\$(ssh-agent -s)\" && ssh-add /root/.ssh/id_rsa_gitlab && pwd && git status && git pull && docker-compose build authservice && docker-compose up -d authservice"
+    - ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_SERVER_IP "
+        cd $PATH_TO_PROJECT && \
+        echo 'Checking for uncommitted changes' && \
+        git fetch origin && \
+        git reset --hard origin/main && \
+        git clean -fd && \
+        echo 'Pulling the latest changes from remote' && \
+        git pull origin main && \
+        echo 'Building and deploying AuthService' && \
+        docker-compose build authservice && \
+        docker-compose up -d authservice"
     - echo "AuthService deployed successfully"
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -70,7 +80,17 @@ deploy_user_service:
     - ssh-keyscan -H $SSH_SERVER_IP >> ~/.ssh/known_hosts
   script:
     - echo "Deploying UserService to production server"
-    - ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_SERVER_IP "cd $PATH_TO_PROJECT && pwd && eval \"\$(ssh-agent -s)\" && ssh-add /root/.ssh/id_rsa_gitlab && pwd && git status && git pull && docker-compose build userservice && docker-compose up -d userservice"
+    - ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_SERVER_IP "
+        cd $PATH_TO_PROJECT && \
+        echo 'Checking for uncommitted changes' && \
+        git fetch origin && \
+        git reset --hard origin/main && \
+        git clean -fd && \
+        echo 'Pulling the latest changes from remote' && \
+        git pull origin main && \
+        echo 'Building and deploying UserService' && \
+        docker-compose build userservice && \
+        docker-compose up -d userservice"
     - echo "UserService deployed successfully"
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
