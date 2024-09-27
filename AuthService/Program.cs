@@ -55,16 +55,14 @@ builder.Services.AddCustomCorsConfig();
 builder.Services.AddControllers();
 builder.Services.AddAuthorization();
 
-builder.WebHost.UseUrls("http://0.0.0.0:80");
+if (builder.Environment.IsProduction())
+{
+    builder.WebHost.UseUrls("http://0.0.0.0:80");
+}
 
 var app = builder.Build();
 
 var dbInit = app.Services.GetRequiredService<IDbInitializer>();
-if (app.Environment.IsProduction())
-{
-    await dbInit.Migrate();
-}
-
 await dbInit.Initialize();
 
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
