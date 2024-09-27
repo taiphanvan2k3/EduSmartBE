@@ -53,9 +53,10 @@ deploy-auth-service:
     - ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_SERVER_IP "cd $PATH_TO_PROJECT && pwd && eval \"\$(ssh-agent -s)\" && ssh-add /root/.ssh/id_rsa_gitlab && pwd && git status && git pull && docker-compose build authservice && docker-compose up -d authservice"
     - echo "AuthService deployed successfully"
   rules:
-    - changes:
-      - '.gitlab-ci.yml'
-      - 'AuthService/**/*'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - '.gitlab-ci.yml'
+        - 'AuthService/**/*'
 
 deploy_user_service:
   stage: deploy
@@ -72,6 +73,7 @@ deploy_user_service:
     - ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_SERVER_IP "cd $PATH_TO_PROJECT && pwd && eval \"\$(ssh-agent -s)\" && ssh-add /root/.ssh/id_rsa_gitlab && pwd && git status && git pull && docker-compose build userservice && docker-compose up -d userservice"
     - echo "UserService deployed successfully"
   rules:
-    - changes:
-      - '.gitlab-ci.yml'
-      - 'UserService/**/*'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - '.gitlab-ci.yml'
+        - 'UserService/**/*'

@@ -14,10 +14,6 @@ builder.AddAutoFact();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGenWithAuth();
 
-// builder.Services.Configure<ServerSetting>(builder.Configuration.GetSection("ServerSetting"));
-// builder.Services.Configure<MailSetting>(builder.Configuration.GetSection("MailSetting"));
-// builder.Services.Configure<JwtSetting>(builder.Configuration.GetSection("JWTSetting"));
-
 // Add services
 // builder.Services.AddHttpClient<ICommandDataClient, HttpCommandDataClient>();
 builder.Services.AddSingleton<IEventProcessor, EventProcessor>();
@@ -28,8 +24,6 @@ builder.Services.AddDataContext(builder.Configuration);
 builder.Services.AddScoped<IDbInitializer, DbInitializer>();
 
 // builder.Services.AddCustomAuthentication(builder.Configuration);
-
-// builder.Services.AddCustomHostedServices();
 
 // Setting to use Razor view rendering
 builder.Services.AddRazorPages();

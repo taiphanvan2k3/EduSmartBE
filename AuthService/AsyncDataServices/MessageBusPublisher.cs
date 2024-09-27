@@ -5,36 +5,61 @@ using RabbitMQ.Client;
 
 namespace AuthService.AsyncDataServices
 {
-    public interface IMessageBusClient
+    public interface IMessagePublisher
     {
         void PublishUserCreated(UserCreatedDto userCreatedDto);
         void PublishUserUpdated(UserPublishedDto userUpdatedDto);
         void PublishUserDeleted(UserReadDto userDeletedDto);
     }
 
-    public class MessageBusClient : IMessageBusClient
+    public class MessageBusProvider : IMessagePublisher
     {
         private readonly IConfiguration _configuration;
-        private readonly IConnection _connection;
-        private readonly IModel _channel;
+        private IConnection _connection;
+        private IModel _channel;
 
-        public MessageBusClient(IConfiguration configuration)
+        public MessageBusProvider(IConfiguration configuration)
         {
             _configuration = configuration;
+            InitializeRabbitMQ();
+        }
 
-            var factory = new ConnectionFactory
-            {
-                HostName = _configuration["RabbitMQ:Host"],
-                Port = int.Parse(_configuration["RabbitMQ:Port"])
-            };
-
+        private void InitializeRabbitMQ()
+        {
             try
             {
-                _connection = factory.CreateConnection();
+                Console.WriteLine("--> [MessageBusProvider] [InitializeRabbitMQ]");
+                Console.WriteLine($"--> Host: {_configuration["RabbitMQ:Host"]} and Port: {_configuration["RabbitMQ:Port"]}");
+                var factory = new ConnectionFactory
+                {
+                    HostName = _configuration["RabbitMQ:Host"],
+                    Port = int.Parse(_configuration["RabbitMQ:Port"]),
+                    UserName = _configuration["RabbitMQ:Username"],
+                    Password = _configuration["RabbitMQ:Password"]
+                };
+
+                var connected = false;
+                var retryCount = 5;
+
+                while (!connected && retryCount > 0)
+                {
+                    try
+                    {
+                        _connection = factory.CreateConnection();
+                        connected = true;
+                        Console.WriteLine("--> [MessageBusSubscriber] [InitializeRabbitMQ] [CreateConnection] [Success]");
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"--> [MessageBusSubscriber] [InitializeRabbitMQ] [RetryCount]: {retryCount} and [Exception]: {e.Message}");
+                        retryCount--;
+                        Thread.Sleep(millisecondsTimeout: 500);
+                    }
+                }
+
                 _channel = _connection.CreateModel();
 
                 _channel.ExchangeDeclare("trigger", ExchangeType.Fanout);
-                
                 _connection.ConnectionShutdown += RabbitMQ_ConnectionShutdown;
 
                 Console.WriteLine("--> Connected to MessageBus");
@@ -47,7 +72,7 @@ namespace AuthService.AsyncDataServices
 
         private void RabbitMQ_ConnectionShutdown(object sender, ShutdownEventArgs e)
         {
-             Console.WriteLine("--> RabbitMQ Connection Shutdown");
+            Console.WriteLine("--> RabbitMQ Connection Shutdown");
         }
 
         public void Dispose()
@@ -65,9 +90,9 @@ namespace AuthService.AsyncDataServices
             var body = Encoding.UTF8.GetBytes(message);
 
             _channel.BasicPublish(exchange: "trigger",
-                            routingKey: "",
-                            basicProperties: null,
-                            body: body);
+                routingKey: "",
+                basicProperties: null,
+                body: body);
             Console.WriteLine($"--> We have sent {message}");
         }
 
@@ -87,7 +112,7 @@ namespace AuthService.AsyncDataServices
             else
             {
                 Console.WriteLine("--> RabbitMQ connection is closed, not sending");
-            }  
+            }
         }
 
         public void PublishUserUpdated(UserPublishedDto userUpdatedDto)
