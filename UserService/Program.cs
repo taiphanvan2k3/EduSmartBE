@@ -25,10 +25,6 @@ builder.Services.AddScoped<IDbInitializer, DbInitializer>();
 
 // builder.Services.AddCustomAuthentication(builder.Configuration);
 
-// Setting to use Razor view rendering
-builder.Services.AddRazorPages();
-// builder.Services.AddScoped<RazorViewService>(); // Add scopes because RazorViewToStringRenderer has dependencies with scoped services
-
 // Setting to use IUrlHelper in services
 builder.Services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
 builder.Services.AddScoped(x =>
@@ -44,16 +40,14 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddControllers();
 builder.Services.AddAuthorization();
 
-builder.WebHost.UseUrls("http://0.0.0.0:80");
+if (builder.Environment.IsProduction())
+{
+    builder.WebHost.UseUrls("http://0.0.0.0:80");
+}
 
 var app = builder.Build();
 
 var dbInit = app.Services.GetRequiredService<IDbInitializer>();
-if (app.Environment.IsProduction())
-{
-    await dbInit.Migrate();
-}
-
 await dbInit.Initialize();
 
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
@@ -74,12 +68,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
-// app.MapGrpcService<GrpcPlatformService>();
-
-app.MapGet("/protos/platforms.proto", async context =>
-{
-    await context.Response.WriteAsync(File.ReadAllText("Protos/platforms.proto"));
-});
 
 await app.RunAsync();
