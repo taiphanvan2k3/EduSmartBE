@@ -5,6 +5,7 @@ using AuthService.Services.Auth.Schemas;
 using AuthService.Services.MailSender.Schemas;
 using AuthService.Services.User.Schemas;
 using AuthService.Settings;
+using Google.Apis.Auth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -21,6 +22,20 @@ namespace AuthService.Services.Auth
         /// <param name="loginRequest"></param>
         /// <returns></returns>
         public Task<ResponseInfo> CheckLogin(LoginRequest loginRequest);
+
+        /// <summary>
+        /// Login with Google by token (IdToken)
+        /// <para>Author: TaiPV</para>
+        /// <para> Created at: 11/09/2024</para>
+        /// </summary>
+        /// <returns></returns>
+        public Task<ResponseInfo> LoginGoogleByToken(GoogleLoginRequest googleLoginRequest, string refreshToken = null);
+
+        /// <summary>
+        /// Login with Google by code (Authorization code)
+        /// </summary>
+        /// <returns></returns>
+        public Task<ResponseInfo> LoginGoogleByCode(GoogleLoginRequest googleLoginRequest);
 
         /// <summary>
         /// Check login by username/email and password
@@ -48,26 +63,24 @@ namespace AuthService.Services.Auth
         MailProducer mailProducer,
         CommonProducer commonProducer,
         ITokenService tokenService,
+        IGoogleAuthService googleAuthService,
         ILogger<AuthService> logger)
         : BaseService(serviceProvider, logger), IAuthService
     {
         private readonly UserManager<ApplicationUser> _userManager = userManager
             ?? throw new ArgumentNullException(nameof(userManager));
-
         private readonly SignInManager<ApplicationUser> _signInManager = signInManager
             ?? throw new ArgumentNullException(nameof(signInManager));
-
         private readonly MailProducer _mailProducer = mailProducer
             ?? throw new ArgumentNullException(nameof(mailProducer));
-
         private readonly CommonProducer _commonProducer = commonProducer
             ?? throw new ArgumentNullException(nameof(commonProducer));
-
         private readonly ServerSetting _serverSetting = serverSetting?.Value
             ?? throw new ArgumentNullException(nameof(serverSetting));
-
         private readonly ITokenService _tokenService = tokenService
             ?? throw new ArgumentNullException(nameof(tokenService));
+        private readonly IGoogleAuthService _googleAuthService = googleAuthService
+            ?? throw new ArgumentNullException(nameof(googleAuthService));
 
         public async Task<ResponseInfo> CheckLogin(LoginRequest loginRequest)
         {
@@ -126,34 +139,80 @@ namespace AuthService.Services.Auth
                     Roles = [.. (await _userManager.GetRolesAsync(user))] // convert to list
                 };
 
-                var authTokens = _tokenService.GenerateTokens(userInfo);
-
-                responseInfo.Data.Add("AccessTokenExpireIn", authTokens.AccessTokenExpireIn);
-                responseInfo.Data.Add("meta", new
-                {
-                    accessToken = authTokens.AccessToken,
-                    refreshToken = authTokens.RefreshToken
-                });
-
-                // Lưu refresh token vào db
-                await _commonProducer.EnqueueDataAsync(new BackgroundJobData()
-                {
-                    JobType = BackgroundJobType.SAVE_REFRESH_TOKEN,
-                    Data = new Dictionary<string, dynamic>()
-                    {
-                        { "refreshToken", authTokens.RefreshToken },
-                        { "userId", userInfo.Id },
-                        { "ipAddress", _httpContextAccessor.HttpContext.Connection?.RemoteIpAddress.ToString() ?? "::1" }
-                    }
-                });
-
-                responseInfo.Data.Add("userInfo", userInfo);
+                await GenerateTokens(userInfo, responseInfo);
                 _logger.LogInformation("[AuthService][CheckLogin] End");
                 return responseInfo;
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "CheckLogin");
+                throw;
+            }
+        }
+
+        public async Task<ResponseInfo> LoginGoogleByToken(GoogleLoginRequest googleLoginRequest, string refreshToken = null)
+        {
+            string methodName = GetActualAsyncMethodName();
+            try
+            {
+                var responseInfo = new ResponseInfo();
+                _logger.LogInformation("[AuthService][{MethodName}] Start", methodName);
+                var payLoad = await GoogleJsonWebSignature.ValidateAsync(googleLoginRequest.IdToken);
+
+                var user = await _userManager.FindByEmailAsync(payLoad.Email);
+                if (user == null)
+                {
+                    await CreateUserFromGooglePayload(payLoad, googleLoginRequest.Role, refreshToken);
+                }
+                else
+                {
+                    // Kiểm tra xem email đã được liên kết với tài khoản google chưa
+                    var isAuthenticatedByGoogle = await _userManager.FindByLoginAsync("Google", payLoad.Subject) != null;
+                    if (!isAuthenticatedByGoogle)
+                    {
+                        // Người dùng đã đăng ký bằng email, không phải google
+                        responseInfo.StatusCode = StatusCodes.Status400BadRequest;
+                        responseInfo.Message = "Email has been used by another method";
+                        return responseInfo;
+                    }
+                }
+
+                user ??= await _userManager.FindByEmailAsync(payLoad.Email);
+                var userInfo = new UserInfo()
+                {
+                    Id = user.Id,
+                    UserName = user.UserName,
+                    Email = user.Email,
+                    Roles = [.. (await _userManager.GetRolesAsync(user))]
+                };
+                await GenerateTokens(userInfo, responseInfo);
+
+                _logger.LogInformation("[AuthService][{MethodName}] End", methodName);
+                return responseInfo;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[AuthService][{MethodName}][{Error}]", methodName, e.Message);
+                throw;
+            }
+        }
+
+        public async Task<ResponseInfo> LoginGoogleByCode(GoogleLoginRequest googleLoginRequest)
+        {
+            var methodName = GetActualAsyncMethodName();
+            _logger.LogInformation("[AuthService][{MethodName}] Start", methodName);
+            try
+            {
+                GoogleTokenResponse googleTokenResponse = await _googleAuthService.GetAccessToken(googleLoginRequest.Code);
+                googleLoginRequest.IdToken = googleTokenResponse.IdToken;
+
+                var responseInfo = await LoginGoogleByToken(googleLoginRequest, googleTokenResponse.RefreshToken);
+                _logger.LogInformation("[AuthService][{MethodName}] End", methodName);
+                return responseInfo;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[AuthService][{MethodName}][{Error}]", methodName, e.Message);
                 throw;
             }
         }
@@ -188,7 +247,6 @@ namespace AuthService.Services.Auth
                 }
 
                 string callbackUrl = await GenerateEmailConfirmationTokenAsync(user);
-
                 await SendMailConfirmAccount(user.Email, user.UserName, callbackUrl);
 
                 responseInfo.StatusCode = StatusCodes.Status201Created;
@@ -252,6 +310,60 @@ namespace AuthService.Services.Auth
                 ConfirmLink = callbackUrl
             };
             await _mailProducer.EnqueueMailAsync(mailBody);
+        }
+
+        private async Task GenerateTokens(UserInfo userInfo, ResponseInfo responseInfo)
+        {
+            var authTokens = _tokenService.GenerateTokens(userInfo);
+
+            responseInfo.Data.Add("AccessTokenExpireIn", authTokens.AccessTokenExpireIn);
+            responseInfo.Data.Add("meta", new
+            {
+                accessToken = authTokens.AccessToken,
+                refreshToken = authTokens.RefreshToken
+            });
+
+            // Lưu refresh token vào db
+            await _commonProducer.EnqueueDataAsync(new BackgroundJobData()
+            {
+                JobType = BackgroundJobType.SAVE_REFRESH_TOKEN,
+                Data = new Dictionary<string, dynamic>()
+                {
+                    { "refreshToken", authTokens.RefreshToken },
+                    { "userId", userInfo.Id },
+                    { "ipAddress", _httpContextAccessor.HttpContext.Connection?.RemoteIpAddress.ToString() ?? "::1" }
+                }
+            });
+
+            responseInfo.Data.Add("userInfo", userInfo);
+        }
+
+        private async Task CreateUserFromGooglePayload(GoogleJsonWebSignature.Payload payLoad,
+            string role = null, string refreshToken = null)
+        {
+            var user = new ApplicationUser()
+            {
+                Email = payLoad.Email,
+                UserName = payLoad.Email.Split('@')[0],
+                FirstName = payLoad.GivenName,
+                LastName = payLoad.FamilyName,
+                AvatarURL = payLoad.Picture
+            };
+
+            var result = await _userManager.CreateAsync(user);
+            if (!result.Succeeded)
+            {
+                throw new Exception(result.Errors.Select(e => e.Description)
+                    .Aggregate((a, b) => $"{a}\n{b}"));
+            }
+
+            await _userManager.AddToRoleAsync(user, role ?? "Student");
+            await _userManager.AddLoginAsync(user, new UserLoginInfo("Google", payLoad.Subject, "Google"));
+
+            if (refreshToken != null)
+            {
+                await _userManager.SetAuthenticationTokenAsync(user, "Google", "refresh_token", refreshToken);
+            }
         }
     }
 }
