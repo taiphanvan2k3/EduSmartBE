@@ -32,11 +32,6 @@ restore_and_build_service:
         - 'AuthService/**/*'
         - 'UserService/**/*'
         - 'CourseManagementService/**/*'
-  # Cần cache thư mục .nuget/packages/ để giảm thời gian restore packages
-  cache:
-    key: ${CI_COMMIT_REF_SLUG}
-    paths:
-      - .nuget/packages/
 
 deploy_services:
   stage: deploy
