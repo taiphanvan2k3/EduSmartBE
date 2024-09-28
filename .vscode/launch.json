@@ -71,6 +71,11 @@
     ],
     "compounds": [
         {
+            "name": "Auth, User",
+            "configurations": ["AuthService", "UserService"],
+            "stopAll": true
+        },
+        {
             "name": "All Services",
             "configurations": ["AuthService", "UserService", "CourseManagementService"],
             "stopAll": true
