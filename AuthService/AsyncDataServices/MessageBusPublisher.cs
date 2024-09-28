@@ -1,15 +1,12 @@
 using System.Text;
 using System.Text.Json;
-using AuthService.Dtos;
 using RabbitMQ.Client;
 
 namespace AuthService.AsyncDataServices
 {
     public interface IMessagePublisher
     {
-        void PublishUserCreated(UserCreatedDto userCreatedDto);
-        void PublishUserUpdated(UserPublishedDto userUpdatedDto);
-        void PublishUserDeleted(UserReadDto userDeletedDto);
+        void PublishMessage<T>(string eventType, T message);
     }
 
     public class MessageBusProvider : IMessagePublisher
@@ -85,6 +82,25 @@ namespace AuthService.AsyncDataServices
             }
         }
 
+        public void PublishMessage<T>(string eventType, T message)
+        {
+            var payload = JsonSerializer.Serialize(new
+            {
+                type = eventType,
+                data = message
+            });
+
+            if (_connection.IsOpen)
+            {
+                Console.WriteLine("--> RabbitMQ Connection Open, sending message...");
+                SendMessage(payload);
+            }
+            else
+            {
+                Console.WriteLine("--> RabbitMQ connection is closed, not sending");
+            }
+        }
+
         private void SendMessage(string message)
         {
             var body = Encoding.UTF8.GetBytes(message);
@@ -94,63 +110,6 @@ namespace AuthService.AsyncDataServices
                 basicProperties: null,
                 body: body);
             Console.WriteLine($"--> We have sent {message}");
-        }
-
-        public void PublishUserCreated(UserCreatedDto userCreatedDto)
-        {
-            var message = JsonSerializer.Serialize(new
-            {
-                type = "UserCreatedEvent",
-                data = userCreatedDto
-            });
-
-            if (_connection.IsOpen)
-            {
-                Console.WriteLine("--> RabbitMQ Connection Open, sending message...");
-                SendMessage(message);
-            }
-            else
-            {
-                Console.WriteLine("--> RabbitMQ connection is closed, not sending");
-            }
-        }
-
-        public void PublishUserUpdated(UserPublishedDto userUpdatedDto)
-        {
-            var message = JsonSerializer.Serialize(new
-            {
-                type = "UserUpdatedEvent",
-                data = userUpdatedDto
-            });
-
-            if (_connection.IsOpen)
-            {
-                Console.WriteLine("--> RabbitMQ Connection Open, sending message...");
-                SendMessage(message);
-            }
-            else
-            {
-                Console.WriteLine("--> RabbitMQ connection is closed, not sending");
-            }
-        }
-
-        public void PublishUserDeleted(UserReadDto userDeletedDto)
-        {
-            var message = JsonSerializer.Serialize(new
-            {
-                type = "UserDeletedEvent",
-                data = userDeletedDto
-            });
-
-            if (_connection.IsOpen)
-            {
-                Console.WriteLine("--> RabbitMQ Connection Open, sending message...");
-                SendMessage(message);
-            }
-            else
-            {
-                Console.WriteLine("--> RabbitMQ connection is closed, not sending");
-            }
         }
     }
 }

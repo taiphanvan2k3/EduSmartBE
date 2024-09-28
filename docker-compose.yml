@@ -49,6 +49,24 @@ services:
     networks:
       - microservices-network
 
+  courseservice:
+    build:
+      context: ./CourseManagementService
+      dockerfile: Dockerfile
+    container_name: courseservice
+    ports:
+      - "7152:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASS=guest
+    depends_on:
+      - rabbitmq
+    networks:
+      - microservices-network
+   
+
 networks:
   microservices-network:
     driver: bridge
