@@ -1,18 +1,27 @@
 image: mcr.microsoft.com/dotnet/sdk:8.0
 
 stages:
-  - build
+  - restore_and_build
   - deploy
 
-build_service:
-  stage: build
+restore_and_build_service:
+  stage: restore_and_build
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - .nuget/packages/
+      - AuthService/obj/
+      - UserService/obj/
+      - CourseManagementService/obj/
   script:
+    - dotnet restore edusmartbe.sln --packages .nuget/packages
+    - ls -la .nuget/packages/  # List directory contents to verify packages have been restored
     - |
       services=("AuthService" "UserService" "CourseManagementService")
       for service in "${services[@]}"; do
         if git diff --name-only HEAD HEAD~1 | grep -q "${service}/"; then
           echo "Building ${service}..."
-          dotnet build ${service}/${service}.csproj --configuration Release
+          dotnet build ${service}/${service}.csproj --configuration Release --no-restore
         else
           echo "No changes in ${service}, skipping build."
         fi

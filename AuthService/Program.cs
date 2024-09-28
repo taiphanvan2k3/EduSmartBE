@@ -20,7 +20,6 @@ builder.Services.Configure<MailSetting>(builder.Configuration.GetSection("MailSe
 builder.Services.Configure<JwtSetting>(builder.Configuration.GetSection("JWTSetting"));
 builder.Services.Configure<GoogleAuthenticationSetting>(builder.Configuration.GetSection("Authentication:Google"));
 
-// Add services
 builder.Services.AddSingleton<IMessagePublisher, MessageBusProvider>();
 
 builder.Services.AddHttpContextAccessor(); // Add IHttpContextAccessor for getting HttpContext in services
