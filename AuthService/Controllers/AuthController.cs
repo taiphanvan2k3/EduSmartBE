@@ -226,7 +226,7 @@ namespace AuthService.Controllers
             {
                 var userRegister = response.Data["userRegister"];
 
-                _messageBusPublisher.PublishUserCreated(new UserCreatedDto
+                _messageBusPublisher.PublishMessage(EventTypes.UserCreated, new UserCreatedDto
                 {
                     UserId = userRegister.Id.ToString(),
                     Email = userRegister.Email,
