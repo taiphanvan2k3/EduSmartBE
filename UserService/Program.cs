@@ -14,16 +14,12 @@ builder.AddAutoFact();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGenWithAuth();
 
-// Add services
-// builder.Services.AddHttpClient<ICommandDataClient, HttpCommandDataClient>();
 builder.Services.AddSingleton<IEventProcessor, EventProcessor>();
 builder.Services.AddHostedService<MessageBusSubscriber>();
-// builder.Services.AddGrpc();
 
 builder.Services.AddDataContext(builder.Configuration);
 builder.Services.AddScoped<IDbInitializer, DbInitializer>();
-
-// builder.Services.AddCustomAuthentication(builder.Configuration);
+builder.Services.AddCustomAuthentication(builder.Configuration);
 
 // Setting to use IUrlHelper in services
 builder.Services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
