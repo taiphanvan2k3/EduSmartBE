@@ -41,7 +41,7 @@ deploy_services:
     - ssh-keyscan -H $SSH_SERVER_IP >> ~/.ssh/known_hosts
   script:
     - echo "Pulling latest code from the repository"
-    - ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_SERVER_IP "cd $PATH_TO_PROJECT && git fetch --prune origin && git reset --hard origin/main && git clean -fd && git gc --prune=now"
+    - ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_SERVER_IP "cd $PATH_TO_PROJECT && eval \"\$(ssh-agent -s)\" && ssh-add /root/.ssh/id_rsa_gitlab && git fetch --prune origin && git reset --hard origin/main && git clean -fd && git gc --prune=now && git pull origin main"
     - |
       services=("AuthService" "UserService" "CourseManagementService")
       for service in "${services[@]}"; do
