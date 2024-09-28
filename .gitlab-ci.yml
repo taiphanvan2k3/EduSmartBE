@@ -1,39 +1,25 @@
 image: mcr.microsoft.com/dotnet/sdk:8.0
 
 stages:
-  - restore
   - build
   - deploy
-
-restore:
-  stage: restore
-  cache:
-    key: ${CI_COMMIT_REF_SLUG}
-    paths:
-      - .nuget/packages/
-      - AuthService/obj/
-      - UserService/obj/
-      - CourseManagementService/obj/
-  script:
-    - dotnet restore edusmartbe.sln --packages .nuget/packages # Restore all NuGet packages for the solution
-    - ls -la .nuget/packages/  # List directory contents to verify packages have been restored
-  rules:
-    - if: '$CI_COMMIT_BRANCH != "main"' # Unnecessary to restore packages when pushing to main branch
-      changes:
-        - '.gitlab-ci.yml'
-        - '**/*.csproj'
-        - 'edusmartbe.sln'
 
 build_service:
   stage: build
   script:
-    - dotnet build AuthService/AuthService.csproj --configuration Release --no-restore  # Build project without restoring packages again
-    - dotnet build UserService/UserService.csproj --configuration Release --no-restore
-    - dotnet build CourseManagementService/CourseManagementService.csproj --configuration Release --no-restore
+    - |
+      services=("AuthService" "UserService" "CourseManagementService")
+      for service in "${services[@]}"; do
+        if git diff --name-only HEAD HEAD~1 | grep -q "${service}/"; then
+          echo "Building ${service}..."
+          dotnet build ${service}/${service}.csproj --configuration Release
+        else
+          echo "No changes in ${service}, skipping build."
+        fi
+      done
   rules:
     - if: '$CI_COMMIT_BRANCH != "main"' # Unnecessary to build projects when pushing to main branch
       changes:
-        - '.gitlab-ci.yml'
         - 'AuthService/**/*'
         - 'UserService/**/*'
         - 'CourseManagementService/**/*'
@@ -54,13 +40,15 @@ deploy_services:
     - chmod 600 ~/.ssh/id_rsa
     - ssh-keyscan -H $SSH_SERVER_IP >> ~/.ssh/known_hosts
   script:
+    - echo "Pulling latest code from the repository"
+    - ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_SERVER_IP "cd $PATH_TO_PROJECT && git fetch --prune origin && git reset --hard origin/main && git clean -fd && git gc --prune=now"
     - |
-      services=("authservice" "userservice" "coursemanagementservice")
+      services=("AuthService" "UserService" "CourseManagementService")
       for service in "${services[@]}"; do
         # Kiểm tra xem có thay đổi nào trong service đó
         if git diff --name-only HEAD HEAD~1 | grep -q "${service}/"; then
           echo "Deploying ${service} to production server"
-          ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_SERVER_IP "cd $PATH_TO_PROJECT && eval \"\$(ssh-agent -s)\" && ssh-add /root/.ssh/id_rsa_gitlab && git fetch --prune origin && git reset --hard origin/main && git clean -fd && git gc --prune=now && docker-compose build $service && docker-compose up -d --no-deps $service"
+          "docker-compose build $service && docker-compose up -d --no-deps $service"
           echo "${service} deployed successfully"
         else
           echo "No changes detected for ${service}. Skipping deployment."
