@@ -57,7 +57,7 @@ deploy_services:
         # Kiểm tra xem có thay đổi nào trong service đó hoặc trong docker-compose.yml hoặc .gitlab-ci.yml không
         if git diff --name-only HEAD HEAD~1 | grep -qiE "^${service}/|^docker-compose.yml|.gitlab-ci.yml"; then
           echo "Deploying ${service} to production server"
-          "pwd && cd $PATH_TO_PROJECT && pwd && docker-compose build $service && docker-compose up -d --no-deps $service"
+          ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_SERVER_IP "cd $PATH_TO_PROJECT && pwd && docker-compose build $service && docker-compose up -d --no-deps $service"
           echo "${service} deployed successfully"
         else
           echo "No changes detected for ${service}. Skipping deployment."
