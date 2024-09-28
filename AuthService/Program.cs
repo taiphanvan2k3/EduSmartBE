@@ -21,9 +21,7 @@ builder.Services.Configure<JwtSetting>(builder.Configuration.GetSection("JWTSett
 builder.Services.Configure<GoogleAuthenticationSetting>(builder.Configuration.GetSection("Authentication:Google"));
 
 // Add services
-// builder.Services.AddHttpClient<ICommandDataClient, HttpCommandDataClient>();
 builder.Services.AddSingleton<IMessagePublisher, MessageBusProvider>();
-// builder.Services.AddGrpc();
 
 builder.Services.AddHttpContextAccessor(); // Add IHttpContextAccessor for getting HttpContext in services
 builder.Services.AddDataContext(builder.Configuration);
@@ -84,12 +82,5 @@ app.UseAuthorization();
 
 app.UseCors("AllowSpecificOrigin");
 app.MapControllers();
-
-// app.MapGrpcService<GrpcPlatformService>();
-
-app.MapGet("/protos/platforms.proto", async context =>
-{
-    await context.Response.WriteAsync(File.ReadAllText("Protos/platforms.proto"));
-});
 
 await app.RunAsync();
