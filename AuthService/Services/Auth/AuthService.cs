@@ -1,6 +1,7 @@
 using AuthService.BackgroundServices;
 using AuthService.Commons;
 using AuthService.Databases.Schemas;
+using AuthService.Extensions;
 using AuthService.Services.Auth.Schemas;
 using AuthService.Services.MailSender.Schemas;
 using AuthService.Services.User.Schemas;
@@ -33,9 +34,20 @@ namespace AuthService.Services.Auth
 
         /// <summary>
         /// Login with Google by code (Authorization code)
+        /// <para>Author: TaiPV</para>
+        /// <para> Created at: 12/09/2024</para>
         /// </summary>
         /// <returns></returns>
         public Task<ResponseInfo> LoginGoogleByCode(GoogleLoginRequest googleLoginRequest);
+
+        /// <summary>
+        /// Login with external provider (Google, Facebook, etc.)
+        /// <para>Author: TaiPV</para>
+        /// <para>Created at: 29/09/2024</para>
+        /// </summary>
+        /// <param name="externalLoginRequest"></param>
+        /// <returns></returns>
+        public Task<ResponseInfo> ExternalLogin(ExternalLoginRequest externalLoginRequest);
 
         /// <summary>
         /// Check login by username/email and password
@@ -162,7 +174,7 @@ namespace AuthService.Services.Auth
                 var user = await _userManager.FindByEmailAsync(payLoad.Email);
                 if (user == null)
                 {
-                    await CreateUserFromGooglePayload(payLoad, googleLoginRequest.Role, refreshToken);
+                    await CreateUserFromGooglePayload(payLoad, googleLoginRequest.Role.GetDisplayName(), refreshToken);
                 }
                 else
                 {
@@ -217,6 +229,53 @@ namespace AuthService.Services.Auth
             }
         }
 
+        public async Task<ResponseInfo> ExternalLogin(ExternalLoginRequest externalLoginRequest)
+        {
+            var methodName = GetActualAsyncMethodName();
+            _logger.LogInformation("[AuthService][{MethodName}] Start", methodName);
+
+            try
+            {
+                var responseInfo = new ResponseInfo();
+                var user = await _userManager.FindByEmailAsync(externalLoginRequest.UserInfo.Email);
+                if (user == null)
+                {
+                    await CreateUserFromExternalPayload(externalLoginRequest.UserInfo, externalLoginRequest.Provider,
+                        externalLoginRequest.UserInfo.Role.GetDisplayName());
+                }
+                else
+                {
+                    var loginInfo = await _userManager.FindByLoginAsync(externalLoginRequest.Provider,
+                        externalLoginRequest.UserInfo.Email);
+
+                    if (loginInfo == null)
+                    {
+                        // Người dùng đã đăng ký bằng email, không phải provider mà người dùng đang đăng nhập
+                        responseInfo.StatusCode = StatusCodes.Status400BadRequest;
+                        responseInfo.Message = "Email has been used by another method";
+                    }
+                }
+
+                user ??= await _userManager.FindByEmailAsync(externalLoginRequest.UserInfo.Email);
+                var userInfo = new UserInfo()
+                {
+                    Id = user.Id,
+                    UserName = user.UserName,
+                    Email = user.Email,
+                    Roles = [.. (await _userManager.GetRolesAsync(user))]
+                };
+
+                await GenerateTokens(userInfo, responseInfo);
+                _logger.LogInformation("[AuthService][{MethodName}] End", methodName);
+                return responseInfo;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[AuthService][{MethodName}][{Error}]", methodName, e.Message);
+                throw;
+            }
+        }
+
         public async Task<ResponseInfo> SignUp(SignUpRequest signUpRequest)
         {
             try
@@ -241,9 +300,10 @@ namespace AuthService.Services.Auth
                     return responseInfo;
                 }
 
-                if (!string.IsNullOrEmpty(signUpRequest.Role))
+                string role = signUpRequest.Role.GetDisplayName();
+                if (!string.IsNullOrEmpty(role))
                 {
-                    await _userManager.AddToRoleAsync(user, signUpRequest.Role);
+                    await _userManager.AddToRoleAsync(user, role);
                 }
 
                 string callbackUrl = await GenerateEmailConfirmationTokenAsync(user);
@@ -364,6 +424,29 @@ namespace AuthService.Services.Auth
             {
                 await _userManager.SetAuthenticationTokenAsync(user, "Google", "refresh_token", refreshToken);
             }
+        }
+
+        private async Task CreateUserFromExternalPayload(ExternalUserInfo externalUserInfo, string provider,
+            string role = null)
+        {
+            var user = new ApplicationUser()
+            {
+                Email = externalUserInfo.Email,
+                UserName = externalUserInfo.Email.Split('@')[0],
+                FirstName = externalUserInfo.FirstName,
+                LastName = externalUserInfo.LastName,
+                AvatarURL = externalUserInfo.Picture
+            };
+
+            var result = await _userManager.CreateAsync(user);
+            if (!result.Succeeded)
+            {
+                throw new Exception(result.Errors.Select(e => e.Description)
+                    .Aggregate((a, b) => $"{a}\n{b}"));
+            }
+
+            await _userManager.AddToRoleAsync(user, role ?? "Student");
+            await _userManager.AddLoginAsync(user, new UserLoginInfo(provider, externalUserInfo.Email, provider));
         }
     }
 }
