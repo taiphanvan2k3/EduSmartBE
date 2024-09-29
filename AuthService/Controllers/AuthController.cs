@@ -4,6 +4,7 @@ using AuthService.Dtos;
 using AuthService.Services.Auth;
 using AuthService.Services.Auth.Schemas;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace AuthService.Controllers
 {
@@ -140,6 +141,52 @@ namespace AuthService.Controllers
             try
             {
                 var responseInfo = await _authService.LoginGoogleByCode(request);
+                if (responseInfo.StatusCode == StatusCodes.Status200OK)
+                {
+                    // Set cookie token
+                    Response.Cookies.Append("access_token", responseInfo.Data["meta"].accessToken.ToString(), new CookieOptions
+                    {
+                        HttpOnly = true,
+                        SameSite = SameSiteMode.None,
+                        Secure = true,
+                        Expires = DateTime.UtcNow.AddMinutes(responseInfo.Data["AccessTokenExpireIn"])
+                    });
+
+                    return Ok(new
+                    {
+                        userInfo = responseInfo.Data["userInfo"],
+                        meta = responseInfo.Data["meta"],
+                    });
+                }
+
+                return Unauthorized(new
+                {
+                    message = responseInfo.Message
+                });
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    message = e.Message
+                });
+            }
+        }
+
+        [HttpPost("external-login")]
+        public async Task<IActionResult> ExternalLogin([FromBody] ExternalLoginRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new
+                {
+                    message = ModelState.Values.SelectMany(x => x.Errors).Select(x => x.ErrorMessage).ToList()
+                });
+            }
+
+            try
+            {
+                var responseInfo = await _authService.ExternalLogin(request);
                 if (responseInfo.StatusCode == StatusCodes.Status200OK)
                 {
                     // Set cookie token

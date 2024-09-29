@@ -38,7 +38,7 @@ services:
       dockerfile: Dockerfile
     container_name: userservice
     ports:
-      - "7145:80"
+      - "7151:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - RABBITMQ_HOST=rabbitmq

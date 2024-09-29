@@ -1,3 +1,6 @@
+using System.ComponentModel.DataAnnotations;
+using AuthService.Enumerations;
+
 namespace AuthService.Services.Auth.Schemas
 {
     public class GoogleLoginRequest
@@ -6,6 +9,7 @@ namespace AuthService.Services.Auth.Schemas
 
         public string Code { get; set; }
 
-        public string Role { get; set; }
+        [Required]
+        public Role Role { get; set; }
     }
 }
