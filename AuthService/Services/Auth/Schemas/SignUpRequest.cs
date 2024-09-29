@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using AuthService.Enumerations;
 
 namespace AuthService.Services.Auth.Schemas
 {
@@ -17,6 +18,6 @@ namespace AuthService.Services.Auth.Schemas
         public string LastName { get; set; }
 
         [Required]
-        public string Role { get; set; }
+        public Role Role { get; set; }
     }
 }
