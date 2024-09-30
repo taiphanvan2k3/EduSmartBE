@@ -1,8 +1,8 @@
-namespace AuthService.Services.User.Schemas
+namespace UserService.EventData
 {
-    public class UserInfo
+    public class UserCreatedEventData
     {
-        public int Id { get; set; }
+        public string Id { get; set; }
 
         public string UserName { get; set; }
 
@@ -14,9 +14,9 @@ namespace AuthService.Services.User.Schemas
 
         public string AvatarUrl { get; set; }
 
-        public DateTimeOffset CreatedAt { get; set; }
-
         public bool IsActive { get; set; }
+
+        public DateTimeOffset CreatedAt { get; set; }
 
         public List<string> Roles { get; set; }
     }

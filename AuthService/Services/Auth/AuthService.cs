@@ -1,3 +1,4 @@
+using AuthService.AsyncDataServices;
 using AuthService.BackgroundServices;
 using AuthService.Commons;
 using AuthService.Databases.Schemas;
@@ -76,6 +77,7 @@ namespace AuthService.Services.Auth
         CommonProducer commonProducer,
         ITokenService tokenService,
         IGoogleAuthService googleAuthService,
+        IMessagePublisher messageBusPublisher,
         ILogger<AuthService> logger)
         : BaseService(serviceProvider, logger), IAuthService
     {
@@ -93,6 +95,8 @@ namespace AuthService.Services.Auth
             ?? throw new ArgumentNullException(nameof(tokenService));
         private readonly IGoogleAuthService _googleAuthService = googleAuthService
             ?? throw new ArgumentNullException(nameof(googleAuthService));
+        private readonly IMessagePublisher _messageBusPublisher = messageBusPublisher
+            ?? throw new ArgumentNullException(nameof(messageBusPublisher));
 
         public async Task<ResponseInfo> CheckLogin(LoginRequest loginRequest)
         {
@@ -143,15 +147,15 @@ namespace AuthService.Services.Auth
                     return responseInfo;
                 }
 
-                var userInfo = new UserInfo()
-                {
-                    Id = user.Id,
-                    UserName = user.UserName,
-                    Email = user.Email,
-                    Roles = [.. (await _userManager.GetRolesAsync(user))] // convert to list
-                };
+                var userInfo = await ConvertAppUserToUserInfo(user);
 
                 await GenerateTokens(userInfo, responseInfo);
+                _messageBusPublisher.PublishMessage(EventTypes.UserLastLoginUpdated, new
+                {
+                    UserId = userInfo.Id,
+                    LastLogin = DateTimeOffset.Now.ToUniversalTime()
+                });
+
                 _logger.LogInformation("[AuthService][CheckLogin] End");
                 return responseInfo;
             }
@@ -190,14 +194,15 @@ namespace AuthService.Services.Auth
                 }
 
                 user ??= await _userManager.FindByEmailAsync(payLoad.Email);
-                var userInfo = new UserInfo()
-                {
-                    Id = user.Id,
-                    UserName = user.UserName,
-                    Email = user.Email,
-                    Roles = [.. (await _userManager.GetRolesAsync(user))]
-                };
+                var userInfo = await ConvertAppUserToUserInfo(user);
+
                 await GenerateTokens(userInfo, responseInfo);
+                _messageBusPublisher.PublishMessage(EventTypes.UserCreated, userInfo);
+                _messageBusPublisher.PublishMessage(EventTypes.UserLastLoginUpdated, new
+                {
+                    UserId = userInfo.Id,
+                    LastLogin = DateTimeOffset.Now
+                });
 
                 _logger.LogInformation("[AuthService][{MethodName}] End", methodName);
                 return responseInfo;
@@ -257,15 +262,16 @@ namespace AuthService.Services.Auth
                 }
 
                 user ??= await _userManager.FindByEmailAsync(externalLoginRequest.UserInfo.Email);
-                var userInfo = new UserInfo()
-                {
-                    Id = user.Id,
-                    UserName = user.UserName,
-                    Email = user.Email,
-                    Roles = [.. (await _userManager.GetRolesAsync(user))]
-                };
+                var userInfo = await ConvertAppUserToUserInfo(user);
 
                 await GenerateTokens(userInfo, responseInfo);
+                _messageBusPublisher.PublishMessage(EventTypes.UserCreated, userInfo);
+                _messageBusPublisher.PublishMessage(EventTypes.UserLastLoginUpdated, new
+                {
+                    UserId = userInfo.Id,
+                    LastLogin = DateTimeOffset.Now
+                });
+
                 _logger.LogInformation("[AuthService][{MethodName}] End", methodName);
                 return responseInfo;
             }
@@ -313,6 +319,7 @@ namespace AuthService.Services.Auth
                 responseInfo.Message = "Login success!";
                 responseInfo.Data.Add("userRegister", user);
 
+                await PublishUserCreated(user.Id);
                 _logger.LogInformation("[AuthService][SignUp] End");
                 return responseInfo;
             }
@@ -343,6 +350,12 @@ namespace AuthService.Services.Auth
                     responseInfo.StatusCode = StatusCodes.Status400BadRequest;
                     responseInfo.Message = confirmResult.Errors.Select(e => e.Description).Aggregate((a, b) => $"{a}\n{b}");
                 }
+
+                _messageBusPublisher.PublishMessage(EventTypes.UserActivated, new
+                {
+                    UserId = user.Id,
+                    IsActive = true
+                });
 
                 _logger.LogInformation("[AuthService][ConfirmAccount] End");
                 return responseInfo;
@@ -407,7 +420,8 @@ namespace AuthService.Services.Auth
                 UserName = payLoad.Email.Split('@')[0],
                 FirstName = payLoad.GivenName,
                 LastName = payLoad.FamilyName,
-                AvatarURL = payLoad.Picture
+                AvatarURL = payLoad.Picture,
+                IsActive = true
             };
 
             var result = await _userManager.CreateAsync(user);
@@ -426,6 +440,22 @@ namespace AuthService.Services.Auth
             }
         }
 
+        private async Task<UserInfo> ConvertAppUserToUserInfo(ApplicationUser user)
+        {
+            return new UserInfo()
+            {
+                Id = user.Id,
+                UserName = user.UserName,
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                AvatarUrl = user.AvatarURL,
+                CreatedAt = DateTimeOffset.Now,
+                Roles = [.. (await _userManager.GetRolesAsync(user))],
+                IsActive = user.IsActive
+            };
+        }
+
         private async Task CreateUserFromExternalPayload(ExternalUserInfo externalUserInfo, string provider,
             string role = null)
         {
@@ -435,7 +465,8 @@ namespace AuthService.Services.Auth
                 UserName = externalUserInfo.Email.Split('@')[0],
                 FirstName = externalUserInfo.FirstName,
                 LastName = externalUserInfo.LastName,
-                AvatarURL = externalUserInfo.Picture
+                AvatarURL = externalUserInfo.Picture,
+                IsActive = true
             };
 
             var result = await _userManager.CreateAsync(user);
@@ -447,6 +478,14 @@ namespace AuthService.Services.Auth
 
             await _userManager.AddToRoleAsync(user, role ?? "Student");
             await _userManager.AddLoginAsync(user, new UserLoginInfo(provider, externalUserInfo.Email, provider));
+        }
+
+        private async Task PublishUserCreated(int userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId: userId.ToString());
+            var userCreatedEventData = await ConvertAppUserToUserInfo(user);
+
+            _messageBusPublisher.PublishMessage(EventTypes.UserCreated, userCreatedEventData);
         }
     }
 }
