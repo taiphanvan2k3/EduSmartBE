@@ -39,43 +39,40 @@ namespace UserService.Databases
 
         public DbSet<User> Users { get; set; }
         public DbSet<UserInfo> UserInfos { get; set; }
+        public DbSet<UserRole> UserRoles { get; set; }
+        public DbSet<Role> Roles { get; set; }
 
         public override int SaveChanges()
         {
-            SetDateTimeToUtc();
+            SetDateTimeOffsetsToUtc();
             return base.SaveChanges();
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            SetDateTimeToUtc();
+            SetDateTimeOffsetsToUtc();
             return base.SaveChangesAsync(cancellationToken);
         }
 
-        // Hàm để chuyển đổi DateTime thành UTC cho User entity
-        private void SetDateTimeToUtc()
+        /// <summary>
+        /// Because PostgreSQL does not allow DateTimeOffsets with non-UTC time zones, we need to convert all DateTimeOffsets 
+        /// to UTC before saving them to the database.
+        /// </summary>
+        private void SetDateTimeOffsetsToUtc()
         {
             foreach (var entry in ChangeTracker.Entries()
-                .Where(e => e.Entity is User && (e.State == EntityState.Added || e.State == EntityState.Modified)))
+                .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified))
             {
-                var entity = (User)entry.Entity;
+                var properties = entry.Entity.GetType().GetProperties()
+                    .Where(p => p.PropertyType == typeof(DateTimeOffset) || p.PropertyType == typeof(DateTimeOffset?));
 
-                if (entity.LastLogin.Kind == DateTimeKind.Unspecified)
+                foreach (var prop in properties)
                 {
-                    entity.LastLogin = DateTime.SpecifyKind(entity.LastLogin, DateTimeKind.Utc);
-                }
-                else
-                {
-                    entity.LastLogin = entity.LastLogin.ToUniversalTime();
-                }
-
-                if (entity.LastLogout.Kind == DateTimeKind.Unspecified)
-                {
-                    entity.LastLogout = DateTime.SpecifyKind(entity.LastLogout, DateTimeKind.Utc);
-                }
-                else
-                {
-                    entity.LastLogout = entity.LastLogout.ToUniversalTime();
+                    var value = (DateTimeOffset?)prop.GetValue(entry.Entity);
+                    if (value.HasValue)
+                    {
+                        prop.SetValue(entry.Entity, value.Value.ToUniversalTime());
+                    }
                 }
             }
         }

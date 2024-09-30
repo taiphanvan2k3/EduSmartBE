@@ -7,7 +7,8 @@ namespace UserService.Services
     {
         protected readonly DataContext _context;
         protected ILogger _logger;
-
+        protected static string GetActualAsyncMethodName([CallerMemberName] string name = null) => name;
+        
         public BaseService() { }
 
         public BaseService(IServiceProvider serviceProvider)

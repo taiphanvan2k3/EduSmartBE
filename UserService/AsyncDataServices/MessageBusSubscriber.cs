@@ -78,17 +78,17 @@ namespace UserService.AsyncDataServices
                 stoppingToken.ThrowIfCancellationRequested();
 
                 var consumer = new EventingBasicConsumer(_channel);
-                consumer.Received += (ModuleHandle, ea) =>
+                consumer.Received += (ModuleHandle, eventArgs) =>
                 {
                     Console.WriteLine("--> Event received");
 
-                    var body = ea.Body;
+                    var body = eventArgs.Body;
                     Console.WriteLine("[UserService] [MessageBusSubscriber] [ExecuteAsync] [body]: " + body);
                     var notificationMessage = Encoding.UTF8.GetString(body.ToArray());
                     Console.WriteLine("[UserService] [MessageBusSubscriber] [ExecuteAsync] [notificationMessage]: " + notificationMessage);
 
                     _eventProcessor.ProcessEvent(notificationMessage);
-                    _channel.BasicAck(ea.DeliveryTag, multiple: false);
+                    _channel.BasicAck(eventArgs.DeliveryTag, multiple: false);
                 };
 
                 _channel.BasicConsume(queue: _queueName, autoAck: false, consumer: consumer);

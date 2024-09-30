@@ -2,7 +2,7 @@ namespace UserService.Services.Users.Schemas
 {
     public class UserInfo
     {
-        public string UserId { get; set; }
+        public int UserId { get; set; }
 
         public string FirstName { get; set; }
 
