@@ -1,7 +1,6 @@
-using System.Text.Json;
 using AutoMapper;
-using UserService.Databases.Schemas;
-using UserService.Dtos;
+using Newtonsoft.Json;
+using UserService.EventData;
 using UserService.Services.Users;
 using UserService.Services.Users.Schemas;
 
@@ -9,91 +8,53 @@ namespace UserService.EventProcessing
 {
     public interface IEventProcessor
     {
-        void ProcessEvent(string message);
+        /// <summary>
+        /// Process the event of RabbitMQ
+        /// <para>Author1: ManhTD</para>
+        /// <para>Author2: TaiPV</para>
+        /// <para>Created: 19/09/2024</para>
+        /// <para>Updated: 29/09/2024</para>
+        /// </summary>
+        /// <returns></returns>
+        Task ProcessEvent(string message);
     }
 
-    public class EventProcessor : IEventProcessor
+    public partial class EventProcessor(IServiceScopeFactory serviceScopeFactory, IMapper mapper) : IEventProcessor
     {
-        private readonly IServiceScopeFactory _serviceScopeFactory;
-        private readonly IMapper _mapper;
-        public EventProcessor(IServiceScopeFactory serviceScopeFactory, IMapper mapper)
-        {
-            _serviceScopeFactory = serviceScopeFactory;
-            _mapper = mapper;
-        }
+        private readonly IServiceScopeFactory _serviceScopeFactory = serviceScopeFactory
+            ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
 
-        public void ProcessEvent(string message)
-        {
-            var eventType = DetermineEvent(message);
+        private readonly IMapper _mapper = mapper
+            ?? throw new ArgumentNullException(nameof(mapper));
 
-            switch (eventType)
-            {
-                case EventType.UserPublished:
-                    AddUser(message);
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        private static EventType DetermineEvent(string notifcationMessage)
-        {
-            Console.WriteLine("--> Determining Event");
-
-            var options = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true // Cho phép không phân biệt chữ hoa và chữ thường
-            };
-
-            var eventType = JsonSerializer.Deserialize<GenericEventDto>(notifcationMessage, options);
-
-            switch (eventType.Type)
-            {
-                case "UserCreatedEvent":
-                    Console.WriteLine("--> User Published Event Detected");
-                    return EventType.UserPublished;
-                default:
-                    Console.WriteLine("--> Could not determine the event type");
-                    return EventType.Undetermined;
-            }
-        }
-
-        private async void AddUser(string userPublishedMessage)
+        public async Task ProcessEvent(string payload)
         {
             try
             {
-                var userPublishedDto = JsonSerializer.Deserialize<UserPublishedDto>(
-                    JsonDocument.Parse(userPublishedMessage).RootElement.GetProperty("data").ToString());
-
-                // Chuyển đổi chuỗi CreateAt thành DateTime
-                DateTime createAt;
-                if (DateTime.TryParseExact(userPublishedDto.CreateAt, 
-                                        "yyyy-MM-dd HH:mm:ss", 
-                                        System.Globalization.CultureInfo.InvariantCulture, 
-                                        System.Globalization.DateTimeStyles.None, 
-                                        out createAt))
+                var decodePayload = JsonConvert.DeserializeObject<MessagePayload<dynamic>>(payload);
+                switch (decodePayload.Type)
                 {
-                    var user = _mapper.Map<UserDto>(userPublishedDto);
-                    using (var scope = _serviceScopeFactory.CreateScope())
-                    {
-                        var _userService = scope.ServiceProvider.GetRequiredService<IUserService>();
-                        await _userService.AddUser(user);
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("--> Invalid DateTime format in CreateAt");
+                    case EventType.UserCreated:
+                        var userPublished = JsonConvert.DeserializeObject<UserCreatedEventData>(decodePayload.Data.ToString());
+                        await AddUser(userPublished);
+                        break;
+                    case EventType.UserActivated:
+                        var userActivated = JsonConvert.DeserializeObject<UserActivatedEventData>(decodePayload.Data.ToString());
+                        await UpdateActiveStatus(userActivated);
+                        break;
+                    case EventType.UserLastLoginUpdated:
+                        var userLastLoginUpdated = JsonConvert.DeserializeObject<UserLastLoginUpdatedEventData>(decodePayload.Data.ToString());
+                        await UpdateLastLogin(userLastLoginUpdated);
+                        break;
+                    default:
+                        break;
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine($"--> Could not add user to database: {e.Message}");
+                Console.WriteLine($"--> Could not process event: {e.Message}");
+                throw;
             }
         }
-    }
-    enum EventType
-    {
-        UserPublished,
-        Undetermined
     }
 }

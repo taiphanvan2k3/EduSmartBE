@@ -12,7 +12,7 @@ namespace UserService.Databases.InitDb
         public async Task Initialize()
         {
             _context.Database.EnsureCreated();
-            await SeedDataDefault(_context);
+            await SeedDataDefault();
         }
     }
 }
