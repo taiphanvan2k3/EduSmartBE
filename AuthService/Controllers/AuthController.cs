@@ -1,20 +1,17 @@
 using AuthService.AsyncDataServices;
 using AuthService.Commons;
-using AuthService.Dtos;
 using AuthService.Services.Auth;
 using AuthService.Services.Auth.Schemas;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace AuthService.Controllers
 {
     [Route("api/auth")]
     [ApiController]
-    public class AuthController(IAuthService authService, ITokenService tokenService, IMessagePublisher messageBusPublisher) : ControllerBase
+    public class AuthController(IAuthService authService, ITokenService tokenService) : ControllerBase
     {
         private readonly IAuthService _authService = authService ?? throw new ArgumentNullException(nameof(authService));
         private readonly ITokenService _tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
-        private readonly IMessagePublisher _messageBusPublisher = messageBusPublisher ?? throw new ArgumentNullException(nameof(messageBusPublisher));
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
@@ -271,16 +268,6 @@ namespace AuthService.Controllers
             var response = await _authService.SignUp(request);
             if (response.StatusCode == StatusCodes.Status201Created)
             {
-                var userRegister = response.Data["userRegister"];
-
-                _messageBusPublisher.PublishMessage(EventTypes.UserCreated, new UserCreatedDto
-                {
-                    UserId = userRegister.Id.ToString(),
-                    Email = userRegister.Email,
-                    UserName = userRegister.UserName,
-                    CreateAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
-                });
-
                 return Ok(new
                 {
                     status = true

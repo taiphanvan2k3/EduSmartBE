@@ -4,18 +4,28 @@ namespace UserService.Databases.Schemas
 {
     public class User
     {
-        [MaxLength(20)]
-        public string Id { get; set; }
+        public int Id { get; set; }
 
         [MaxLength(100)]
+        [Required]
         public string UserName { get; set; }
 
-        public DateTime LastLogin { get; set; }
-
-        public DateTime LastLogout { get; set; }
+        [MaxLength(100)]
+        [Required]
+        public string Email { get; set; }
 
         public bool IsOnline { get; set; }
 
         public bool IsActive { get; set; }
+
+        public DateTimeOffset CreatedAt { get; set; }
+
+        public DateTimeOffset? LastLogin { get; set; }
+
+        public DateTimeOffset? LastLogout { get; set; }
+
+        public virtual UserInfo UserInfo { get; set; }
+
+        public virtual ICollection<UserRole> UserRoles { get; set; }
     }
 }
