@@ -1,4 +1,5 @@
 using System.Data.Common;
+using System.Reflection;
 using System.Text;
 using AuthService.Commons;
 using AuthService.Databases;
@@ -68,7 +69,7 @@ namespace AuthService.Extensions
 
             // TODO: Cấu hình thời gian sống cho từng loại token thay vì dùng toàn bộ 10 phút
             services.Configure<DataProtectionTokenProviderOptions>(options =>
-                options.TokenLifespan = TimeSpan.FromMinutes(10));  
+                options.TokenLifespan = TimeSpan.FromMinutes(10));
 
             return services;
         }
@@ -104,7 +105,7 @@ namespace AuthService.Extensions
         {
             services.AddSwaggerGen(opt =>
             {
-                opt.SwaggerDoc("v1", new OpenApiInfo { Title = "AuthService", Version = "v1" });
+                opt.SwaggerDoc("v1", new OpenApiInfo { Title = "AuthService", Version = "v1", Description = "API for AuthService" });
 
                 opt.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, new OpenApiSecurityScheme()
                 {
@@ -118,6 +119,11 @@ namespace AuthService.Extensions
 
                 // Chỉ hiển thị lock icon cho các API cần xác thực
                 opt.OperationFilter<AuthenticationRequirementOperationFilter>();
+
+                // Configure để hiển thị chú thích
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                opt.IncludeXmlComments(xmlPath);
             });
 
             return services;

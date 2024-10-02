@@ -1,0 +1,36 @@
+.swagger-ui .topbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000000;
+}
+
+.swagger-ui .swagger-ui {
+    margin-top: 100px
+}
+
+.swagger-ui .dialog-ux .modal-ux-content p {
+    word-break: break-word;
+}
+
+.swagger-ui .auth-container input[type=password],
+.swagger-ui .auth-container input[type=text] {
+    width: 100%;
+}
+
+.swagger-ui .opblock .opblock-summary-description {
+    flex: 1;
+    text-align: right;
+}
+
+.swagger-ui .topbar .download-url-wrapper .logout-url-button {
+    background: #62a03f;
+    border: none;
+    border-radius: 4px 4px;
+    color: #fff;
+    font-family: sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 4px 30px;
+    margin-left: 5px;
+}
