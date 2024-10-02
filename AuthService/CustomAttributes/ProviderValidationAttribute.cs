@@ -2,6 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace AuthService.CustomAttributes
 {
+    // AllowMultiple = false means that this attribute can only be used once on a property or field.
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
     public class ProviderValidationAttribute(params string[] validProviders) : ValidationAttribute
     {
         private readonly string[] _validProviders = validProviders;

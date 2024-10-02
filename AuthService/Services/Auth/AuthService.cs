@@ -55,7 +55,7 @@ namespace AuthService.Services.Auth
         /// <para>Author: TaiPV</para>
         /// <para>Created at: 29/08/2024</para>
         /// </summary>
-        /// <param name="loginRequest"></param>
+        /// <param name="signUpRequest"></param>
         /// <returns></returns>
         public Task<ResponseInfo> SignUp(SignUpRequest signUpRequest);
 
