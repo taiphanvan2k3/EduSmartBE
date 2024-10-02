@@ -15,7 +15,8 @@ namespace AuthService.Services.Permission
         /// <para>Author: TaiPV</para>
         /// <para>Created at: 07/09/2024</para>
         /// </summary>
-        /// <param name="roleId">Id of Admin or teacher or student or assistant</param>
+        /// <param name="currentRoleNames">Current role names in token</param>
+        /// <param name="requestRoleId">Role id from parameters to get permission</param>
         /// <returns></returns>
         public Task<ResponseInfo> GetListOfPermissionsByRole(string currentRoleNames, int requestRoleId);
 
