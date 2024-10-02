@@ -29,5 +29,5 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         updateDescriptions();
-    }, 200);
+    }, 500);
 });
