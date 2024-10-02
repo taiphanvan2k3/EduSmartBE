@@ -13,6 +13,13 @@ namespace AuthService.Controllers
         private readonly IAuthService _authService = authService ?? throw new ArgumentNullException(nameof(authService));
         private readonly ITokenService _tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
 
+        /// <summary>
+        /// Login with UserName or Email and Password
+        /// <para>Created at: 2024/09/05</para>
+        /// <para>Created by: TaiPV</para> 
+        /// </summary>
+        /// <param name="request">Information is need for login</param>
+        /// <returns></returns>
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
@@ -68,7 +75,9 @@ namespace AuthService.Controllers
         }
 
         /// <summary>
-        /// This function is used if the client side is using built-in Google Sign-In button
+        /// Login google with IdToken
+        /// <para>Created at: 2024/09/22</para>
+        /// <para>Created by: TaiPV</para> 
         /// </summary>
         /// <param name="request">IdToken which is contains user info from Google</param>
         /// <returns></returns>
@@ -119,8 +128,9 @@ namespace AuthService.Controllers
         }
 
         /// <summary>
-        /// This function is used if the client side is using custom Google Sign-In button
-        /// Server will receive the code from client side and exchange it for access token
+        /// Login google with authorization code. It will be used to get IdToken
+        /// <para>Created at: 2024/09/22</para>
+        /// <para>Created by: TaiPV</para> 
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
