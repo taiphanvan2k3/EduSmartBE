@@ -34,3 +34,8 @@
     padding: 4px 30px;
     margin-left: 5px;
 }
+
+.swagger-ui .markdown code,
+.swagger-ui .renderedMarkdown code {
+    color: blue;
+}
