@@ -142,7 +142,7 @@ namespace AuthService.Controllers
         }
 
         /// <summary>
-        /// Login google with IdToken
+        /// Login google with IdToken (JWT)
         /// <para>Created at: 2024/09/22</para>
         /// <para>Created by: TaiPV</para> 
         /// </summary>
@@ -150,7 +150,7 @@ namespace AuthService.Controllers
         /// <remarks>
         /// Note:
         /// 
-        ///     DO NOT PASS Code!!!
+        ///     DO NOT PASS the Code paramter!!!
         ///
         /// </remarks>
         /// <response code="200">
@@ -264,7 +264,7 @@ namespace AuthService.Controllers
         /// <remarks>
         /// Note:
         /// 
-        ///     DO NOT IdToken Code!!!
+        ///     DO NOT PASS the IdToken paramter!!!
         ///
         /// </remarks>
         /// <response code="200">
@@ -370,7 +370,7 @@ namespace AuthService.Controllers
         }
 
         /// <summary>
-        /// Login google with user info from Google
+        /// Login google with user info from Google (The request data structure is below)
         /// <para>Created at: 2024/09/24</para>
         /// <para>Created by: TaiPV</para> 
         /// </summary>
