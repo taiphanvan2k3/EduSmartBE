@@ -593,29 +593,47 @@ namespace AuthService.Controllers
         /// <param name="request">Contains user registration information</param>
         /// <returns></returns>
         /// <remarks>
+        /// Role
+        /// 
+        ///     1 - Admin. But you cannot pass this role
+        ///     2 - Teacher
+        ///     3 - Student
         /// Code
         /// 
-        ///     201 - User created successfully
+        ///     200 - User created successfully
         ///     400 - Error during signup
         /// </remarks>
-        /// <response code="201">
+        /// <response code="200">
         /// Success
         /// 
         ///     {
-        ///         "status": true
+        ///         "message": "Signup successfully"
         ///     }
         /// </response>
         /// <response code="400">
         /// Validate error
         /// 
         ///     {
-        ///         "status": false,
         ///         "message": "Error message explaining why signup failed"
         ///     }
         /// </response>
         [HttpPost("signup")]
         public async Task<IActionResult> SignUp([FromBody] SignUpRequest request)
         {
+            if (!ModelState.IsValid || request.Role == Role.Admin)
+            {
+                var modelStateErrors = ModelState.Values.SelectMany(x => x.Errors).Select(x => x.ErrorMessage).ToList();
+                if (request.Role == Role.Admin)
+                {
+                    modelStateErrors.Add("Create account with Admin role is not allowed");
+                }
+
+                return BadRequest(new
+                {
+                    message = modelStateErrors
+                });
+            }
+
             var response = await _authService.SignUp(request);
             if (response.StatusCode == StatusCodes.Status201Created)
             {
@@ -626,7 +644,6 @@ namespace AuthService.Controllers
             }
             return BadRequest(new
             {
-                status = false,
                 message = response.Message
             });
         }
