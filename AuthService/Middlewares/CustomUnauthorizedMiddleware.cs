@@ -22,8 +22,9 @@ namespace AuthService.Middlewares
                 context.Response.ContentType = "application/json";
                 var response = new
                 {
+                    statusCode = 401,
+                    error = "Unauthorized",
                     message = "You need to be authenticated to access this resource.",
-                    statusCode = 401
                 };
                 await context.Response.WriteAsync(JsonSerializer.Serialize(response));
             }
@@ -32,8 +33,9 @@ namespace AuthService.Middlewares
                 context.Response.ContentType = "application/json";
                 var response = new
                 {
+                    statusCode = 403,
+                    error = "Forbidden",
                     message = "You are not authorized to access this resource.",
-                    statusCode = 403
                 };
                 await context.Response.WriteAsync(JsonSerializer.Serialize(response));
             }

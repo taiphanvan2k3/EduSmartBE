@@ -1,4 +1,5 @@
 using AuthService.Commons;
+using AuthService.Commons.Helpers;
 using AuthService.Enumerations;
 using AuthService.Services.Auth;
 using AuthService.Services.Auth.Schemas;
@@ -36,7 +37,7 @@ namespace AuthService.Controllers
         /// 
         ///     {
         ///         "userInfo": {
-        ///             id": 2003,
+        ///             id: 2003,
         ///             "userName": "userName",
         ///             "email": "email",
         ///             "firstName": "firstName",
@@ -44,7 +45,7 @@ namespace AuthService.Controllers
         ///             "avatarUrl": avatarUrl,
         ///             "createdAt": "2024-10-02T19:38:40.2021319+07:00",
         ///             "isActive": false,
-        ///             "roles": [ ... ]
+        ///             "roles": [ "Student", "Assistant" ]
         ///         },
         ///         "meta": {
         ///             "accessToken": "refreshToken",
@@ -56,13 +57,17 @@ namespace AuthService.Controllers
         /// Validate error
         /// 
         ///     {
-        ///         "message": "Only one of UserName or Email is required | UserName or Email is required"
+        ///         statusCode: 400,
+        ///         error: "Bad Request",
+        ///         message: "Only one of UserName or Email is required | UserName or Email is required"
         ///     }
         /// </response>
         /// <response code="401">
         /// Validate error
         /// 
         ///     {
+        ///         statusCode: 401,
+        ///         error: "Unauthorized",
         ///         "message": "Invalid login"
         ///     }
         /// </response>
@@ -70,20 +75,26 @@ namespace AuthService.Controllers
         /// Validate error
         /// 
         ///     {
-        ///         "message": "Account is locked out | Account is not allowed | Requires two factor"
+        ///         statusCode: 403,
+        ///         error: "Forbidden",
+        ///         message: "Account is locked out | Account is not allowed | Requires two factor"
         ///     }
         /// </response>
         /// <response code="404">
         /// Validate error
         /// 
         ///     {
-        ///         "message": "User not found"
+        ///         statusCode: 404,
+        ///         error: "InvalidAccount",
+        ///         message: "Username or email not found"
         ///     }
         /// </response>
         /// <response code="500">
         /// Validate error
         /// 
         ///     {
+        ///         statusCode: 500,
+        ///         error: "Internal Server Error",
         ///         "message": "Server error message ..."
         ///     }
         /// </response>
@@ -92,18 +103,12 @@ namespace AuthService.Controllers
         {
             if (!string.IsNullOrEmpty(request.UserName) && !string.IsNullOrEmpty(request.Email))
             {
-                return BadRequest(new
-                {
-                    message = "Only one of UserName or Email is required"
-                });
+                return BadRequest(ErrorResponseHelper.GetContentOfBadRequestResponse("Only one of UserName or Email is required"));
             }
 
             if (string.IsNullOrEmpty(request.UserName) && string.IsNullOrEmpty(request.Email))
             {
-                return BadRequest(new
-                {
-                    message = "UserName or Email is required"
-                });
+                return BadRequest(ErrorResponseHelper.GetContentOfBadRequestResponse("UserName or Email is required"));
             }
 
             try
@@ -127,17 +132,12 @@ namespace AuthService.Controllers
                     });
                 }
 
-                return Unauthorized(new
-                {
-                    message = responseInfo.Message
-                });
+                return StatusCode(responseInfo.StatusCode, ErrorResponseHelper.GetContentOfAnyError(
+                    responseInfo.StatusCode, responseInfo.Error, responseInfo.Message));
             }
             catch (Exception e)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new
-                {
-                    message = e.Message
-                });
+                return StatusCode(StatusCodes.Status500InternalServerError, ErrorResponseHelper.GetContentOfInternalServerResponse(e));
             }
         }
 
@@ -166,7 +166,7 @@ namespace AuthService.Controllers
         ///             "avatarUrl": avatarUrl,
         ///             "createdAt": "2024-10-02T19:38:40.2021319+07:00",
         ///             "isActive": false,
-        ///             "roles": [ ... ]
+        ///             "roles": [ "Student", "Assistant" ]
         ///         },
         ///         "meta": {
         ///             "accessToken": "refreshToken",
@@ -178,6 +178,8 @@ namespace AuthService.Controllers
         /// Validate error
         /// 
         ///     {
+        ///         statusCode: 400,
+        ///         error: "Bad Request",
         ///         "message": "IdToken is required"
         ///     }
         /// </response>
@@ -185,6 +187,8 @@ namespace AuthService.Controllers
         /// Validate error
         /// 
         ///     {
+        ///         statusCode: 401,
+        ///         error: "Unauthorized",
         ///         "message": "Invalid login"
         ///     }
         /// </response>
@@ -192,6 +196,8 @@ namespace AuthService.Controllers
         /// Validate error
         /// 
         ///     {
+        ///         statusCode: 403,
+        ///         error: "Forbidden",
         ///         "message": "Account is locked out | Account is not allowed | Requires two factor"
         ///     }
         /// </response>
@@ -199,6 +205,8 @@ namespace AuthService.Controllers
         /// Validate error
         /// 
         ///     {
+        ///         statusCode: 404,
+        ///         error: "....",
         ///         "message": "User not found"
         ///     }
         /// </response>
@@ -206,6 +214,8 @@ namespace AuthService.Controllers
         /// Validate error
         /// 
         ///     {
+        ///         statusCode: 500,
+        ///         error: "Internal Server Error",
         ///         "message": "Server error message ..."
         ///     }
         /// </response>
@@ -214,10 +224,12 @@ namespace AuthService.Controllers
         {
             if (string.IsNullOrEmpty(request.IdToken))
             {
-                return BadRequest(new
-                {
-                    message = "IdToken is required"
-                });
+                return BadRequest(ErrorResponseHelper.GetContentOfBadRequestResponse("IdToken is required"));
+            }
+
+            if (!string.IsNullOrEmpty(request.Code))
+            {
+                return BadRequest(ErrorResponseHelper.GetContentOfBadRequestResponse("Passing Code is not allowed"));
             }
 
             try
@@ -241,17 +253,26 @@ namespace AuthService.Controllers
                     });
                 }
 
-                return Unauthorized(new
+                if (responseInfo.StatusCode == StatusCodes.Status409Conflict)
                 {
-                    message = responseInfo.Message
-                });
+                    var userInfo = responseInfo.Data.TryGetValue("userInfo", out dynamic value)
+                        ? value : new { error = "Cannot get user info from your JWT" };
+
+                    return StatusCode(responseInfo.StatusCode, new
+                    {
+                        statusCode = responseInfo.StatusCode,
+                        error = responseInfo.Error,
+                        message = responseInfo.Message,
+                        userInfo
+                    });
+                }
+
+                return StatusCode(responseInfo.StatusCode, ErrorResponseHelper.GetContentOfAnyError(
+                    responseInfo.StatusCode, responseInfo.Error, responseInfo.Message));
             }
             catch (Exception e)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new
-                {
-                    message = e.Message
-                });
+                return StatusCode(StatusCodes.Status500InternalServerError, ErrorResponseHelper.GetContentOfInternalServerResponse(e));
             }
         }
 
@@ -280,7 +301,7 @@ namespace AuthService.Controllers
         ///             "avatarUrl": avatarUrl,
         ///             "createdAt": "2024-10-02T19:38:40.2021319+07:00",
         ///             "isActive": false,
-        ///             "roles": [ ... ]
+        ///             "roles": [ "Student", "Assistant" ]
         ///         },
         ///         "meta": {
         ///             "accessToken": "refreshToken",
@@ -292,6 +313,8 @@ namespace AuthService.Controllers
         /// Validate error
         /// 
         ///     {
+        ///         statusCode: 400,
+        ///         error: "Bad Request",
         ///         "message": "Code is required"
         ///     }
         /// </response>
@@ -299,6 +322,8 @@ namespace AuthService.Controllers
         /// Validate error
         /// 
         ///     {
+        ///         statusCode: 401,
+        ///         error: "Unauthorized",
         ///         "message": "Invalid login"
         ///     }
         /// </response>
@@ -306,6 +331,8 @@ namespace AuthService.Controllers
         /// Validate error
         /// 
         ///     {
+        ///         statusCode: 403,
+        ///         error: "Forbidden",
         ///         "message": "Account is locked out | Account is not allowed | Requires two factor"
         ///     }
         /// </response>
@@ -313,6 +340,8 @@ namespace AuthService.Controllers
         /// Validate error
         /// 
         ///     {
+        ///         statusCode: 404,
+        ///         error: "....",
         ///         "message": "User not found"
         ///     }
         /// </response>
@@ -320,6 +349,8 @@ namespace AuthService.Controllers
         /// Validate error
         /// 
         ///     {
+        ///         statusCode: 500,
+        ///         error: "Internal Server Error",
         ///         "message": "Server error message ..."
         ///     }
         /// </response>
@@ -328,10 +359,12 @@ namespace AuthService.Controllers
         {
             if (string.IsNullOrEmpty(request.Code))
             {
-                return BadRequest(new
-                {
-                    message = "Code is required"
-                });
+                return BadRequest(ErrorResponseHelper.GetContentOfBadRequestResponse("Code is required"));
+            }
+
+            if (!string.IsNullOrEmpty(request.IdToken))
+            {
+                return BadRequest(ErrorResponseHelper.GetContentOfBadRequestResponse("Passing IdToken is not allowed"));
             }
 
             try
@@ -355,17 +388,26 @@ namespace AuthService.Controllers
                     });
                 }
 
-                return Unauthorized(new
+                if (responseInfo.StatusCode == StatusCodes.Status409Conflict)
                 {
-                    message = responseInfo.Message
-                });
+                    var userInfo = responseInfo.Data.TryGetValue("userInfo", out dynamic value)
+                        ? value : new { error = "Cannot get user info from your authorization code" };
+
+                    return StatusCode(responseInfo.StatusCode, new
+                    {
+                        statusCode = responseInfo.StatusCode,
+                        error = responseInfo.Error,
+                        message = responseInfo.Message,
+                        userInfo
+                    });
+                }
+
+                return StatusCode(responseInfo.StatusCode, ErrorResponseHelper.GetContentOfAnyError(
+                    responseInfo.StatusCode, responseInfo.Error, responseInfo.Message));
             }
             catch (Exception e)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new
-                {
-                    message = e.Message
-                });
+                return StatusCode(StatusCodes.Status500InternalServerError, ErrorResponseHelper.GetContentOfInternalServerResponse(e));
             }
         }
 
@@ -396,7 +438,7 @@ namespace AuthService.Controllers
         ///             "avatarUrl": avatarUrl,
         ///             "createdAt": "2024-10-02T19:38:40.2021319+07:00",
         ///             "isActive": false,
-        ///             "roles": [ ... ]
+        ///             "roles": [ "Student", "Assistant" ]
         ///         },
         ///         "meta": {
         ///             "accessToken": "refreshToken",
@@ -408,6 +450,8 @@ namespace AuthService.Controllers
         /// Validate error
         /// 
         ///     {
+        ///         statusCode: 400,
+        ///         error: "Bad Request",
         ///         "message": "Provider must be one of the following ..."
         ///     }
         /// </response>
@@ -415,6 +459,8 @@ namespace AuthService.Controllers
         /// Validate error
         /// 
         ///     {
+        ///         statusCode: 401,
+        ///         error: "Unauthorized",
         ///         "message": "Invalid login"
         ///     }
         /// </response>
@@ -422,6 +468,8 @@ namespace AuthService.Controllers
         /// Validate error
         /// 
         ///     {
+        ///         statusCode: 403,
+        ///         error: "Forbidden",
         ///         "message": "Account is locked out | Account is not allowed | Requires two factor"
         ///     }
         /// </response>
@@ -429,6 +477,8 @@ namespace AuthService.Controllers
         /// Validate error
         /// 
         ///     {
+        ///         statusCode: 404,
+        ///         error: "....",
         ///         "message": "User not found"
         ///     }
         /// </response>
@@ -436,6 +486,8 @@ namespace AuthService.Controllers
         /// Validate error
         /// 
         ///     {
+        ///         statusCode: 500,
+        ///         error: "Internal Server Error",
         ///         "message": "Server error message ..."
         ///     }
         /// </response>
@@ -444,18 +496,14 @@ namespace AuthService.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(new
-                {
-                    message = ModelState.Values.SelectMany(x => x.Errors).Select(x => x.ErrorMessage).ToList()
-                });
+                return BadRequest(ErrorResponseHelper.GetContentOfBadRequestResponse(
+                    ModelState.Values.SelectMany(x => x.Errors)
+                        .Select(x => x.ErrorMessage).ToList()));
             }
 
             if (request.UserInfo.Role == Role.Admin)
             {
-                return BadRequest(new
-                {
-                    message = "You cannot pass Admin role"
-                });
+                return BadRequest(ErrorResponseHelper.GetContentOfBadRequestResponse("Create account with Admin role is not allowed"));
             }
 
             try
@@ -479,17 +527,12 @@ namespace AuthService.Controllers
                     });
                 }
 
-                return Unauthorized(new
-                {
-                    message = responseInfo.Message
-                });
+                return StatusCode(responseInfo.StatusCode, ErrorResponseHelper.GetContentOfAnyError(
+                    responseInfo.StatusCode, responseInfo.Error, responseInfo.Message));
             }
             catch (Exception e)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new
-                {
-                    message = e.Message
-                });
+                return StatusCode(StatusCodes.Status500InternalServerError, ErrorResponseHelper.GetContentOfInternalServerResponse(e));
             }
         }
 
@@ -522,6 +565,8 @@ namespace AuthService.Controllers
         /// Validate error
         /// 
         ///     {
+        ///         statusCode: 400,
+        ///         error: "Bad Request",
         ///         "message": "RefreshToken is required"
         ///     }
         /// </response>
@@ -529,6 +574,8 @@ namespace AuthService.Controllers
         /// Validate error
         /// 
         ///     {
+        ///         statusCode: 401,
+        ///         error: "Unauthorized",
         ///         "message": "Refresh token is invalid"
         ///     }
         /// </response>
@@ -536,6 +583,8 @@ namespace AuthService.Controllers
         /// Server error
         /// 
         ///     {
+        ///         statusCode: 500,
+        ///         error: "Internal Server Error",
         ///         "message": "Server error message ..."
         ///     }
         /// </response>
@@ -544,10 +593,7 @@ namespace AuthService.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(new
-                {
-                    message = "RefreshToken is required"
-                });
+                return BadRequest(ErrorResponseHelper.GetContentOfBadRequestResponse("RefreshToken is required"));
             }
 
             try
@@ -571,17 +617,12 @@ namespace AuthService.Controllers
                     });
                 }
 
-                return Unauthorized(new
-                {
-                    message = responseInfo.Message
-                });
+                return StatusCode(responseInfo.StatusCode, ErrorResponseHelper.GetContentOfAnyError(
+                    responseInfo.StatusCode, responseInfo.Error, responseInfo.Message));
             }
             catch (Exception e)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new
-                {
-                    message = e.Message
-                });
+                return StatusCode(StatusCodes.Status500InternalServerError, ErrorResponseHelper.GetContentOfInternalServerResponse(e));
             }
         }
 
@@ -614,6 +655,7 @@ namespace AuthService.Controllers
         /// Validate error
         /// 
         ///     {
+        ///         statusCode: 400,
         ///         "message": "Error message explaining why signup failed"
         ///     }
         /// </response>
@@ -628,24 +670,27 @@ namespace AuthService.Controllers
                     modelStateErrors.Add("Create account with Admin role is not allowed");
                 }
 
-                return BadRequest(new
-                {
-                    message = modelStateErrors
-                });
+                return StatusCode(400, ErrorResponseHelper.GetContentOfBadRequestResponse(modelStateErrors));
             }
 
-            var response = await _authService.SignUp(request);
-            if (response.StatusCode == StatusCodes.Status201Created)
+            try
             {
-                return Ok(new
+                var response = await _authService.SignUp(request);
+                if (response.StatusCode == StatusCodes.Status201Created)
                 {
-                    message = "Signup successfully"
-                });
+                    return Ok(new
+                    {
+                        message = "Signup successfully"
+                    });
+                }
+
+                return StatusCode(response.StatusCode, ErrorResponseHelper.GetContentOfAnyError(
+                    response.StatusCode, response.Error, response.Message));
             }
-            return BadRequest(new
+            catch (Exception e)
             {
-                message = response.Message
-            });
+                return StatusCode(StatusCodes.Status500InternalServerError, ErrorResponseHelper.GetContentOfInternalServerResponse(e));
+            }
         }
 
         /// <summary>
@@ -674,6 +719,8 @@ namespace AuthService.Controllers
         /// Validate error
         /// 
         ///     {
+        ///         "statusCode": 400,
+        ///         "error": "Bad Request",
         ///         "message": "Token and Email are required | Error message explaining why confirmation failed"
         ///     }
         /// </response>
@@ -681,6 +728,8 @@ namespace AuthService.Controllers
         /// Server error
         /// 
         ///     {
+        ///         "statusCode": 500,
+        ///         "error": "Internal Server Error",
         ///         "message": "Server error message ..."
         ///     }
         /// </response>
@@ -689,10 +738,7 @@ namespace AuthService.Controllers
         {
             if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(userId))
             {
-                return BadRequest(new
-                {
-                    message = "Token and Email are required"
-                });
+                return BadRequest(ErrorResponseHelper.GetContentOfBadRequestResponse("Token and Email are required"));
             }
 
             try
@@ -706,17 +752,12 @@ namespace AuthService.Controllers
                     });
                 }
 
-                return BadRequest(new
-                {
-                    message = response.Message
-                });
+                return StatusCode(response.StatusCode, ErrorResponseHelper.GetContentOfAnyError(
+                    response.StatusCode, response.Error, response.Message));
             }
             catch (Exception e)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new
-                {
-                    message = e.Message
-                });
+                return StatusCode(StatusCodes.Status500InternalServerError, ErrorResponseHelper.GetContentOfInternalServerResponse(e));
             }
         }
     }
