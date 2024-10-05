@@ -104,24 +104,24 @@ namespace AuthService.Services.Auth
             {
                 _logger.LogInformation("[AuthService][CheckLogin] Start");
                 var responseInfo = new ResponseInfo();
-                var userName = loginRequest.UserName;
                 var user = await _userManager.FindByEmailAsync(loginRequest.Email)
                     ?? await _userManager.FindByNameAsync(loginRequest.UserName);
 
                 if (user == null)
                 {
                     responseInfo.StatusCode = StatusCodes.Status404NotFound;
-                    responseInfo.Message = "User not found";
+                    responseInfo.Error = "InvalidAccount";
+                    responseInfo.Message = "Username or email not found";
 
                     _logger.LogInformation("[AuthService][CheckLogin] End");
                     return responseInfo;
                 }
-                userName = user.UserName;
 
-                var result = await _signInManager.PasswordSignInAsync(userName, loginRequest.Password, isPersistent: false,
+                var result = await _signInManager.PasswordSignInAsync(user.UserName, loginRequest.Password, isPersistent: false,
                     lockoutOnFailure: false);
                 if (!result.Succeeded)
                 {
+                    responseInfo.Error = "InvalidAccount";
                     if (result.IsLockedOut)
                     {
                         responseInfo.StatusCode = StatusCodes.Status403Forbidden;
@@ -140,7 +140,7 @@ namespace AuthService.Services.Auth
                     else
                     {
                         responseInfo.StatusCode = StatusCodes.Status401Unauthorized;
-                        responseInfo.Message = "Invalid login";
+                        responseInfo.Message = "Password is incorrect";
                     }
 
                     _logger.LogInformation("[AuthService][CheckLogin] End");
@@ -161,7 +161,7 @@ namespace AuthService.Services.Auth
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "CheckLogin");
+                _logger.LogError(e, "[AuthService][CheckLogin][{Error}]", e.InnerException?.Message ?? e.Message);
                 throw;
             }
         }
@@ -175,10 +175,30 @@ namespace AuthService.Services.Auth
                 _logger.LogInformation("[AuthService][{MethodName}] Start", methodName);
                 var payLoad = await GoogleJsonWebSignature.ValidateAsync(googleLoginRequest.IdToken);
 
+                if (payLoad == null)
+                {
+                    responseInfo.StatusCode = StatusCodes.Status401Unauthorized;
+                    responseInfo.Error = "InvalidToken";
+                    responseInfo.Message = "Invalid token";
+                    return responseInfo;
+                }
+
                 var user = await _userManager.FindByEmailAsync(payLoad.Email);
                 if (user == null)
                 {
-                    await CreateUserFromGooglePayload(payLoad, googleLoginRequest.Role.GetDisplayName(), refreshToken);
+                    responseInfo.StatusCode = StatusCodes.Status409Conflict;
+                    responseInfo.Error = "UserNotSignedUp";
+                    responseInfo.Message = "The user has not signed up yet. Additional information is required to complete the registration.";
+                    responseInfo.Data.Add("userInfo", new ExternalUserInfo()
+                    {
+                        Email = payLoad.Email,
+                        FirstName = payLoad.GivenName,
+                        LastName = payLoad.FamilyName,
+                        Picture = payLoad.Picture
+                    });
+
+                    _logger.LogInformation("[AuthService][{MethodName}] End", methodName);
+                    return responseInfo;
                 }
                 else
                 {
@@ -187,13 +207,14 @@ namespace AuthService.Services.Auth
                     if (!isAuthenticatedByGoogle)
                     {
                         // Người dùng đã đăng ký bằng email, không phải google
-                        responseInfo.StatusCode = StatusCodes.Status400BadRequest;
+                        responseInfo.StatusCode = StatusCodes.Status409Conflict;
+                        responseInfo.Error = "EmailInUse";
                         responseInfo.Message = "Email has been used by another method";
                         return responseInfo;
                     }
                 }
 
-                user ??= await _userManager.FindByEmailAsync(payLoad.Email);
+                user = await _userManager.FindByEmailAsync(payLoad.Email);
                 var userInfo = await ConvertAppUserToUserInfo(user);
 
                 await GenerateTokens(userInfo, responseInfo);
@@ -209,7 +230,7 @@ namespace AuthService.Services.Auth
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "[AuthService][{MethodName}][{Error}]", methodName, e.Message);
+                _logger.LogError(e, "[AuthService][{MethodName}][{Error}]", methodName, e.InnerException?.Message ?? e.Message);
                 throw;
             }
         }
@@ -229,7 +250,7 @@ namespace AuthService.Services.Auth
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "[AuthService][{MethodName}][{Error}]", methodName, e.Message);
+                _logger.LogError(e, "[AuthService][{MethodName}][{Error}]", methodName, e.InnerException?.Message ?? e.Message);
                 throw;
             }
         }
@@ -277,7 +298,7 @@ namespace AuthService.Services.Auth
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "[AuthService][{MethodName}][{Error}]", methodName, e.Message);
+                _logger.LogError(e, "[AuthService][{MethodName}][{Error}]", methodName, e.InnerException?.Message ?? e.Message);
                 throw;
             }
         }
@@ -325,7 +346,7 @@ namespace AuthService.Services.Auth
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "[AuthService][SignUp][{Error}]", e.Message);
+                _logger.LogError(e, "[AuthService][SignUp][{Error}]", e.InnerException?.Message ?? e.Message);
                 throw;
             }
         }
@@ -358,16 +379,16 @@ namespace AuthService.Services.Auth
                     UserId = user.Id,
                     IsActive = true
                 });
-                
+
                 user.IsActive = true;
                 await _context.SaveChangesAsync();
-                
+
                 _logger.LogInformation("[AuthService][ConfirmAccount] End");
                 return responseInfo;
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "[AuthService][ConfirmAccount][{Error}]", e.Message);
+                _logger.LogError(e, "[AuthService][ConfirmAccount][{Error}]", e.InnerException?.Message ?? e.Message);
                 throw;
             }
         }
@@ -414,35 +435,6 @@ namespace AuthService.Services.Auth
             });
 
             responseInfo.Data.Add("userInfo", userInfo);
-        }
-
-        private async Task CreateUserFromGooglePayload(GoogleJsonWebSignature.Payload payLoad,
-            string role = null, string refreshToken = null)
-        {
-            var user = new ApplicationUser()
-            {
-                Email = payLoad.Email,
-                UserName = payLoad.Email.Split('@')[0],
-                FirstName = payLoad.GivenName,
-                LastName = payLoad.FamilyName,
-                AvatarURL = payLoad.Picture,
-                IsActive = true
-            };
-
-            var result = await _userManager.CreateAsync(user);
-            if (!result.Succeeded)
-            {
-                throw new Exception(result.Errors.Select(e => e.Description)
-                    .Aggregate((a, b) => $"{a}\n{b}"));
-            }
-
-            await _userManager.AddToRoleAsync(user, role ?? "Student");
-            await _userManager.AddLoginAsync(user, new UserLoginInfo("Google", payLoad.Subject, "Google"));
-
-            if (refreshToken != null)
-            {
-                await _userManager.SetAuthenticationTokenAsync(user, "Google", "refresh_token", refreshToken);
-            }
         }
 
         private async Task<UserInfo> ConvertAppUserToUserInfo(ApplicationUser user)
