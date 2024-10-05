@@ -342,6 +342,7 @@ namespace AuthService.Services.Auth
                 {
                     responseInfo.StatusCode = StatusCodes.Status404NotFound;
                     responseInfo.Message = "User not found";
+                    return responseInfo;
                 }
 
                 var confirmResult = await _userManager.ConfirmEmailAsync(user, token);
@@ -349,6 +350,7 @@ namespace AuthService.Services.Auth
                 {
                     responseInfo.StatusCode = StatusCodes.Status400BadRequest;
                     responseInfo.Message = confirmResult.Errors.Select(e => e.Description).Aggregate((a, b) => $"{a}\n{b}");
+                    return responseInfo;
                 }
 
                 _messageBusPublisher.PublishMessage(EventTypes.UserActivated, new
@@ -356,7 +358,10 @@ namespace AuthService.Services.Auth
                     UserId = user.Id,
                     IsActive = true
                 });
-
+                
+                user.IsActive = true;
+                await _context.SaveChangesAsync();
+                
                 _logger.LogInformation("[AuthService][ConfirmAccount] End");
                 return responseInfo;
             }

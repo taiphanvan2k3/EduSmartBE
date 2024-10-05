@@ -150,7 +150,7 @@ namespace AuthService.Controllers
         /// <remarks>
         /// Note:
         /// 
-        ///     DO NOT PASS the Code paramter!!!
+        ///     DO NOT PASS the Code parameter!!!
         ///
         /// </remarks>
         /// <response code="200">
@@ -264,7 +264,7 @@ namespace AuthService.Controllers
         /// <remarks>
         /// Note:
         /// 
-        ///     DO NOT PASS the IdToken paramter!!!
+        ///     DO NOT PASS the IdToken parameter!!!
         ///
         /// </remarks>
         /// <response code="200">
@@ -621,7 +621,7 @@ namespace AuthService.Controllers
             {
                 return Ok(new
                 {
-                    status = true
+                    message = "Signup successfully"
                 });
             }
             return BadRequest(new
