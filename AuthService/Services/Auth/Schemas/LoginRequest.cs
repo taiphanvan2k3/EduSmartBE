@@ -10,5 +10,11 @@ namespace AuthService.Services.Auth.Schemas
 
         [Required]
         public string Password { get; set; }
+
+        public LoginRequest()
+        {
+            Email = "";
+            UserName = "";
+        }
     }
 }
