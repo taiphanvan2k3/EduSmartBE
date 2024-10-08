@@ -192,17 +192,19 @@ namespace AuthService.Services.Auth
 
             // Ở đây dùng mã ASCII cũng được vì secret key thường là tiếng Anh nên bảng mã ASCII có thể biểu diễn được
             var key = Encoding.ASCII.GetBytes(_jwtSetting.SecretKey);
+            var claims = new List<Claim>
+            {
+                new("username", userInfo.UserName),
+                new(ClaimTypes.Email, userInfo.Email),
+                new("userId", userInfo.Id.ToString()),
+                new("iss", _jwtSetting.Issuer),
+                new("aud", _jwtSetting.Audience)
+            };
 
+            claims.AddRange(userInfo.Roles.Select(role => new Claim("role", role)));
             var tokenDescriptor = new SecurityTokenDescriptor()
             {
-                Subject = new ClaimsIdentity([
-                    new Claim("username", userInfo.UserName),
-                    new Claim(ClaimTypes.Email, userInfo.Email),
-                    new Claim("userId", userInfo.Id.ToString()),
-                    new Claim("roles", string.Join(",", userInfo.Roles)),
-                    new Claim("iss", _jwtSetting.Issuer),
-                    new Claim("aud", _jwtSetting.Audience),
-                ]),
+                Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddMinutes(_jwtSetting.TokenExpirationInMinutes),
 
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
