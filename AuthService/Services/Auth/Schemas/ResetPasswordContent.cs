@@ -1,11 +1,17 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace AuthService.Services.Auth.Schemas
 {
     public class ResetPasswordContent
     {
-        public int UserId { get; set; }
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; }
 
-        public string Token { get; set; }
+        [Required]
+        public string OtpCode { get; set; }
 
+        [Required]
         public string NewPassword { get; set; }
     }
 }
