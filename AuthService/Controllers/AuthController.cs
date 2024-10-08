@@ -102,12 +102,12 @@ namespace AuthService.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            if (!string.IsNullOrEmpty(request.UserName) && !string.IsNullOrEmpty(request.Email))
+            if (!string.IsNullOrEmpty(request.Username) && !string.IsNullOrEmpty(request.Email))
             {
                 return BadRequest(ErrorResponseHelper.GetContentOfBadRequestResponse("Only one of UserName or Email is required"));
             }
 
-            if (string.IsNullOrEmpty(request.UserName) && string.IsNullOrEmpty(request.Email))
+            if (string.IsNullOrEmpty(request.Username) && string.IsNullOrEmpty(request.Email))
             {
                 return BadRequest(ErrorResponseHelper.GetContentOfBadRequestResponse("UserName or Email is required"));
             }
@@ -890,7 +890,7 @@ namespace AuthService.Controllers
         ///         "message": "Server error message ..."
         ///     }
         /// </response>
-        [HttpPost("reset-password")]
+        [HttpPut("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordContent resetPasswordContent)
         {
             if (!ModelState.IsValid)
