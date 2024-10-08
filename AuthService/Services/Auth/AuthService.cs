@@ -126,7 +126,7 @@ namespace AuthService.Services.Auth
                 _logger.LogInformation("[AuthService][CheckLogin] Start");
                 var responseInfo = new ResponseInfo();
                 var user = await _userManager.FindByEmailAsync(loginRequest.Email)
-                    ?? await _userManager.FindByNameAsync(loginRequest.UserName);
+                    ?? await _userManager.FindByNameAsync(loginRequest.Username);
 
                 if (user == null)
                 {

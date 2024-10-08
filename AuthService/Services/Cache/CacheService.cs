@@ -39,12 +39,12 @@ namespace AuthService.Services.Cache
 
     public class CacheService : ICacheService
     {
-        private readonly IDatabase _cacheDb;
+        private IDatabase _cacheDb;
 
         public CacheService(IConfiguration configuration)
         {
-            var redis = ConnectionMultiplexer.Connect(configuration.GetConnectionString("RedisConnection"));
-            _cacheDb = redis.GetDatabase();
+            var connectionString = configuration.GetConnectionString("RedisConnection");
+            ConnectToRedis(connectionString);
         }
 
         public T GetData<T>(string key)
@@ -59,6 +59,11 @@ namespace AuthService.Services.Cache
 
         public object RemoveData(string key)
         {
+            if (_cacheDb == null)
+            {
+                return null;
+            }
+
             var isExist = _cacheDb.KeyExists(key);
             if (isExist)
             {
@@ -72,8 +77,30 @@ namespace AuthService.Services.Cache
         {
             var expireTime = timeEnd.DateTime.Subtract(DateTime.Now);
 
+            if (_cacheDb == null)
+            {
+                return false;
+            }
+
             // Trả về true nếu set thành công, ngược lại trả về false. Nếu key đã tồn tại thì sẽ bị ghi đè.
             return _cacheDb.StringSet(key, JsonSerializer.Serialize(value), expireTime);
+        }
+
+        private void ConnectToRedis(string connectionString)
+        {
+            try
+            {
+                var options = ConfigurationOptions.Parse(connectionString);
+                options.AbortOnConnectFail = false; // Cho phép thực hiện retry nếu kết nối thất bại
+                options.ConnectRetry = 3;
+                var redis = ConnectionMultiplexer.Connect(options);
+                _cacheDb = redis.GetDatabase();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error when connect to redis: " + e.Message);
+                throw;
+            }
         }
     }
 }
