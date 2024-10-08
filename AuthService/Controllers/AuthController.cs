@@ -767,7 +767,7 @@ namespace AuthService.Controllers
         /// <para>Created at: 2024/10/08</para>
         /// <para>Created by: TaiPV</para>
         /// </summary>
-        /// <param name="forgotPasswordContent">The content containing user email for password recovery</param>
+        /// <param name="forgotPasswordContent">The content for forgot password</param>
         /// <returns></returns>
         /// <remarks>
         /// Code
@@ -846,7 +846,7 @@ namespace AuthService.Controllers
         /// <para>Created at: 2024/10/08</para>
         /// <para>Created by: TaiPV</para>
         /// </summary>
-        /// <param name="resetPasswordContent">The content containing user ID, reset token, and new password</param>
+        /// <param name="resetPasswordContent">The content for resetting the password</param>
         /// <returns></returns>
         /// <remarks>
         /// Code
