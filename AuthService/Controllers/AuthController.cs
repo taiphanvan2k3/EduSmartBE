@@ -4,6 +4,7 @@ using AuthService.Enumerations;
 using AuthService.Services.Auth;
 using AuthService.Services.Auth.Schemas;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace AuthService.Controllers
 {
@@ -758,6 +759,165 @@ namespace AuthService.Controllers
             catch (Exception e)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, ErrorResponseHelper.GetContentOfInternalServerResponse(e));
+            }
+        }
+
+        /// <summary>
+        /// Initiate the password recovery process for a user.
+        /// <para>Created at: 2024/10/08</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="forgotPasswordContent">The content containing user email for password recovery</param>
+        /// <returns></returns>
+        /// <remarks>
+        /// Code
+        /// 
+        ///     200 - Reset password link sent successfully
+        ///     400 - Validation error | User not found
+        ///     500 - Server error
+        /// </remarks>
+        /// <response code="200">
+        /// Success
+        /// 
+        ///     {
+        ///         "message": "Reset password link has been sent to your email"
+        ///     }
+        /// </response>
+        /// <response code="400">
+        /// Validate error
+        /// 
+        ///     {
+        ///         "statusCode": 400,
+        ///         "error": "Bad Request",
+        ///         "message": "Error messages explaining the validation failure"
+        ///     }
+        /// </response>
+        /// <response code="404">
+        /// User not found
+        ///     
+        ///     {
+        ///         "statusCode": 404,
+        ///         "error": "Not Found",
+        ///         "message": "User not found"
+        ///     }
+        /// </response>
+        /// <response code="500">
+        /// Server error
+        /// 
+        ///     {
+        ///         "statusCode": 500,
+        ///         "error": "Internal Server Error",
+        ///         "message": "Server error message ..."
+        ///     }
+        /// </response>
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordContent forgotPasswordContent)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ErrorResponseHelper.GetContentOfBadRequestResponse(
+                    ModelState.Values.SelectMany(x => x.Errors)
+                        .Select(x => x.ErrorMessage).ToList()));
+            }
+
+            try
+            {
+                var response = await _authService.ForgotPassword(forgotPasswordContent);
+                if (response.StatusCode == StatusCodes.Status200OK)
+                {
+                    return Ok(new
+                    {
+                        message = response.Message
+                    });
+                }
+
+                return StatusCode(response.StatusCode, ErrorResponseHelper.GetContentOfAnyError(
+                    response.StatusCode, response.Error, response.Message));
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ErrorResponseHelper.GetContentOfInternalServerResponse(e));
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Reset the user's password using the provided token and new password.
+        /// <para>Created at: 2024/10/08</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="resetPasswordContent">The content containing user ID, reset token, and new password</param>
+        /// <returns></returns>
+        /// <remarks>
+        /// Code
+        /// 
+        ///     200 - Password reset successfully
+        ///     400 - Validation error
+        ///     404 - User not found
+        ///     500 - Server error
+        /// </remarks>
+        /// <response code="200">
+        /// Success
+        /// 
+        ///     {
+        ///         "message": "Password has been reset successfully."
+        ///     }
+        /// </response>
+        /// <response code="400">
+        /// Validate error
+        /// 
+        ///     {
+        ///         "statusCode": 400,
+        ///         "error": "Bad Request",
+        ///         "message": "Error messages explaining the validation failure or user not found"
+        ///     }
+        /// </response>
+        /// <response code="404">
+        /// User not found
+        ///     
+        ///     {
+        ///         "statusCode": 404,
+        ///         "error": "Not Found",
+        ///         "message": "User not found"
+        ///     }
+        /// </response>
+        /// <response code="500">
+        /// Server error
+        /// 
+        ///     {
+        ///         "statusCode": 500,
+        ///         "error": "Internal Server Error",
+        ///         "message": "Server error message ..."
+        ///     }
+        /// </response>
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordContent resetPasswordContent)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ErrorResponseHelper.GetContentOfBadRequestResponse(
+                    ModelState.Values.SelectMany(x => x.Errors)
+                        .Select(x => x.ErrorMessage).ToList()));
+            }
+
+            try
+            {
+                var response = await _authService.ResetPassword(resetPasswordContent);
+                if (response.StatusCode == StatusCodes.Status200OK)
+                {
+                    return Ok(new
+                    {
+                        message = response.Message
+                    });
+                }
+
+                return StatusCode(response.StatusCode, ErrorResponseHelper.GetContentOfAnyError(
+                    response.StatusCode, response.Error, response.Message));
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ErrorResponseHelper.GetContentOfInternalServerResponse(e));
+                throw;
             }
         }
     }
