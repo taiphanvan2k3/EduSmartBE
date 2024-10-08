@@ -52,17 +52,17 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
     app.UseSwaggerUI();
 }
 
-app.UseMiddleware<CustomUnauthorizedMiddleware>();
 if (app.Environment.IsProduction())
 {
     app.UseHttpsRedirection();
 }
 
 app.UseRouting();
+app.UseCors("AllowSpecificOrigin");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseCors("AllowSpecificOrigin");
+app.UseMiddleware<CustomUnauthorizedMiddleware>();
 app.MapControllers();
 await app.RunAsync();
