@@ -66,6 +66,24 @@ namespace AuthService.Services.Auth
         /// </summary>
         /// <returns></returns>
         public Task<ResponseInfo> ConfirmAccount(string token, string userId);
+
+        /// <summary>
+        /// Handle forgot password
+        /// <para>Author: TaiPV</para>
+        /// <para>Created at: 08/10/2024</para>
+        /// </summary>
+        /// <param name="forgotPasswordContent">Data for forgot password</param>
+        /// <returns></returns>
+        public Task<ResponseInfo> ForgotPassword(ForgotPasswordContent forgotPasswordContent);
+
+        /// <summary>
+        /// Handle reset password after forgot password
+        /// <para>Author: TaiPV</para>
+        /// <para>Created at: 08/10/2024</para>
+        /// </summary>
+        /// <param name="resetPasswordContent">Data for forgot password</param>
+        /// <returns></returns>
+        public Task<ResponseInfo> ResetPassword(ResetPasswordContent resetPasswordContent);
     }
 
     public class AuthService(IServiceProvider serviceProvider,
@@ -97,6 +115,8 @@ namespace AuthService.Services.Auth
             ?? throw new ArgumentNullException(nameof(googleAuthService));
         private readonly IMessagePublisher _messageBusPublisher = messageBusPublisher
             ?? throw new ArgumentNullException(nameof(messageBusPublisher));
+        private readonly IConfiguration _configuration = serviceProvider.GetRequiredService<IConfiguration>()
+            ?? throw new InvalidOperationException("Cannot get IConfiguration service");
 
         public async Task<ResponseInfo> CheckLogin(LoginRequest loginRequest)
         {
@@ -393,6 +413,84 @@ namespace AuthService.Services.Auth
             }
         }
 
+        public async Task<ResponseInfo> ForgotPassword(ForgotPasswordContent forgotPasswordContent)
+        {
+            try
+            {
+                _logger.LogInformation("[AuthService][ForgotPassword] Start");
+                var responseInfo = new ResponseInfo();
+
+                var user = await _userManager.FindByEmailAsync(forgotPasswordContent.Email);
+                if (user == null)
+                {
+                    responseInfo.Error = "UserNotFound";
+                    responseInfo.StatusCode = StatusCodes.Status404NotFound;
+                    responseInfo.Message = "User not found";
+                    return responseInfo;
+                }
+
+                string token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var clientBaseUrl = _configuration.GetValue<string>("ClientSetting:BaseUrl");
+                string callbackUrl = $"{clientBaseUrl}/reset-password?userId={user.Id}&token={token}";
+
+                var mailBody = new ResetPasswordMailBody()
+                {
+                    Subject = "Reset password",
+                    ToEmail = user.Email,
+                    ToUserName = user.UserName,
+                    ResetLink = callbackUrl
+                };
+
+                await _mailProducer.EnqueueMailAsync(mailBody);
+                responseInfo.Message = "Reset password link has been sent to your email";
+
+                _logger.LogInformation("[AuthService][ForgotPassword] End");
+                return responseInfo;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[AuthService][ForgotPassword][{Error}]", e.InnerException?.Message ?? e.Message);
+                throw;
+            }
+        }
+
+        public async Task<ResponseInfo> ResetPassword(ResetPasswordContent resetPasswordContent)
+        {
+            var method = GetActualAsyncMethodName();
+            try
+            {
+                _logger.LogInformation("[AuthService][{Method}] Start", method);
+                var responseInfo = new ResponseInfo();
+
+                var user = await _userManager.FindByIdAsync(resetPasswordContent.UserId.ToString());
+                if (user == null)
+                {
+                    responseInfo.Error = "UserNotFound";
+                    responseInfo.StatusCode = StatusCodes.Status404NotFound;
+                    responseInfo.Message = "User not found";
+                    return responseInfo;
+                }
+
+                var result = await _userManager.ResetPasswordAsync(user, resetPasswordContent.Token, resetPasswordContent.NewPassword);
+                if (!result.Succeeded)
+                {
+                    responseInfo.Error = "ResetPasswordFailed";
+                    responseInfo.StatusCode = StatusCodes.Status400BadRequest;
+                    responseInfo.Message = result.Errors.Select(e => e.Description).Aggregate((a, b) => $"{a}\n{b}");
+                    return responseInfo;
+                }
+
+                responseInfo.Message = "Reset password successfully";
+                _logger.LogInformation("[AuthService][{Method}] End", method);
+                return responseInfo;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[AuthService][{Method}][{Error}]", method, e.InnerException?.Message ?? e.Message);
+                throw;
+            }
+        }
+
         private async Task<string> GenerateEmailConfirmationTokenAsync(ApplicationUser user)
         {
             string token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
@@ -403,7 +501,7 @@ namespace AuthService.Services.Auth
         {
             var mailBody = new ConfirmMailBody()
             {
-                Subject = "Xác thực tài khoản",
+                Subject = "Verify your email",
                 ToEmail = email,
                 ToUserName = userName,
                 ConfirmLink = callbackUrl

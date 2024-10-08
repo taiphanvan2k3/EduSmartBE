@@ -39,6 +39,9 @@ namespace AuthService.BackgroundServices
                     case ConfirmMailBody confirmMailBody:
                         await mailService.SendMailConfirmAccount(confirmMailBody);
                         break;
+                    case ResetPasswordMailBody resetPasswordMailBody:
+                        await mailService.SendEmailResetPassword(resetPasswordMailBody);
+                        break;
                     default:
                         throw new ArgumentException("Unsupported mail body type.");
                 }
