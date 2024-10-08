@@ -72,27 +72,19 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
     });
 }
 
-app.UseMiddleware<CustomUnauthorizedMiddleware>();
 if (app.Environment.IsProduction())
 {
     app.UseHttpsRedirection();
 }
 
 app.UseRouting();
+app.UseCors("AllowSpecificOrigin");
 
 app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseCors("AllowAllOrigins");
-}
-else
-{
-    // TODO: Change to AllowSpecificOrigin when finish frontend
-    app.UseCors("AllowAllOrigins");
-}
-app.MapControllers();
+app.UseMiddleware<CustomUnauthorizedMiddleware>();
 
+app.MapControllers();
 await app.RunAsync();
