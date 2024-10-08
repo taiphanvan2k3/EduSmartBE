@@ -147,8 +147,7 @@ namespace AuthService.Extensions
                     {
                         builder.AllowAnyOrigin()
                             .AllowAnyHeader()
-                            .AllowAnyMethod()
-                            .AllowCredentials();
+                            .AllowAnyMethod();
                     });
             });
 

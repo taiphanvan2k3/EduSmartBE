@@ -107,8 +107,7 @@ namespace UserService.Extensions
                     {
                         builder.AllowAnyOrigin()
                             .AllowAnyHeader()
-                            .AllowAnyMethod()
-                            .AllowCredentials();
+                            .AllowAnyMethod();
                     });
             });
 
