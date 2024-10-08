@@ -724,7 +724,7 @@ namespace AuthService.Controllers
         ///         "message": "Error message explaining what went wrong"
         ///     }
         /// </response>
-        [HttpPost("permissions/update")]
+        [HttpPut("permissions/update")]
         public async Task<IActionResult> UpdatePermission(PermissionStatus permission)
         {
             try
