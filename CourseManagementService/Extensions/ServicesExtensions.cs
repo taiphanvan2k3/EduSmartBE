@@ -105,8 +105,7 @@ namespace CourseManagementService.Extensions
                     {
                         builder.AllowAnyOrigin()
                             .AllowAnyHeader()
-                            .AllowAnyMethod()
-                            .AllowCredentials();
+                            .AllowAnyMethod();
                     });
             });
 
