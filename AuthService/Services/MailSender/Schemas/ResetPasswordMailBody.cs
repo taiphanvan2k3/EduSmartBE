@@ -4,6 +4,6 @@ namespace AuthService.Services.MailSender.Schemas
     {
         public string Content { get; set; }
 
-        public string ResetLink { get; set; }
+        public string OtpCode { get; set; }
     }
 }

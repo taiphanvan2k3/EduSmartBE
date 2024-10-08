@@ -4,6 +4,7 @@ using AuthService.Commons;
 using AuthService.Databases.Schemas;
 using AuthService.Extensions;
 using AuthService.Services.Auth.Schemas;
+using AuthService.Services.Cache;
 using AuthService.Services.MailSender.Schemas;
 using AuthService.Services.User.Schemas;
 using AuthService.Settings;
@@ -115,8 +116,8 @@ namespace AuthService.Services.Auth
             ?? throw new ArgumentNullException(nameof(googleAuthService));
         private readonly IMessagePublisher _messageBusPublisher = messageBusPublisher
             ?? throw new ArgumentNullException(nameof(messageBusPublisher));
-        private readonly IConfiguration _configuration = serviceProvider.GetRequiredService<IConfiguration>()
-            ?? throw new InvalidOperationException("Cannot get IConfiguration service");
+        private readonly ICacheService _cacheService = serviceProvider.GetRequiredService<ICacheService>()
+            ?? throw new InvalidOperationException("Cannot get ICacheService service");
 
         public async Task<ResponseInfo> CheckLogin(LoginRequest loginRequest)
         {
@@ -429,16 +430,31 @@ namespace AuthService.Services.Auth
                     return responseInfo;
                 }
 
+                string otp = GenerateOtp();
                 string token = await _userManager.GeneratePasswordResetTokenAsync(user);
-                var clientBaseUrl = _configuration.GetValue<string>("ClientSetting:BaseUrl");
-                string callbackUrl = $"{clientBaseUrl}/reset-password?userId={user.Id}&token={token}";
+                var otpData = new OtpData()
+                {
+                    OtpCode = otp,
+                    ResetPasswordToken = token
+                };
+
+                // Lưu mã OTP vào cache
+                var cacheKey = CacheKeyManager.GetOtpKey(user.Email);
+                var isOtpSaved = _cacheService.SetData(cacheKey, otpData, DateTimeOffset.Now.AddMinutes(2));
+                if (!isOtpSaved)
+                {
+                    responseInfo.Error = "SaveOtpFailed";
+                    responseInfo.StatusCode = StatusCodes.Status500InternalServerError;
+                    responseInfo.Message = "Save OTP failed";
+                    return responseInfo;
+                }
 
                 var mailBody = new ResetPasswordMailBody()
                 {
                     Subject = "Reset password",
                     ToEmail = user.Email,
                     ToUserName = user.UserName,
-                    ResetLink = callbackUrl
+                    OtpCode = otp
                 };
 
                 await _mailProducer.EnqueueMailAsync(mailBody);
@@ -462,7 +478,7 @@ namespace AuthService.Services.Auth
                 _logger.LogInformation("[AuthService][{Method}] Start", method);
                 var responseInfo = new ResponseInfo();
 
-                var user = await _userManager.FindByIdAsync(resetPasswordContent.UserId.ToString());
+                var user = await _userManager.FindByEmailAsync(resetPasswordContent.Email);
                 if (user == null)
                 {
                     responseInfo.Error = "UserNotFound";
@@ -471,11 +487,23 @@ namespace AuthService.Services.Auth
                     return responseInfo;
                 }
 
-                var result = await _userManager.ResetPasswordAsync(user, resetPasswordContent.Token, resetPasswordContent.NewPassword);
+                var cacheKey = CacheKeyManager.GetOtpKey(user.Email);
+                var otpData = _cacheService.GetData<OtpData>(cacheKey);
+
+                if (otpData == null || otpData.OtpCode != resetPasswordContent.OtpCode)
+                {
+                    responseInfo.Error = otpData == null ? "OtpNotFound" : "InvalidOtp";
+                    responseInfo.StatusCode = StatusCodes.Status400BadRequest;
+                    responseInfo.Message = otpData == null ? "OTP not found or expired" : "Invalid OTP";
+                    return responseInfo;
+                }
+
+                var result = await _userManager.ResetPasswordAsync(user, otpData.ResetPasswordToken, resetPasswordContent.NewPassword);
+
                 if (!result.Succeeded)
                 {
                     responseInfo.Error = "ResetPasswordFailed";
-                    responseInfo.StatusCode = StatusCodes.Status400BadRequest;
+                    responseInfo.StatusCode = StatusCodes.Status500InternalServerError;
                     responseInfo.Message = result.Errors.Select(e => e.Description).Aggregate((a, b) => $"{a}\n{b}");
                     return responseInfo;
                 }
@@ -581,6 +609,13 @@ namespace AuthService.Services.Auth
             var userCreatedEventData = await ConvertAppUserToUserInfo(user);
 
             _messageBusPublisher.PublishMessage(EventTypes.UserCreated, userCreatedEventData);
+        }
+
+        private static string GenerateOtp()
+        {
+            // Tạo mã OTP 6 chữ số ngẫu nhiên
+            var random = new Random();
+            return random.Next(100000, 999999).ToString();
         }
     }
 }
