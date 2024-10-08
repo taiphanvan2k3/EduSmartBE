@@ -32,6 +32,7 @@ builder.Services.AddScoped(x =>
 });
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+builder.Services.AddCustomCorsConfig();
 
 builder.Services.AddControllers();
 builder.Services.AddAuthorization();
@@ -62,6 +63,16 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseCors("AllowAllOrigins");
+}
+else
+{
+    // TODO: Change to AllowSpecificOrigin when finish frontend
+    app.UseCors("AllowAllOrigins");
+}
 
 app.MapControllers();
 
