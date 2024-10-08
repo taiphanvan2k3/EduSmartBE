@@ -84,7 +84,15 @@ app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseCors("AllowSpecificOrigin");
+if (app.Environment.IsDevelopment())
+{
+    app.UseCors("AllowAllOrigins");
+}
+else
+{
+    // TODO: Change to AllowSpecificOrigin when finish frontend
+    app.UseCors("AllowAllOrigins");
+}
 app.MapControllers();
 
 await app.RunAsync();
