@@ -136,18 +136,10 @@ namespace AuthService.Extensions
                 options.AddPolicy("AllowSpecificOrigin",
                     builder =>
                     {
-                        builder.WithOrigins("http://localhost:3000")
+                        builder.WithOrigins("http://localhost:3000", "http://localhost:3030")
                             .AllowAnyHeader()
                             .AllowAnyMethod()
                             .AllowCredentials(); // Cho phép client gửi cookie qua cross-origin
-                    });
-
-                options.AddPolicy("AllowAllOrigins",
-                    builder =>
-                    {
-                        builder.AllowAnyOrigin()
-                            .AllowAnyHeader()
-                            .AllowAnyMethod();
                     });
             });
 
