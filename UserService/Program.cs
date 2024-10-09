@@ -13,6 +13,7 @@ builder.AddAutoFact();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGenWithAuth();
+builder.Services.AddCloudinarySettings(builder.Configuration);
 
 builder.Services.AddSingleton<IEventProcessor, EventProcessor>();
 builder.Services.AddHostedService<MessageBusSubscriber>();
