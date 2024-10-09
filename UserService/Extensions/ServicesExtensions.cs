@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Npgsql;
+using UserService.Settings;
 
 namespace UserService.Extensions
 {
@@ -103,6 +104,12 @@ namespace UserService.Extensions
                     });
             });
 
+            return services;
+        }
+
+        public static IServiceCollection AddCloudinarySettings(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.Configure<CloudinarySettings>(configuration.GetSection("CloudinarySettings"));
             return services;
         }
     }
