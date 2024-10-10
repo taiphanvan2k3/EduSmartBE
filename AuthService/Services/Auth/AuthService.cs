@@ -78,6 +78,14 @@ namespace AuthService.Services.Auth
         public Task<ResponseInfo> ForgotPassword(ForgotPasswordContent forgotPasswordContent);
 
         /// <summary>
+        /// Check OTP code
+        /// </summary>
+        /// <param name="email">Email of user</param>
+        /// <param name="otpCode">OTP code</param>
+        /// <returns></returns>
+        public ResponseInfo ValidateOtpCode(string email, string otpCode);
+
+        /// <summary>
         /// Handle reset password after forgot password
         /// <para>Author: TaiPV</para>
         /// <para>Created at: 08/10/2024</para>
@@ -466,6 +474,37 @@ namespace AuthService.Services.Auth
             catch (Exception e)
             {
                 _logger.LogError(e, "[AuthService][ForgotPassword][{Error}]", e.InnerException?.Message ?? e.Message);
+                throw;
+            }
+        }
+
+        public ResponseInfo ValidateOtpCode(string email, string otpCode)
+        {
+            var method = GetActualAsyncMethodName();
+            try
+            {
+                _logger.LogInformation("[AuthService][{Method}] Start", method);
+                var responseInfo = new ResponseInfo();
+                var cacheKey = CacheKeyManager.GetOtpKey(email);
+                var otpData = _cacheService.GetData<OtpData>(cacheKey);
+
+                if (otpData == null || otpData.OtpCode != otpCode)
+                {
+                    responseInfo.Error = otpData == null ? "OtpNotFound" : "InvalidOtp";
+                    responseInfo.StatusCode = StatusCodes.Status400BadRequest;
+                    responseInfo.Message = otpData == null ? "OTP not found or expired" : "Invalid OTP";
+                }
+
+                // Gia hạn thời gian sống của mã OTP
+                _cacheService.SetData(cacheKey, otpData, DateTimeOffset.Now.AddMinutes(1));
+
+                responseInfo.Message = "OTP is valid";
+                _logger.LogInformation("[AuthService][{Method}] End", method);
+                return responseInfo;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[AuthService][CheckOtp][{Error}]", e.InnerException?.Message ?? e.Message);
                 throw;
             }
         }
