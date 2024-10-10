@@ -1,6 +1,7 @@
 using AuthService.AsyncDataServices;
 using AuthService.BackgroundServices;
 using AuthService.Commons;
+using AuthService.Commons.Helpers;
 using AuthService.Databases.Schemas;
 using AuthService.Extensions;
 using AuthService.Services.Auth.Schemas;
@@ -357,6 +358,7 @@ namespace AuthService.Services.Auth
                         : signUpRequest.Email.Split('@')[0],
                     FirstName = signUpRequest.FirstName,
                     LastName = signUpRequest.LastName,
+                    AvatarURL = Utils.GetDefaultAvatarUrl(signUpRequest.AvatarURL, $"{signUpRequest.LastName} {signUpRequest.FirstName}"),
                 };
 
                 var result = await _userManager.CreateAsync(user, signUpRequest.Password);
@@ -368,9 +370,11 @@ namespace AuthService.Services.Auth
                 }
 
                 string role = signUpRequest.Role.GetDisplayName();
-                if (!string.IsNullOrEmpty(role))
+                await _userManager.AddToRoleAsync(user, role ?? "Student");
+
+                if (!string.IsNullOrEmpty(signUpRequest.Provider))
                 {
-                    await _userManager.AddToRoleAsync(user, role);
+                    await _userManager.AddLoginAsync(user, new UserLoginInfo(signUpRequest.Provider, signUpRequest.Email, signUpRequest.Provider));
                 }
 
                 string callbackUrl = await GenerateEmailConfirmationTokenAsync(user);
@@ -627,30 +631,6 @@ namespace AuthService.Services.Auth
                 Roles = [.. (await _userManager.GetRolesAsync(user))],
                 IsActive = user.IsActive
             };
-        }
-
-        private async Task CreateUserFromExternalPayload(ExternalUserInfo externalUserInfo, string provider,
-            string role = null)
-        {
-            var user = new ApplicationUser()
-            {
-                Email = externalUserInfo.Email,
-                UserName = externalUserInfo.Email.Split('@')[0],
-                FirstName = externalUserInfo.FirstName,
-                LastName = externalUserInfo.LastName,
-                AvatarURL = externalUserInfo.Picture,
-                IsActive = true
-            };
-
-            var result = await _userManager.CreateAsync(user);
-            if (!result.Succeeded)
-            {
-                throw new Exception(result.Errors.Select(e => e.Description)
-                    .Aggregate((a, b) => $"{a}\n{b}"));
-            }
-
-            await _userManager.AddToRoleAsync(user, role ?? "Student");
-            await _userManager.AddLoginAsync(user, new UserLoginInfo(provider, externalUserInfo.Email, provider));
         }
 
         private async Task PublishUserCreated(int userId)

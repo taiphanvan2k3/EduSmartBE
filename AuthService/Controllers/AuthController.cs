@@ -459,6 +459,7 @@ namespace AuthService.Controllers
         ///     3 - Student
         /// Provider
         /// 
+        ///     Email
         ///     Google
         ///     Facebook
         ///     GitHub
@@ -698,6 +699,12 @@ namespace AuthService.Controllers
         /// 
         ///     200 - User created successfully
         ///     400 - Error during signup
+        /// Provider
+        /// 
+        ///     Email
+        ///     Google
+        ///     Facebook
+        ///     GitHub
         /// </remarks>
         /// <response code="200">
         /// Success
