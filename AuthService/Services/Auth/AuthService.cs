@@ -295,8 +295,19 @@ namespace AuthService.Services.Auth
                 var user = await _userManager.FindByEmailAsync(externalLoginRequest.UserInfo.Email);
                 if (user == null)
                 {
-                    await CreateUserFromExternalPayload(externalLoginRequest.UserInfo, externalLoginRequest.Provider,
-                        externalLoginRequest.UserInfo.Role.GetDisplayName());
+                    responseInfo.StatusCode = StatusCodes.Status409Conflict;
+                    responseInfo.Error = "UserNotSignedUp";
+                    responseInfo.Message = "The user has not signed up yet. Additional information is required to complete the registration.";
+                    responseInfo.Data.Add("userInfo", new ExternalUserInfo()
+                    {
+                        Email = externalLoginRequest.UserInfo.Email,
+                        FirstName = externalLoginRequest.UserInfo.FirstName,
+                        LastName = externalLoginRequest.UserInfo.LastName,
+                        Picture = externalLoginRequest.UserInfo.Picture
+                    });
+
+                    _logger.LogInformation("[AuthService][{MethodName}] End", methodName);
+                    return responseInfo;
                 }
                 else
                 {
