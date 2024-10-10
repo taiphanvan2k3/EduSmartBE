@@ -49,6 +49,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 isExecutedSetAuth = true;
             }
+        } else if (!swaggerToken) {
+            isExecutedSetAuth = true;
         }
     };
 
