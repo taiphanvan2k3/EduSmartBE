@@ -6,7 +6,7 @@ using AuthService.Services.Permission.Schemas.Function;
 using AuthService.Services.Permission.Schemas;
 using AuthService.Binders;
 using System.Security.Claims;
-using TblScreen = AuthService.Databases.Schemas.Screen;
+using AuthService.Commons.Helpers;
 
 namespace AuthService.Controllers
 {
@@ -729,8 +729,25 @@ namespace AuthService.Controllers
         {
             try
             {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ErrorResponseHelper.GetContentOfBadRequestResponse(
+                    ModelState.Values.SelectMany(x => x.Errors)
+                        .Select(x => x.ErrorMessage).ToList()));
+                }
+
                 var response = await _permissionService.UpdatePermission(permission);
-                return StatusCode(response.StatusCode, response);
+                if (response.StatusCode == StatusCodes.Status200OK)
+                {
+                    return Ok(new
+                    {
+                        message = response.Message,
+                        permission = response.Data.TryGetValue("result", out var result) ? result : new { }
+                    });
+                }
+
+                return StatusCode(response.StatusCode, ErrorResponseHelper.GetContentOfAnyError(
+                    response.StatusCode, response.Error, response.Message));
             }
             catch (Exception e)
             {

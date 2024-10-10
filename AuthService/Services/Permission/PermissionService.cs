@@ -110,6 +110,7 @@ namespace AuthService.Services.Permission
                 var requestedRole = await _roleManager.FindByIdAsync(permission.RoleId.ToString());
                 if (requestedRole == null)
                 {
+                    responseInfo.Error = "NotFound";
                     responseInfo.Message = "Role not found";
                     responseInfo.StatusCode = StatusCodes.Status404NotFound;
                     return responseInfo;
@@ -122,6 +123,7 @@ namespace AuthService.Services.Permission
                 {
                     if (!permission.IsActive)
                     {
+                        responseInfo.Error = "NotFound";
                         responseInfo.Message = "You can't disable a permission that doesn't exist";
                         responseInfo.StatusCode = StatusCodes.Status400BadRequest;
                         return responseInfo;
@@ -133,7 +135,13 @@ namespace AuthService.Services.Permission
 
                         await _context.SaveChangesAsync();
 
-                        responseInfo.Data.Add("result", newPermission);
+                        responseInfo.Data.Add("result", new
+                        {
+                            newPermission.RoleId,
+                            newPermission.FunctionId,
+                            IsActive = true
+                        });
+                        responseInfo.Message = "Permission is created";
                     }
 
                     _logger.LogInformation("[PermissionService][UpdatePermission] End");
@@ -142,6 +150,7 @@ namespace AuthService.Services.Permission
 
                 if (permission.IsActive)
                 {
+                    responseInfo.Error = "BadRequest";
                     responseInfo.Message = "Permission is already active";
                     responseInfo.StatusCode = StatusCodes.Status400BadRequest;
                 }
@@ -149,10 +158,14 @@ namespace AuthService.Services.Permission
                 {
                     _context.Permissions.Remove(existedPermission);
                     await _context.SaveChangesAsync();
+
                     responseInfo.Data.Add("result", new
                     {
-                        message = "Permission is disabled"
+                        permission.RoleId,
+                        permission.FunctionId,
+                        IsActive = false
                     });
+                    responseInfo.Message = "Permission is disabled";
                 }
 
                 _logger.LogInformation("[PermissionService][UpdatePermission] End");
