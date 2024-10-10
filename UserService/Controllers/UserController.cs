@@ -6,6 +6,5 @@ namespace UserService.Controllers
     [ApiController]
     public class UserController() : ControllerBase
     {
-
     }
 }
