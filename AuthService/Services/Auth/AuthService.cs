@@ -366,7 +366,7 @@ namespace AuthService.Services.Auth
                 await SendMailConfirmAccount(user.Email, user.UserName, callbackUrl);
 
                 responseInfo.StatusCode = StatusCodes.Status201Created;
-                responseInfo.Message = "Login success!";
+                responseInfo.Message = "Sign up successfully";
                 responseInfo.Data.Add("userRegister", user);
 
                 await PublishUserCreated(user.Id);
