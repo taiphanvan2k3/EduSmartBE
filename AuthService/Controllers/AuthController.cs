@@ -4,7 +4,6 @@ using AuthService.Enumerations;
 using AuthService.Services.Auth;
 using AuthService.Services.Auth.Schemas;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace AuthService.Controllers
 {
@@ -69,7 +68,7 @@ namespace AuthService.Controllers
         ///     {
         ///         statusCode: 401,
         ///         error: "Unauthorized",
-        ///         "message": "Invalid login"
+        ///         message: "Invalid login"
         ///     }
         /// </response>
         /// <response code="403">
@@ -96,7 +95,7 @@ namespace AuthService.Controllers
         ///     {
         ///         statusCode: 500,
         ///         error: "Internal Server Error",
-        ///         "message": "Server error message ..."
+        ///         message: "Server error message ..."
         ///     }
         /// </response>
         [HttpPost("login")]
@@ -181,7 +180,7 @@ namespace AuthService.Controllers
         ///     {
         ///         statusCode: 400,
         ///         error: "Bad Request",
-        ///         "message": "IdToken is required"
+        ///         message: "IdToken is required"
         ///     }
         /// </response>
         /// <response code="401">
@@ -190,7 +189,7 @@ namespace AuthService.Controllers
         ///     {
         ///         statusCode: 401,
         ///         error: "Unauthorized",
-        ///         "message": "Invalid login"
+        ///         message: "Invalid login"
         ///     }
         /// </response>
         /// <response code="403">
@@ -199,7 +198,7 @@ namespace AuthService.Controllers
         ///     {
         ///         statusCode: 403,
         ///         error: "Forbidden",
-        ///         "message": "Account is locked out | Account is not allowed | Requires two factor"
+        ///         message: "Account is locked out | Account is not allowed | Requires two factor"
         ///     }
         /// </response>
         /// <response code="404">
@@ -208,7 +207,24 @@ namespace AuthService.Controllers
         ///     {
         ///         statusCode: 404,
         ///         error: "....",
-        ///         "message": "User not found"
+        ///         message: "User not found"
+        ///     }
+        /// </response>
+        /// <response code="409">
+        /// User not signed up yet
+        /// 
+        ///     {
+        ///         statusCode: 409,
+        ///         error: "UserNotSignedUp",
+        ///         message: "The user has not signed up yet. Additional information is required to complete the registration."
+        ///     }
+        ///     
+        /// Email is already used by another method
+        /// 
+        ///     {
+        ///         statusCode: 409,
+        ///         error: "EmailInUse",
+        ///         message: "Email has been used by another method."
         ///     }
         /// </response>
         /// <response code="500">
@@ -217,7 +233,7 @@ namespace AuthService.Controllers
         ///     {
         ///         statusCode: 500,
         ///         error: "Internal Server Error",
-        ///         "message": "Server error message ..."
+        ///         message: "Server error message ..."
         ///     }
         /// </response>
         [HttpPost("login-google-by-token")]
@@ -316,7 +332,7 @@ namespace AuthService.Controllers
         ///     {
         ///         statusCode: 400,
         ///         error: "Bad Request",
-        ///         "message": "Code is required"
+        ///         message: "Code is required"
         ///     }
         /// </response>
         /// <response code="401">
@@ -325,7 +341,7 @@ namespace AuthService.Controllers
         ///     {
         ///         statusCode: 401,
         ///         error: "Unauthorized",
-        ///         "message": "Invalid login"
+        ///         message: "Invalid login"
         ///     }
         /// </response>
         /// <response code="403">
@@ -334,7 +350,7 @@ namespace AuthService.Controllers
         ///     {
         ///         statusCode: 403,
         ///         error: "Forbidden",
-        ///         "message": "Account is locked out | Account is not allowed | Requires two factor"
+        ///         message: "Account is locked out | Account is not allowed | Requires two factor"
         ///     }
         /// </response>
         /// <response code="404">
@@ -343,7 +359,24 @@ namespace AuthService.Controllers
         ///     {
         ///         statusCode: 404,
         ///         error: "....",
-        ///         "message": "User not found"
+        ///         message: "User not found"
+        ///     }
+        /// </response>
+        /// <response code="409">
+        /// User not signed up yet
+        /// 
+        ///     {
+        ///         statusCode: 409,
+        ///         error: "UserNotSignedUp",
+        ///         message: "The user has not signed up yet. Additional information is required to complete the registration."
+        ///     }
+        ///     
+        /// Email is already used by another method
+        /// 
+        ///     {
+        ///         statusCode: 409,
+        ///         error: "EmailInUse",
+        ///         message: "Email has been used by another method."
         ///     }
         /// </response>
         /// <response code="500">
@@ -352,7 +385,7 @@ namespace AuthService.Controllers
         ///     {
         ///         statusCode: 500,
         ///         error: "Internal Server Error",
-        ///         "message": "Server error message ..."
+        ///         message: "Server error message ..."
         ///     }
         /// </response>
         [HttpPost("login-google-by-code")]
@@ -453,7 +486,7 @@ namespace AuthService.Controllers
         ///     {
         ///         statusCode: 400,
         ///         error: "Bad Request",
-        ///         "message": "Provider must be one of the following ..."
+        ///         message: "Provider must be one of the following ..."
         ///     }
         /// </response>
         /// <response code="401">
@@ -462,7 +495,7 @@ namespace AuthService.Controllers
         ///     {
         ///         statusCode: 401,
         ///         error: "Unauthorized",
-        ///         "message": "Invalid login"
+        ///         message: "Invalid login"
         ///     }
         /// </response>
         /// <response code="403">
@@ -471,7 +504,7 @@ namespace AuthService.Controllers
         ///     {
         ///         statusCode: 403,
         ///         error: "Forbidden",
-        ///         "message": "Account is locked out | Account is not allowed | Requires two factor"
+        ///         message: "Account is locked out | Account is not allowed | Requires two factor"
         ///     }
         /// </response>
         /// <response code="404">
@@ -480,7 +513,24 @@ namespace AuthService.Controllers
         ///     {
         ///         statusCode: 404,
         ///         error: "....",
-        ///         "message": "User not found"
+        ///         message: "User not found"
+        ///     }
+        /// </response>
+        /// <response code="409">
+        /// User not signed up yet
+        /// 
+        ///     {
+        ///         statusCode: 409,
+        ///         error: "UserNotSignedUp",
+        ///         message: "The user has not signed up yet. Additional information is required to complete the registration."
+        ///     }
+        ///     
+        /// Email is already used by another method
+        /// 
+        ///     {
+        ///         statusCode: 409,
+        ///         error: "EmailInUse",
+        ///         message: "Email has been used by another method."
         ///     }
         /// </response>
         /// <response code="500">
@@ -489,7 +539,7 @@ namespace AuthService.Controllers
         ///     {
         ///         statusCode: 500,
         ///         error: "Internal Server Error",
-        ///         "message": "Server error message ..."
+        ///         message: "Server error message ..."
         ///     }
         /// </response>
         [HttpPost("external-login")]
@@ -568,7 +618,7 @@ namespace AuthService.Controllers
         ///     {
         ///         statusCode: 400,
         ///         error: "Bad Request",
-        ///         "message": "RefreshToken is required"
+        ///         message: "RefreshToken is required"
         ///     }
         /// </response>
         /// <response code="401">
@@ -577,7 +627,7 @@ namespace AuthService.Controllers
         ///     {
         ///         statusCode: 401,
         ///         error: "Unauthorized",
-        ///         "message": "Refresh token is invalid"
+        ///         message: "Refresh token is invalid"
         ///     }
         /// </response>
         /// <response code="500">
@@ -586,7 +636,7 @@ namespace AuthService.Controllers
         ///     {
         ///         statusCode: 500,
         ///         error: "Internal Server Error",
-        ///         "message": "Server error message ..."
+        ///         message: "Server error message ..."
         ///     }
         /// </response>
         [HttpPost("refresh-token")]
@@ -649,7 +699,7 @@ namespace AuthService.Controllers
         /// Success
         /// 
         ///     {
-        ///         "message": "Signup successfully"
+        ///         message: "Signup successfully"
         ///     }
         /// </response>
         /// <response code="400">
@@ -657,7 +707,7 @@ namespace AuthService.Controllers
         /// 
         ///     {
         ///         statusCode: 400,
-        ///         "message": "Error message explaining why signup failed"
+        ///         message: "Error message explaining why signup failed"
         ///     }
         /// </response>
         [HttpPost("signup")]
@@ -713,7 +763,7 @@ namespace AuthService.Controllers
         /// Success
         /// 
         ///     {
-        ///         "message": "Account confirmed successfully"
+        ///         message: "Account confirmed successfully"
         ///     }
         /// </response>
         /// <response code="400">
@@ -722,7 +772,7 @@ namespace AuthService.Controllers
         ///     {
         ///         "statusCode": 400,
         ///         "error": "Bad Request",
-        ///         "message": "Token and Email are required | Error message explaining why confirmation failed"
+        ///         message: "Token and Email are required | Error message explaining why confirmation failed"
         ///     }
         /// </response>
         /// <response code="500">
@@ -731,7 +781,7 @@ namespace AuthService.Controllers
         ///     {
         ///         "statusCode": 500,
         ///         "error": "Internal Server Error",
-        ///         "message": "Server error message ..."
+        ///         message: "Server error message ..."
         ///     }
         /// </response>
         [HttpGet("confirm-account", Name = "ConfirmAccount")]
@@ -780,7 +830,7 @@ namespace AuthService.Controllers
         /// Success
         /// 
         ///     {
-        ///         "message": "Reset password link has been sent to your email"
+        ///         message: "Reset password link has been sent to your email"
         ///     }
         /// </response>
         /// <response code="400">
@@ -789,7 +839,7 @@ namespace AuthService.Controllers
         ///     {
         ///         "statusCode": 400,
         ///         "error": "Bad Request",
-        ///         "message": "Error messages explaining the validation failure"
+        ///         message: "Error messages explaining the validation failure"
         ///     }
         /// </response>
         /// <response code="404">
@@ -798,7 +848,7 @@ namespace AuthService.Controllers
         ///     {
         ///         "statusCode": 404,
         ///         "error": "Not Found",
-        ///         "message": "User not found"
+        ///         message: "User not found"
         ///     }
         /// </response>
         /// <response code="500">
@@ -807,7 +857,7 @@ namespace AuthService.Controllers
         ///     {
         ///         "statusCode": 500,
         ///         "error": "Internal Server Error",
-        ///         "message": "Server error message ..."
+        ///         message: "Server error message ..."
         ///     }
         /// </response>
         [HttpPost("forgot-password")]
@@ -842,6 +892,76 @@ namespace AuthService.Controllers
         }
 
         /// <summary>
+        /// Initiate the password recovery process for a user.
+        /// <para>Created at: 2024/10/08</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="validateOtpContent">Contains the email and OTP code</param>
+        /// <returns></returns>
+        /// <remarks>
+        /// Code
+        /// 
+        ///     200 - Reset password link sent successfully
+        ///     400 - Validation error | User not found
+        ///     500 - Server error
+        /// </remarks>
+        /// <response code="200">
+        /// Success
+        /// 
+        ///     {
+        ///         message: "OTP code is valid"
+        ///     }
+        /// </response>
+        /// <response code="400">
+        /// Validate error
+        /// 
+        ///     {
+        ///         "statusCode": 400,
+        ///         "error": "Bad Request",
+        ///         message: "Error messages explaining the validation failure"
+        ///     }
+        /// </response>
+        /// <response code="500">
+        /// Server error
+        /// 
+        ///     {
+        ///         "statusCode": 500,
+        ///         "error": "Internal Server Error",
+        ///         message: "Server error message ..."
+        ///     }
+        /// </response>
+        [HttpPost("validate-otp")]
+        [ProducesResponseType(typeof(OkObjectResult), StatusCodes.Status200OK)]
+        public IActionResult ValidateOtp([FromBody] OtpCodeContent validateOtpContent)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ErrorResponseHelper.GetContentOfBadRequestResponse(
+                    ModelState.Values.SelectMany(x => x.Errors)
+                        .Select(x => x.ErrorMessage).ToList()));
+            }
+
+            try
+            {
+                var response = _authService.ValidateOtpCode(validateOtpContent.Email, validateOtpContent.OtpCode);
+                if (response.StatusCode == StatusCodes.Status200OK)
+                {
+                    return Ok(new
+                    {
+                        message = response.Message
+                    });
+                }
+
+                return StatusCode(response.StatusCode, ErrorResponseHelper.GetContentOfAnyError(
+                    response.StatusCode, response.Error, response.Message));
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ErrorResponseHelper.GetContentOfInternalServerResponse(e));
+            }
+        }
+
+        /// <summary>
         /// Reset the user's password using the provided token and new password.
         /// <para>Created at: 2024/10/08</para>
         /// <para>Created by: TaiPV</para>
@@ -860,7 +980,7 @@ namespace AuthService.Controllers
         /// Success
         /// 
         ///     {
-        ///         "message": "Password has been reset successfully."
+        ///         message: "Password has been reset successfully."
         ///     }
         /// </response>
         /// <response code="400">
@@ -869,7 +989,7 @@ namespace AuthService.Controllers
         ///     {
         ///         "statusCode": 400,
         ///         "error": "Bad Request",
-        ///         "message": "Error messages explaining the validation failure or user not found"
+        ///         message: "Error messages explaining the validation failure or user not found"
         ///     }
         /// </response>
         /// <response code="404">
@@ -878,7 +998,7 @@ namespace AuthService.Controllers
         ///     {
         ///         "statusCode": 404,
         ///         "error": "Not Found",
-        ///         "message": "User not found"
+        ///         message: "User not found"
         ///     }
         /// </response>
         /// <response code="500">
@@ -887,7 +1007,7 @@ namespace AuthService.Controllers
         ///     {
         ///         "statusCode": 500,
         ///         "error": "Internal Server Error",
-        ///         "message": "Server error message ..."
+        ///         message: "Server error message ..."
         ///     }
         /// </response>
         [HttpPut("reset-password")]
