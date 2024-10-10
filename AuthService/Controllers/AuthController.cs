@@ -457,7 +457,11 @@ namespace AuthService.Controllers
         ///     1 - Admin. But you cannot pass this role
         ///     2 - Teacher
         ///     3 - Student
-        ///
+        /// Provider
+        /// 
+        ///     Google
+        ///     Facebook
+        ///     GitHub
         /// </remarks>
         /// <response code="200">
         /// Success
