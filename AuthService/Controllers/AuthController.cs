@@ -729,10 +729,7 @@ namespace AuthService.Controllers
                 var response = await _authService.SignUp(request);
                 if (response.StatusCode == StatusCodes.Status201Created)
                 {
-                    return Ok(new
-                    {
-                        message = "Signup successfully"
-                    });
+                    return Ok(new SuccessResponse(response.Message));
                 }
 
                 return StatusCode(response.StatusCode, ErrorResponseHelper.GetContentOfAnyError(
@@ -797,10 +794,7 @@ namespace AuthService.Controllers
                 ResponseInfo response = await _authService.ConfirmAccount(token, userId);
                 if (response.StatusCode == StatusCodes.Status200OK)
                 {
-                    return Ok(new
-                    {
-                        message = response.Message
-                    });
+                    return Ok(new SuccessResponse(response.Message));
                 }
 
                 return StatusCode(response.StatusCode, ErrorResponseHelper.GetContentOfAnyError(
@@ -875,10 +869,7 @@ namespace AuthService.Controllers
                 var response = await _authService.ForgotPassword(forgotPasswordContent);
                 if (response.StatusCode == StatusCodes.Status200OK)
                 {
-                    return Ok(new
-                    {
-                        message = response.Message
-                    });
+                    return Ok(new SuccessResponse(response.Message));
                 }
 
                 return StatusCode(response.StatusCode, ErrorResponseHelper.GetContentOfAnyError(
@@ -931,7 +922,7 @@ namespace AuthService.Controllers
         ///     }
         /// </response>
         [HttpPost("validate-otp")]
-        [ProducesResponseType(typeof(OkObjectResult), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(SuccessResponse), StatusCodes.Status200OK)]
         public IActionResult ValidateOtp([FromBody] OtpCodeContent validateOtpContent)
         {
             if (!ModelState.IsValid)
@@ -946,10 +937,7 @@ namespace AuthService.Controllers
                 var response = _authService.ValidateOtpCode(validateOtpContent.Email, validateOtpContent.OtpCode);
                 if (response.StatusCode == StatusCodes.Status200OK)
                 {
-                    return Ok(new
-                    {
-                        message = response.Message
-                    });
+                    return Ok(new SuccessResponse(response.Message));
                 }
 
                 return StatusCode(response.StatusCode, ErrorResponseHelper.GetContentOfAnyError(
@@ -1025,10 +1013,7 @@ namespace AuthService.Controllers
                 var response = await _authService.ResetPassword(resetPasswordContent);
                 if (response.StatusCode == StatusCodes.Status200OK)
                 {
-                    return Ok(new
-                    {
-                        message = response.Message
-                    });
+                    return Ok(new SuccessResponse(response.Message));
                 }
 
                 return StatusCode(response.StatusCode, ErrorResponseHelper.GetContentOfAnyError(
