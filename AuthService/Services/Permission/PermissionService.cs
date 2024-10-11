@@ -1,5 +1,6 @@
 using AuthService.Commons;
 using AuthService.Services.Permission.Schemas;
+using AuthService.Services.Permission.Schemas.Function;
 using AuthService.Services.Permission.Schemas.Screen;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
@@ -81,8 +82,13 @@ namespace AuthService.Services.Permission
                             .OrderBy(f => f.Order)
                             .Select(f => new PermissionDto()
                             {
-                                FunctionId = f.Id,
-                                FunctionName = f.Name,
+                                Function = new FunctionDto()
+                                {
+                                    Id = f.Id,
+                                    Name = f.Name,
+                                    Code = f.Code,
+                                    Order = f.Order
+                                },
                                 IsActive = permissionByRole.ContainsKey(f.Id)
                             })
                             .ToList()

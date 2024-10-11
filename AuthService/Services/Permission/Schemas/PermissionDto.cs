@@ -1,10 +1,10 @@
+using AuthService.Services.Permission.Schemas.Function;
+
 namespace AuthService.Services.Permission.Schemas
 {
     public class PermissionDto
     {
-        public string FunctionId { get; set; }
-
-        public string FunctionName { get; set; }
+        public FunctionDto Function { get; set; }
 
         public bool IsActive { get; set; }
     }

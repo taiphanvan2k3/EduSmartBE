@@ -9,5 +9,7 @@ namespace AuthService.Services.Permission.Schemas.Function
         public string Name { get; set; }
 
         public string ScreenId { get; set; }
+
+        public int Order { get; set; }
     }
 }
