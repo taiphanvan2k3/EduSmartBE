@@ -179,6 +179,7 @@ namespace AuthService.Services.Permission
                 _context.Functions.Remove(existedFunction);
                 await _context.SaveChangesAsync();
 
+                responseInfo.Data.Add("id", id);
                 _logger.LogInformation("[FunctionService][DeleteFunction] End");
                 return responseInfo;
             }

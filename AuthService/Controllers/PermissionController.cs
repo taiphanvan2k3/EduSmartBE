@@ -566,7 +566,11 @@ namespace AuthService.Controllers
                     });
                 }
 
-                return Ok(response);
+                return Ok(new
+                {
+                    id,
+                    message = response.Message
+                });
             }
             catch (Exception e)
             {
