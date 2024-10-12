@@ -149,10 +149,10 @@ namespace AuthService.Services.Auth
 
                 var result = await _signInManager.PasswordSignInAsync(user.UserName, loginRequest.Password, isPersistent: false,
                     lockoutOnFailure: false);
-                if (!result.Succeeded)
+                if (!result.Succeeded || !user.IsActive)
                 {
                     responseInfo.Error = "InvalidAccount";
-                    if (result.IsLockedOut)
+                    if (result.IsLockedOut || !user.IsActive)
                     {
                         responseInfo.StatusCode = StatusCodes.Status403Forbidden;
                         responseInfo.Message = "Account is locked out";
