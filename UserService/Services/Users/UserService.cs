@@ -85,7 +85,7 @@ namespace UserService.Services.Users
                 {
                     FirstName = user.FirstName,
                     LastName = user.LastName,
-                    AvatarURL = user.AvatarUrl,
+                    AvatarURL = user.AvatarURL,
                     Phone = null
                 };
 

@@ -9,7 +9,7 @@ namespace AuthService.Services
         protected ILogger _logger;
         protected IHttpContextAccessor _httpContextAccessor;
         protected static string GetActualAsyncMethodName([CallerMemberName] string name = null) => name;
-        
+
         public BaseService() { }
 
         public BaseService(IServiceProvider serviceProvider)
@@ -37,6 +37,12 @@ namespace AuthService.Services
         protected virtual void LogError(string message, [CallerMemberName] string method = null)
         {
             _logger?.LogError("[{Type}] [{Method}] {Message}", GetType().Name, method, message);
+        }
+
+        protected virtual void LogError(Exception exception, [CallerMemberName] string method = null)
+        {
+            _logger?.LogError(exception, "[{Type}] [{Method}] {Message}", GetType().Name, method,
+                exception.InnerException?.Message ?? exception.Message);
         }
     }
 }
