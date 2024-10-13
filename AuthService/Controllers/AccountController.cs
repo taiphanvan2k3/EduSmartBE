@@ -23,7 +23,7 @@ namespace AuthService.Controllers
                     return Ok(new
                     {
                         userId,
-                        userStatus = activationContent.IsActive ? "Activated" : "Deactivated"
+                        isActive = activationContent.IsActive
                     });
                 }
 
