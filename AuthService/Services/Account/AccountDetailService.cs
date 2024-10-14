@@ -1,3 +1,4 @@
+using AuthService.AsyncDataServices;
 using AuthService.Commons;
 
 namespace AuthService.Services.Account
@@ -11,6 +12,9 @@ namespace AuthService.Services.Account
         ILogger<AccountDetailService> logger)
         : BaseService(serviceProvider, logger), IAccountDetailService
     {
+        private readonly IMessagePublisher _messageBusPublisher = serviceProvider.GetRequiredService<IMessagePublisher>()
+            ?? throw new InvalidDataException(ServiceInjectionError("IMessagePublisher"));
+            
         public async Task<ResponseInfo> ActivateUser(int userId, bool isActive)
         {
             var method = GetActualAsyncMethodName();
@@ -32,6 +36,12 @@ namespace AuthService.Services.Account
 
                 user.IsActive = isActive;
                 await _context.SaveChangesAsync();
+
+                _messageBusPublisher.PublishMessage(EventTypes.ActiveStatusUpdated, new
+                {
+                    UserId = user.Id,
+                    IsActive = isActive
+                });
 
                 LogInfo("End", method);
                 return responseInfo;
