@@ -418,7 +418,7 @@ namespace AuthService.Services.Auth
                     return responseInfo;
                 }
 
-                _messageBusPublisher.PublishMessage(EventTypes.UserActivated, new
+                _messageBusPublisher.PublishMessage(EventTypes.ActiveStatusUpdated, new
                 {
                     UserId = user.Id,
                     IsActive = true
