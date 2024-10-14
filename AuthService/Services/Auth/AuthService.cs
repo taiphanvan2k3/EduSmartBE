@@ -358,7 +358,7 @@ namespace AuthService.Services.Auth
                         : signUpRequest.Email.Split('@')[0],
                     FirstName = signUpRequest.FirstName,
                     LastName = signUpRequest.LastName,
-                    AvatarURL = Utils.GetDefaultAvatarUrl(signUpRequest.AvatarURL, $"{signUpRequest.LastName} {signUpRequest.FirstName}"),
+                    AvatarURL = Utils.GetDefaultAvatarUrl(signUpRequest.AvatarURL, $"{signUpRequest.LastName} {signUpRequest.FirstName}", signUpRequest.Username),
                 };
 
                 var result = await _userManager.CreateAsync(user, signUpRequest.Password);
@@ -377,8 +377,11 @@ namespace AuthService.Services.Auth
                     await _userManager.AddLoginAsync(user, new UserLoginInfo(signUpRequest.Provider, signUpRequest.Email, signUpRequest.Provider));
                 }
 
-                string callbackUrl = await GenerateEmailConfirmationTokenAsync(user);
-                await SendMailConfirmAccount(user.Email, user.UserName, callbackUrl);
+                if (signUpRequest.Provider == ProviderType.Email)
+                {
+                    string callbackUrl = await GenerateEmailConfirmationTokenAsync(user);
+                    await SendMailConfirmAccount(user.Email, user.UserName, callbackUrl);
+                }
 
                 responseInfo.StatusCode = StatusCodes.Status201Created;
                 responseInfo.Message = "Sign up successfully";
@@ -629,7 +632,8 @@ namespace AuthService.Services.Auth
                 AvatarUrl = user.AvatarURL,
                 CreatedAt = DateTimeOffset.Now,
                 Roles = [.. (await _userManager.GetRolesAsync(user))],
-                IsActive = user.IsActive
+                IsActive = user.IsActive,
+                Phone = user.Phone
             };
         }
 
