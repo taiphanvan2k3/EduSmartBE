@@ -1,6 +1,6 @@
 namespace UserService.EventData
 {
-    public class UserActivatedEventData
+    public class ActiveStatusEventData
     {
         public int UserId { get; set; }
 

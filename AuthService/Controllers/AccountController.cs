@@ -13,6 +13,7 @@ namespace AuthService.Controllers
             ?? throw new ArgumentNullException(nameof(accountDetailService));
 
         [HttpPut("{userId}/activate")]
+        [Filters.Auth(Roles = "Admin")]
         public async Task<IActionResult> ActivateUser([FromRoute] int userId, [FromBody] UserActivationContent activationContent)
         {
             try
