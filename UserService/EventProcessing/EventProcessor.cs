@@ -38,8 +38,8 @@ namespace UserService.EventProcessing
                         var userPublished = JsonConvert.DeserializeObject<UserCreatedEventData>(decodePayload.Data.ToString());
                         await AddUser(userPublished);
                         break;
-                    case EventType.UserActivated:
-                        var userActivated = JsonConvert.DeserializeObject<UserActivatedEventData>(decodePayload.Data.ToString());
+                    case EventType.ActiveStatusUpdated:
+                        var userActivated = JsonConvert.DeserializeObject<ActiveStatusEventData>(decodePayload.Data.ToString());
                         await UpdateActiveStatus(userActivated);
                         break;
                     case EventType.UserLastLoginUpdated:

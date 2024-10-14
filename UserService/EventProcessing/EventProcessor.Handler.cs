@@ -21,7 +21,7 @@ namespace UserService.EventProcessing
             }
         }
 
-        private async Task UpdateActiveStatus(UserActivatedEventData userActivated)
+        private async Task UpdateActiveStatus(ActiveStatusEventData userActivated)
         {
             try
             {
