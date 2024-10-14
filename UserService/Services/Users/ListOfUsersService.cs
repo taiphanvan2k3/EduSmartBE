@@ -21,17 +21,15 @@ namespace UserService.Services.Users
             {
                 LogInfo("Start", method);
 
-                searchCondition.Email = searchCondition.Email.Trim();
-                searchCondition.Username = searchCondition.Username.Trim();
-                searchCondition.FullName = searchCondition.FullName.Trim();
+                searchCondition.SearchInput = searchCondition.SearchInput.Trim();
 
                 var usersQuery = _context.Users
-                    .Where(x => (string.IsNullOrEmpty(searchCondition.Email)
-                            || EF.Functions.ILike(x.Email, $"%{searchCondition.Email}%"))
-                        && (string.IsNullOrEmpty(searchCondition.Username)
-                            || EF.Functions.ILike(x.UserName, $"%{searchCondition.Username}%"))
-                        && (string.IsNullOrEmpty(searchCondition.FullName)
-                            || EF.Functions.ILike(x.UserInfo.LastName + " " + x.UserInfo.FirstName, $"%{searchCondition.FullName}%")))
+                    .Where(x =>
+                        (!searchCondition.IsActive.HasValue || x.IsActive == searchCondition.IsActive.Value)
+                        && (string.IsNullOrEmpty(searchCondition.SearchInput)
+                            || EF.Functions.ILike(x.Email, $"%{searchCondition.SearchInput}%")
+                            || EF.Functions.ILike(x.UserName, $"%{searchCondition.SearchInput}%")
+                            || EF.Functions.ILike(x.UserInfo.LastName + " " + x.UserInfo.FirstName, $"%{searchCondition.SearchInput}%")))
                     .Select(x => new UserDto()
                     {
                         Id = x.Id,

@@ -14,6 +14,10 @@ namespace AuthService.Services.User.Schemas
 
         public string AvatarUrl { get; set; }
 
+        public string Phone { get; set; }
+
+        public int? Gender { get; set; }
+
         public DateTimeOffset CreatedAt { get; set; }
 
         public bool IsActive { get; set; }
