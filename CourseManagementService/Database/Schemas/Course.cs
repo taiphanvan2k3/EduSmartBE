@@ -19,6 +19,8 @@ namespace CourseManagementService.Database.Schemas
 
         public decimal Price { get; set; }
 
+        public int CurrencyId { get; set; }
+
         public CourseType Type { get; set; }
 
         public int TeacherId { get; set; }
@@ -27,8 +29,13 @@ namespace CourseManagementService.Database.Schemas
 
         public virtual Category Category { get; set; }
 
+        [Required]
+        public Currency Currency { get; set; }
+
         public virtual ICollection<CourseTag> Tags { get; set; }
 
         public virtual ICollection<Chapter> Chapters { get; set; }
+
+        public virtual ICollection<CourseEnrollment> Enrollments { get; set; }
     }
 }

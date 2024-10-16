@@ -1,0 +1,40 @@
+syntax = "proto3";
+option csharp_namespace = "UserService.GrpcServices";
+
+service User {
+    rpc GetUserInfo (UserRequest) returns (UserResponse);
+    rpc CheckUserExist (UserRequest) returns (CheckUserExistResponse);
+    rpc GetListOfTeachers (UsersRequest) returns (ListOfUsersResponse);
+}
+
+// Dùng để lấy thông tin user theo id
+message UserRequest {
+    int32 id = 1;
+}
+
+// Dùng để lấy danh sách user theo mảng id
+message UsersRequest {
+    repeated int32 ids = 1; // Truyền vào mảng các id
+}
+
+message SimpleUserResponse {
+    int32 id = 1;
+    string userName = 2;
+    string avatar = 3;
+}
+
+message UserResponse {
+    int32 id = 1;
+    string userName = 2;
+    string firstName = 3;
+    string lastName = 4;
+    string email = 5;
+}
+
+message ListOfUsersResponse {
+    repeated SimpleUserResponse users = 1;
+}
+
+message CheckUserExistResponse {
+    bool isExist = 1;
+}
