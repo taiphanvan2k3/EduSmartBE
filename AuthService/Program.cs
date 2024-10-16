@@ -5,6 +5,7 @@ using AuthService.Extensions;
 using AuthService.Middlewares;
 using AuthService.Services.MailSender;
 using AuthService.Settings;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
 
@@ -56,6 +57,12 @@ if (builder.Environment.IsProduction())
 {
     builder.WebHost.UseUrls("http://0.0.0.0:80");
 }
+
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    // Ngăn chặn response ngay lập tức khi ModelState không hợp lệ, để có thể xử lý lỗi ở Controller
+    options.SuppressModelStateInvalidFilter = true;
+});
 
 var app = builder.Build();
 

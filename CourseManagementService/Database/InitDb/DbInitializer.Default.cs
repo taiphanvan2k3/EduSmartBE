@@ -13,6 +13,7 @@ namespace CourseManagementService.Database.InitDb
 
                 await SeedCategoryData();
                 await SeedTagData();
+                await SeedCurrencyData();
 
                 await _context.SaveChangesAsync();
                 _logger.LogInformation("[DbInitializer] Seeding default data completed");
@@ -28,19 +29,19 @@ namespace CourseManagementService.Database.InitDb
         {
             if (!await _context.Categories.AnyAsync())
             {
-                await _context.Categories.AddRangeAsync(
-                [
-                    new Category()
+                await _context.Categories.AddRangeAsync(new List<Category>
+                {
+                    new ()
                     {
                         Name= "IT",
                         IsCreatedByAdmin = true
                     },
-                    new Category()
+                    new ()
                     {
                         Name= "Toeic",
                         IsCreatedByAdmin = true
                     },
-                ]);
+                });
             }
         }
 
@@ -57,6 +58,24 @@ namespace CourseManagementService.Database.InitDb
                         Name = tag,
                         IsCreatedByAdmin = true
                     }));
+            }
+        }
+
+        private async Task SeedCurrencyData()
+        {
+            if (!await _context.Currencies.AnyAsync())
+            {
+                await _context.Currencies.AddRangeAsync(
+                    new Currency()
+                    {
+                        Name = "Viet Nam Dong",
+                        Code = "VND"
+                    },
+                    new Currency()
+                    {
+                        Name = "US Dollar",
+                        Code = "USD"
+                    });
             }
         }
     }

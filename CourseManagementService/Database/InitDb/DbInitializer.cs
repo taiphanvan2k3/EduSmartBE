@@ -12,7 +12,7 @@ namespace CourseManagementService.Database.InitDb
 
         public async Task Initialize()
         {
-            _context.Database.EnsureCreated();
+            await _context.Database.EnsureCreatedAsync();
             await SeedDataDefault();
         }
     }
