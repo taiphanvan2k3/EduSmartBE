@@ -1,6 +1,7 @@
 using System.Reflection;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using CourseManagementService.Services.AppState;
 using Serilog;
 
 namespace CourseManagementService.Extensions
@@ -36,6 +37,9 @@ namespace CourseManagementService.Extensions
                         .Where(t => t.Name.EndsWith("Service") && t.Namespace.Contains("Services"))
                         .AsImplementedInterfaces()
                         .InstancePerLifetimeScope(); // lifetime scope
+
+                    // Đăng ký AppStateService mà không cần interface
+                    containerBuilder.RegisterType<AppStateService>().AsSelf().InstancePerLifetimeScope();
                 });
             }
             catch (Exception ex)

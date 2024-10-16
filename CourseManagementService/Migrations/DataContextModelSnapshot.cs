@@ -82,6 +82,9 @@ namespace CourseManagementService.Migrations
                     b.Property<int>("CategoryId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("CurrencyId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("DetailedDescription")
                         .HasColumnType("text");
 
@@ -108,7 +111,25 @@ namespace CourseManagementService.Migrations
 
                     b.HasIndex("CategoryId");
 
+                    b.HasIndex("CurrencyId");
+
                     b.ToTable("Courses", (string)null);
+                });
+
+            modelBuilder.Entity("CourseManagementService.Database.Schemas.CourseEnrollment", b =>
+                {
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("StudentId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("EnrollmentDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("CourseId", "StudentId");
+
+                    b.ToTable("CourseEnrollments", (string)null);
                 });
 
             modelBuilder.Entity("CourseManagementService.Database.Schemas.CourseTag", b =>
@@ -134,6 +155,29 @@ namespace CourseManagementService.Migrations
                     b.ToTable("CourseTags", (string)null);
                 });
 
+            modelBuilder.Entity("CourseManagementService.Database.Schemas.Currency", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Currencies");
+                });
+
             modelBuilder.Entity("CourseManagementService.Database.Schemas.Tag", b =>
                 {
                     b.Property<int>("Id")
@@ -149,7 +193,9 @@ namespace CourseManagementService.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("Name")
-                        .HasColumnType("text");
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.HasKey("Id");
 
@@ -175,7 +221,26 @@ namespace CourseManagementService.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("CourseManagementService.Database.Schemas.Currency", "Currency")
+                        .WithMany("Courses")
+                        .HasForeignKey("CurrencyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Category");
+
+                    b.Navigation("Currency");
+                });
+
+            modelBuilder.Entity("CourseManagementService.Database.Schemas.CourseEnrollment", b =>
+                {
+                    b.HasOne("CourseManagementService.Database.Schemas.Course", "Course")
+                        .WithMany("Enrollments")
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Course");
                 });
 
             modelBuilder.Entity("CourseManagementService.Database.Schemas.CourseTag", b =>
@@ -183,7 +248,7 @@ namespace CourseManagementService.Migrations
                     b.HasOne("CourseManagementService.Database.Schemas.Course", "Course")
                         .WithMany("Tags")
                         .HasForeignKey("CourseId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("CourseManagementService.Database.Schemas.Tag", "Tag")
@@ -206,7 +271,14 @@ namespace CourseManagementService.Migrations
                 {
                     b.Navigation("Chapters");
 
+                    b.Navigation("Enrollments");
+
                     b.Navigation("Tags");
+                });
+
+            modelBuilder.Entity("CourseManagementService.Database.Schemas.Currency", b =>
+                {
+                    b.Navigation("Courses");
                 });
 
             modelBuilder.Entity("CourseManagementService.Database.Schemas.Tag", b =>

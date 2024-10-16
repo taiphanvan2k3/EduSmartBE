@@ -4,6 +4,8 @@ namespace CourseManagementService.Commons
     {
         public int StatusCode { get; set; }
 
+        public string Error { get; set; }
+
         public string Message { get; set; }
 
         public Dictionary<string, dynamic> Data { get; set; }
