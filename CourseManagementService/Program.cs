@@ -1,7 +1,10 @@
 using CourseManagementService.Common;
 using CourseManagementService.Database.InitDb;
 using CourseManagementService.Extensions;
+using CourseManagementService.Filters;
 using CourseManagementService.Middlewares;
+using CourseManagementService.Services.AppState;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
 
@@ -41,6 +44,12 @@ if (builder.Environment.IsProduction())
     builder.WebHost.UseUrls("http://0.0.0.0:80");
 }
 
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    // Ngăn chặn response ngay lập tức khi ModelState không hợp lệ, để có thể xử lý lỗi ở Controller
+    options.SuppressModelStateInvalidFilter = true;
+});
+
 var app = builder.Build();
 
 var dbInit = app.Services.GetRequiredService<IDbInitializer>();
@@ -49,7 +58,11 @@ await dbInit.Initialize();
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.InjectStylesheet("/swagger/custom-swagger.css");
+        options.InjectJavascript("/swagger/custom-swagger.js");
+    });
 }
 
 if (app.Environment.IsProduction())

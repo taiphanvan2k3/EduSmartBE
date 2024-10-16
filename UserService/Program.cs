@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
 using UserService.EventProcessing;
 using UserService.AsyncDataServices;
+using UserService.GrpcServices;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.UseCustomLog(Constants.SERVICE_NAME);
@@ -38,11 +41,7 @@ builder.Services.AddCustomCorsConfig();
 builder.Services.AddControllers();
 builder.Services.AddAuthorization();
 
-if (builder.Environment.IsProduction())
-{
-    builder.WebHost.UseUrls("http://0.0.0.0:80");
-}
-
+builder.Services.AddGrpc();
 var app = builder.Build();
 
 var dbInit = app.Services.GetRequiredService<IDbInitializer>();
@@ -58,6 +57,7 @@ if (app.Environment.IsProduction())
 {
     app.UseHttpsRedirection();
 }
+app.UseHttpsRedirection();
 
 app.UseRouting();
 app.UseCors("AllowSpecificOrigin");
@@ -66,6 +66,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseMiddleware<CustomUnauthorizedMiddleware>();
+app.MapGrpcService<GrpcUserService>();
 app.MapControllers();
 
 await app.RunAsync();

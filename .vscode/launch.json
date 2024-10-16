@@ -76,6 +76,11 @@
             "stopAll": true
         },
         {
+            "name": "User, Course",
+            "configurations": ["UserService", "CourseManagementService"],
+            "stopAll": true
+        },
+        {
             "name": "All Services",
             "configurations": ["AuthService", "UserService", "CourseManagementService"],
             "stopAll": true

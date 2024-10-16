@@ -97,36 +97,29 @@ namespace AuthService.Services.Auth
     }
 
     public class AuthService(IServiceProvider serviceProvider,
-        UserManager<ApplicationUser> userManager,
-        SignInManager<ApplicationUser> signInManager,
-        IUrlHelper urlHelper,
-        IOptions<ServerSetting> serverSetting,
-        MailProducer mailProducer,
-        CommonProducer commonProducer,
-        ITokenService tokenService,
-        IGoogleAuthService googleAuthService,
-        IMessagePublisher messageBusPublisher,
         ILogger<AuthService> logger)
         : BaseService(serviceProvider, logger), IAuthService
     {
-        private readonly UserManager<ApplicationUser> _userManager = userManager
-            ?? throw new ArgumentNullException(nameof(userManager));
-        private readonly SignInManager<ApplicationUser> _signInManager = signInManager
-            ?? throw new ArgumentNullException(nameof(signInManager));
-        private readonly MailProducer _mailProducer = mailProducer
-            ?? throw new ArgumentNullException(nameof(mailProducer));
-        private readonly CommonProducer _commonProducer = commonProducer
-            ?? throw new ArgumentNullException(nameof(commonProducer));
-        private readonly ServerSetting _serverSetting = serverSetting?.Value
-            ?? throw new ArgumentNullException(nameof(serverSetting));
-        private readonly ITokenService _tokenService = tokenService
-            ?? throw new ArgumentNullException(nameof(tokenService));
-        private readonly IGoogleAuthService _googleAuthService = googleAuthService
-            ?? throw new ArgumentNullException(nameof(googleAuthService));
-        private readonly IMessagePublisher _messageBusPublisher = messageBusPublisher
-            ?? throw new ArgumentNullException(nameof(messageBusPublisher));
+        private readonly UserManager<ApplicationUser> _userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>()
+            ?? throw new InvalidOperationException(ServiceInjectionError("UserManager"));
+        private readonly SignInManager<ApplicationUser> _signInManager = serviceProvider.GetRequiredService<SignInManager<ApplicationUser>>()
+            ?? throw new InvalidOperationException(ServiceInjectionError("SignInManager"));
+        private readonly MailProducer _mailProducer = serviceProvider.GetRequiredService<MailProducer>()
+            ?? throw new InvalidOperationException(ServiceInjectionError("MailProducer"));
+        private readonly CommonProducer _commonProducer = serviceProvider.GetRequiredService<CommonProducer>()
+            ?? throw new InvalidOperationException(ServiceInjectionError("CommonProducer"));
+        private readonly ServerSetting _serverSetting = serviceProvider.GetRequiredService<IOptions<ServerSetting>>().Value
+            ?? throw new InvalidOperationException(ServiceInjectionError("ServerSetting"));
+        private readonly ITokenService _tokenService = serviceProvider.GetRequiredService<ITokenService>()
+            ?? throw new InvalidOperationException(ServiceInjectionError("TokenService"));
+        private readonly IGoogleAuthService _googleAuthService = serviceProvider.GetRequiredService<IGoogleAuthService>()
+            ?? throw new InvalidOperationException(ServiceInjectionError("GoogleAuthService"));
+        private readonly IUrlHelper urlHelper = serviceProvider.GetRequiredService<IUrlHelper>()
+            ?? throw new InvalidOperationException(ServiceInjectionError("UrlHelper"));
+        private readonly IMessagePublisher _messageBusPublisher = serviceProvider.GetRequiredService<IMessagePublisher>()
+            ?? throw new InvalidOperationException(ServiceInjectionError("MessageBusPublisher"));
         private readonly ICacheService _cacheService = serviceProvider.GetRequiredService<ICacheService>()
-            ?? throw new InvalidOperationException("Cannot get ICacheService service");
+            ?? throw new InvalidOperationException(ServiceInjectionError("CacheService"));
 
         public async Task<ResponseInfo> CheckLogin(LoginRequest loginRequest)
         {
