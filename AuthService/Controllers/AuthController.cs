@@ -907,6 +907,11 @@ namespace AuthService.Controllers
         ///     200 - Reset password link sent successfully
         ///     400 - Validation error | User not found
         ///     500 - Server error
+        ///  OtpType
+        ///     
+        ///     1 - Forgot password
+        ///     2 - Confirm delete account
+        ///     
         /// </remarks>
         /// <response code="200">
         /// Success

@@ -1,4 +1,5 @@
 using System.Reflection;
+using AuthService.Services.AppState;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Serilog;
@@ -36,6 +37,9 @@ namespace AuthService.Extensions
                         .Where(t => t.Name.EndsWith("Service") && t.Namespace.Contains("Services"))
                         .AsImplementedInterfaces()
                         .InstancePerLifetimeScope(); // lifetime scope
+
+                    // Đăng ký AppStateService mà không cần interface
+                    containerBuilder.RegisterType<AppStateService>().AsSelf().InstancePerLifetimeScope();
                 });
             }
             catch (Exception ex)

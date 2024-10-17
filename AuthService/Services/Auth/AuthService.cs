@@ -477,7 +477,8 @@ namespace AuthService.Services.Auth
                     Subject = "Reset password",
                     ToEmail = user.Email,
                     ToUserName = user.UserName,
-                    OtpCode = otp
+                    OtpCode = otp,
+                    ActionName = OtpVerificationType.ResetPassword
                 };
 
                 await _mailProducer.EnqueueMailAsync(mailBody);
@@ -501,13 +502,20 @@ namespace AuthService.Services.Auth
                 _logger.LogInformation("[AuthService][{Method}] Start", method);
                 var responseInfo = new ResponseInfo();
                 (string cacheKey, Type otpWrapperType) = Utils.GetOtpCacheKey(email, otpType);
-                var otpData = _cacheService.GetData<OtpWrapperBase>(cacheKey);
+
+                var otpData = otpWrapperType switch
+                {
+                    Type t when t == typeof(OtpWrapperBase) => _cacheService.GetData<OtpWrapperBase>(cacheKey),
+                    Type t when t == typeof(ResetPasswordWrapper) => _cacheService.GetData<ResetPasswordWrapper>(cacheKey),
+                    _ => null
+                };
 
                 if (otpData == null || otpData.OtpCode != otpCode)
                 {
                     responseInfo.Error = otpData == null ? "OtpNotFound" : "InvalidOtp";
                     responseInfo.StatusCode = StatusCodes.Status400BadRequest;
                     responseInfo.Message = otpData == null ? "OTP not found or expired" : "Invalid OTP";
+                    return responseInfo;
                 }
 
                 // Gia hạn thời gian sống của mã OTP
