@@ -158,13 +158,16 @@ namespace AuthService.Services.Account
                 var otpCode = Utils.GenerateOtp();
                 var mailBody = new OtpVerificationMailBody()
                 {
+                    Subject = "Delete account verification",
+                    ToUserName = user.UserName,
                     ToEmail = user.Email,
-                    OtpCode = otpCode
+                    OtpCode = otpCode,
+                    ActionName = OtpVerificationType.ConfirmDeleteAccount
                 };
 
                 await _mailProducer.EnqueueMailAsync(mailBody);
 
-                var cacheKey = CacheKeyManager.GetResetPasswordKey(user.Email);
+                var cacheKey = CacheKeyManager.GetConfirmDeleteAccountKey(user.Email);
                 var otpData = new OtpWrapperBase()
                 {
                     OtpCode = otpCode
@@ -207,7 +210,7 @@ namespace AuthService.Services.Account
                     return responseInfo;
                 }
 
-                var cacheKey = CacheKeyManager.GetResetPasswordKey(user.Email);
+                var cacheKey = CacheKeyManager.GetConfirmDeleteAccountKey(user.Email);
                 var otpData = _cacheService.GetData<OtpWrapperBase>(cacheKey);
 
                 if (otpData == null || otpData.OtpCode != deleteAccountContent.OtpCode)

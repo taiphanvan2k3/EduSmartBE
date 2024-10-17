@@ -20,16 +20,20 @@ namespace AuthService.Extensions
         {
             try
             {
-                services.AddDbContext<DataContext>(options =>
+                // Dùng AddDbContextPool để tạo ra một pool các DbContext, giúp tăng hiệu suất trong việc sử dụng các DbContext instances
+                services.AddDbContextPool<DataContext>(options =>
                     options.UseNpgsql(configuration.GetConnectionString("DefaultConnection") ?? Constants.CONNECTION_STRING)
                         .EnableSensitiveDataLogging() // cho phép log dữ liệu nhạy cảm
-                        .EnableDetailedErrors(),
-                    ServiceLifetime.Scoped);
+                        .EnableDetailedErrors());
 
                 services.AddScoped<DbConnection>(provider =>
                 {
                     return new NpgsqlConnection(configuration.GetConnectionString("DefaultConnection") ?? Constants.CONNECTION_STRING);
                 });
+
+                // Thêm IDbContextFactory để cho phép tạo ra các instance của DbContext 
+                services.AddDbContextFactory<DataContext>(options =>
+                    options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
             }
             catch (Exception e)
             {
