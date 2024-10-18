@@ -3,10 +3,13 @@ using AuthService.BackgroundServices;
 using AuthService.Commons;
 using AuthService.Commons.Helpers;
 using AuthService.Databases.Schemas;
+using AuthService.Enumerations;
 using AuthService.Extensions;
 using AuthService.Services.Auth.Schemas;
 using AuthService.Services.Cache;
 using AuthService.Services.MailSender.Schemas;
+using AuthService.Services.Otp.Schemas;
+using AuthService.Services.Otp.Schemas.Wrappers;
 using AuthService.Services.User.Schemas;
 using AuthService.Settings;
 using Google.Apis.Auth;
@@ -81,10 +84,11 @@ namespace AuthService.Services.Auth
         /// <summary>
         /// Check OTP code
         /// </summary>
+        /// <param name="otpType">Type of OTP</param>
         /// <param name="email">Email of user</param>
         /// <param name="otpCode">OTP code</param>
         /// <returns></returns>
-        public ResponseInfo ValidateOtpCode(string email, string otpCode);
+        public ResponseInfo ValidateOtpCode(OtpType otpType, string email, string otpCode);
 
         /// <summary>
         /// Handle reset password after forgot password
@@ -449,16 +453,16 @@ namespace AuthService.Services.Auth
                     return responseInfo;
                 }
 
-                string otp = GenerateOtp();
+                string otp = Utils.GenerateOtp();
                 string token = await _userManager.GeneratePasswordResetTokenAsync(user);
-                var otpData = new OtpData()
+                var otpData = new ResetPasswordWrapper()
                 {
                     OtpCode = otp,
                     ResetPasswordToken = token
                 };
 
                 // Lưu mã OTP vào cache
-                var cacheKey = CacheKeyManager.GetOtpKey(user.Email);
+                var cacheKey = CacheKeyManager.GetResetPasswordKey(user.Email);
                 var isOtpSaved = _cacheService.SetData(cacheKey, otpData, DateTimeOffset.Now.AddMinutes(2));
                 if (!isOtpSaved)
                 {
@@ -468,12 +472,13 @@ namespace AuthService.Services.Auth
                     return responseInfo;
                 }
 
-                var mailBody = new ResetPasswordMailBody()
+                var mailBody = new OtpVerificationMailBody()
                 {
                     Subject = "Reset password",
                     ToEmail = user.Email,
                     ToUserName = user.UserName,
-                    OtpCode = otp
+                    OtpCode = otp,
+                    ActionName = OtpVerificationType.ResetPassword
                 };
 
                 await _mailProducer.EnqueueMailAsync(mailBody);
@@ -489,21 +494,28 @@ namespace AuthService.Services.Auth
             }
         }
 
-        public ResponseInfo ValidateOtpCode(string email, string otpCode)
+        public ResponseInfo ValidateOtpCode(OtpType otpType, string email, string otpCode)
         {
             var method = GetActualAsyncMethodName();
             try
             {
                 _logger.LogInformation("[AuthService][{Method}] Start", method);
                 var responseInfo = new ResponseInfo();
-                var cacheKey = CacheKeyManager.GetOtpKey(email);
-                var otpData = _cacheService.GetData<OtpData>(cacheKey);
+                (string cacheKey, Type otpWrapperType) = Utils.GetOtpCacheKey(email, otpType);
+
+                var otpData = otpWrapperType switch
+                {
+                    Type t when t == typeof(OtpWrapperBase) => _cacheService.GetData<OtpWrapperBase>(cacheKey),
+                    Type t when t == typeof(ResetPasswordWrapper) => _cacheService.GetData<ResetPasswordWrapper>(cacheKey),
+                    _ => null
+                };
 
                 if (otpData == null || otpData.OtpCode != otpCode)
                 {
                     responseInfo.Error = otpData == null ? "OtpNotFound" : "InvalidOtp";
                     responseInfo.StatusCode = StatusCodes.Status400BadRequest;
                     responseInfo.Message = otpData == null ? "OTP not found or expired" : "Invalid OTP";
+                    return responseInfo;
                 }
 
                 // Gia hạn thời gian sống của mã OTP
@@ -537,8 +549,8 @@ namespace AuthService.Services.Auth
                     return responseInfo;
                 }
 
-                var cacheKey = CacheKeyManager.GetOtpKey(user.Email);
-                var otpData = _cacheService.GetData<OtpData>(cacheKey);
+                var cacheKey = CacheKeyManager.GetResetPasswordKey(user.Email);
+                var otpData = _cacheService.GetData<ResetPasswordWrapper>(cacheKey);
 
                 if (otpData == null || otpData.OtpCode != resetPasswordContent.OtpCode)
                 {
@@ -636,13 +648,6 @@ namespace AuthService.Services.Auth
             var userCreatedEventData = await ConvertAppUserToUserInfo(user);
 
             _messageBusPublisher.PublishMessage(EventTypes.UserCreated, userCreatedEventData);
-        }
-
-        private static string GenerateOtp()
-        {
-            // Tạo mã OTP 6 chữ số ngẫu nhiên
-            var random = new Random();
-            return random.Next(100000, 999999).ToString();
         }
     }
 }

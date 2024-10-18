@@ -1,5 +1,5 @@
 @using AuthService.Services.MailSender.Schemas
-@model ResetPasswordMailBody
+@model OtpVerificationMailBody
 
 <!DOCTYPE html>
 <html lang="en">
@@ -11,7 +11,8 @@
 </head>
 
 <body>
-    <h1>Hello @Model.ToUserName!</h1>
+    <h1>OTP Verification</h1>
+    <h2>Hello @Model.ToUserName!</h2>
     <p>We received a request to send you a One-Time Password (OTP) for your account.</p>
     <h2>Your OTP is: <strong>@Model.OtpCode</strong></h2>
     <p>Please enter this OTP to verify your identity. This OTP is valid in 2 minutes.</p>
