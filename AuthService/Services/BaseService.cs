@@ -1,5 +1,7 @@
 using System.Runtime.CompilerServices;
 using AuthService.Databases;
+using AuthService.Services.AppState;
+using Microsoft.EntityFrameworkCore;
 
 namespace AuthService.Services
 {
@@ -8,6 +10,8 @@ namespace AuthService.Services
         protected readonly DataContext _context;
         protected ILogger _logger;
         protected IHttpContextAccessor _httpContextAccessor;
+        protected readonly IDbContextFactory<DataContext> _dbContextFactory;
+        protected readonly AppStateService _appStateService;
         protected static string GetActualAsyncMethodName([CallerMemberName] string name = null) => name;
 
         public BaseService() { }
@@ -15,18 +19,26 @@ namespace AuthService.Services
         public BaseService(IServiceProvider serviceProvider)
         {
             _context = serviceProvider.GetService<DataContext>()
-                ?? throw new InvalidOperationException("DataContext is null");
+                ?? throw new InvalidOperationException(ServiceInjectionError("DataContext"));
             _httpContextAccessor = serviceProvider.GetService<IHttpContextAccessor>()
-                ?? throw new InvalidOperationException("HttpContextAccessor is null");
+                ?? throw new InvalidOperationException(ServiceInjectionError("IHttpContextAccessor"));
+            _dbContextFactory = serviceProvider.GetService<IDbContextFactory<DataContext>>()
+                ?? throw new InvalidOperationException(ServiceInjectionError("IDbContextFactory<DataContext>"));
+            _appStateService = serviceProvider.GetService<AppStateService>()
+                ?? throw new InvalidOperationException(ServiceInjectionError("AppStateService"));
         }
 
         public BaseService(IServiceProvider serviceProvider, ILogger logger)
         {
             _context = serviceProvider.GetService<DataContext>()
-                ?? throw new InvalidOperationException("DataContext is null");
+                ?? throw new InvalidOperationException(ServiceInjectionError("DataContext"));
             _httpContextAccessor = serviceProvider.GetService<IHttpContextAccessor>()
-                ?? throw new InvalidOperationException("HttpContextAccessor is null");
+                ?? throw new InvalidOperationException(ServiceInjectionError("IHttpContextAccessor"));
+            _dbContextFactory = serviceProvider.GetService<IDbContextFactory<DataContext>>()
+                ?? throw new InvalidOperationException(ServiceInjectionError("IDbContextFactory<DataContext>"));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _appStateService = serviceProvider.GetService<AppStateService>()
+                ?? throw new InvalidOperationException(ServiceInjectionError("AppStateService"));
         }
 
         protected static string ServiceInjectionError(string serviceName)

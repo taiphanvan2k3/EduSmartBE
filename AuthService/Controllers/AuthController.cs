@@ -3,6 +3,7 @@ using AuthService.Commons.Helpers;
 using AuthService.Enumerations;
 using AuthService.Services.Auth;
 using AuthService.Services.Auth.Schemas;
+using AuthService.Services.Otp.Schemas;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AuthService.Controllers
@@ -898,7 +899,7 @@ namespace AuthService.Controllers
         /// <para>Created at: 2024/10/08</para>
         /// <para>Created by: TaiPV</para>
         /// </summary>
-        /// <param name="validateOtpContent">Contains the email and OTP code</param>
+        /// <param name="otpContentBase">Contains the email and OTP code</param>
         /// <returns></returns>
         /// <remarks>
         /// Code
@@ -906,6 +907,11 @@ namespace AuthService.Controllers
         ///     200 - Reset password link sent successfully
         ///     400 - Validation error | User not found
         ///     500 - Server error
+        ///  OtpType
+        ///     
+        ///     1 - Forgot password
+        ///     2 - Confirm delete account
+        ///     
         /// </remarks>
         /// <response code="200">
         /// Success
@@ -934,7 +940,7 @@ namespace AuthService.Controllers
         /// </response>
         [HttpPost("validate-otp")]
         [ProducesResponseType(typeof(SuccessResponse), StatusCodes.Status200OK)]
-        public IActionResult ValidateOtp([FromBody] OtpCodeContent validateOtpContent)
+        public IActionResult ValidateOtp([FromBody] OtpContentBase otpContentBase)
         {
             if (!ModelState.IsValid)
             {
@@ -945,7 +951,7 @@ namespace AuthService.Controllers
 
             try
             {
-                var response = _authService.ValidateOtpCode(validateOtpContent.Email, validateOtpContent.OtpCode);
+                var response = _authService.ValidateOtpCode(otpContentBase.OtpType, otpContentBase.Email, otpContentBase.OtpCode);
                 if (response.StatusCode == StatusCodes.Status200OK)
                 {
                     return Ok(new SuccessResponse(response.Message));

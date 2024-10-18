@@ -39,11 +39,16 @@ namespace AuthService.BackgroundServices
                     case ConfirmMailBody confirmMailBody:
                         await mailService.SendMailConfirmAccount(confirmMailBody);
                         break;
-                    case ResetPasswordMailBody resetPasswordMailBody:
-                        await mailService.SendEmailResetPassword(resetPasswordMailBody);
+                    case OtpVerificationMailBody otpVerificationMailBody:
+                        if (otpVerificationMailBody.ActionName == OtpVerificationType.ResetPassword)
+                        {
+                            await mailService.SendEmailResetPassword(otpVerificationMailBody);
+                        }
+                        else if (otpVerificationMailBody.ActionName == OtpVerificationType.ConfirmDeleteAccount)
+                        {
+                            await mailService.SendEmailConfirmDeleteAccount(otpVerificationMailBody);
+                        }
                         break;
-                    default:
-                        throw new ArgumentException("Unsupported mail body type.");
                 }
             }
         }

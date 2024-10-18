@@ -1,6 +1,9 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using UserService.Services.AppState;
+using UserInfoState = UserService.Services.AppState.Schemas.UserInfo;
 
 namespace UserService.Filters
 {
@@ -13,6 +16,15 @@ namespace UserService.Filters
             {
                 context.Result = new UnauthorizedResult();
             }
+
+            var appStateService = context.HttpContext.RequestServices.GetService<AppStateService>();
+            appStateService.UserInfo = new UserInfoState
+            {
+                UserId = int.Parse(user.FindFirst("userId")?.Value ?? "0"),
+                UserName = user.FindFirst("username")?.Value,
+                Email = user.FindFirst(ClaimTypes.Email)?.Value,
+                Roles = user.FindFirst(ClaimTypes.Role)?.Value.Split(',').ToList()
+            };
         }
     }
 }
