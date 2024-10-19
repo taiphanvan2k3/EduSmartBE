@@ -76,7 +76,7 @@ namespace UserService.Services.Users
 
         private readonly IGrpcAuthService _grpcAuthService = serviceProvider.GetRequiredService<IGrpcAuthService>()
             ?? throw new InvalidOperationException("Cannot get IGrpcAuthService");
-
+            
         public async Task<ResponseInfo> AddUser(UserDto user)
         {
             var methodName = GetActualAsyncMethodName();
@@ -217,10 +217,18 @@ namespace UserService.Services.Users
                     return response;
                 }
 
+                // Delete file in cloudinary before upload
+                if(!string.IsNullOrEmpty(userInfoDB.AvatarURL) && userInfoDB.AvatarURL.Contains("res.cloudinary.com"))
+                {
+                    string publicId = ExtractPublicId(userInfoDB.AvatarURL);
+                    await _photoService.DeletePhotoAsync(publicId);
+
+                }
+
                 var uploadFileResult = await _photoService.AddPhotoAsync(file);
                 userInfoDB.FirstName = userInfo.FirstName;
                 userInfoDB.LastName = userInfo.LastName;
-                userInfoDB.AvatarURL = uploadFileResult.Url.ToString();
+                userInfoDB.AvatarURL = uploadFileResult.Url?.ToString();
                 userInfoDB.Phone = userInfo.Phone;
                 userInfoDB.Gender = userInfo.Gender;
 
@@ -231,7 +239,7 @@ namespace UserService.Services.Users
                     UserId = userInfoDB.UserId,
                     FirstName = userInfo.FirstName,
                     LastName = userInfo.LastName,
-                    AvatarURL = uploadFileResult.Url.ToString(),
+                    AvatarURL = uploadFileResult.Url?.ToString(),
                     Phone = userInfo.Phone,
                     Gender = userInfo.Gender
                 });
@@ -246,6 +254,24 @@ namespace UserService.Services.Users
             {
                 _logger.LogError(e, "[UserInfoService] [{Method}] Error", methodName);
                 throw;
+            }
+        }
+
+        private string ExtractPublicId(string url)
+        {
+            try
+            {
+                // Example http://res.cloudinary.com/da1aqhx1g/image/upload/v1729529214/q0joipmzjgfxdkugh9tj.png
+                var uri = new Uri(url);
+                var segments = uri.AbsolutePath.Split('/');
+                var fileName = segments.Last(); // e.g., "q0joipmzjgfxdkugh9tj.png"
+                var publicId = Path.GetFileNameWithoutExtension(fileName); // "q0joipmzjgfxdkugh9tj"
+                return publicId;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to extract publicId from URL: {Url}", url);
+                return null;
             }
         }
     }
