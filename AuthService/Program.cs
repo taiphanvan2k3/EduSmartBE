@@ -2,6 +2,7 @@ using AuthService.AsyncDataServices;
 using AuthService.Commons;
 using AuthService.Databases.InitDb;
 using AuthService.Extensions;
+using AuthService.GrpcServices;
 using AuthService.Middlewares;
 using AuthService.Services.MailSender;
 using AuthService.Settings;
@@ -53,6 +54,8 @@ builder.Services.AddCustomCorsConfig();
 builder.Services.AddControllers();
 builder.Services.AddAuthorization();
 
+builder.Services.AddGrpc();
+
 if (builder.Environment.IsProduction())
 {
     builder.WebHost.UseUrls("http://0.0.0.0:80");
@@ -92,6 +95,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseMiddleware<CustomUnauthorizedMiddleware>();
-
+app.MapGrpcService<GrpcAuthServices>();
 app.MapControllers();
 await app.RunAsync();

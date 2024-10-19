@@ -25,6 +25,11 @@ namespace UserService.Services
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        protected static string ServiceInjectionError(string serviceName)
+        {
+            return $"Service injection error: {serviceName} is null";
+        }
+        
         protected virtual void LogInfo(string message, [CallerMemberName] string method = null)
         {
             _logger?.LogInformation("[{Type}] [{Method}] {Message}", GetType().Name, method, message);
