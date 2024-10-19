@@ -2,6 +2,7 @@ using System.Reflection;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Serilog;
+using UserService.Services.AppState;
 
 namespace UserService.Extensions
 {
@@ -36,6 +37,9 @@ namespace UserService.Extensions
                         .Where(t => t.Name.EndsWith("Service") && t.Namespace.Contains("Services"))
                         .AsImplementedInterfaces()
                         .InstancePerLifetimeScope(); // lifetime scope
+
+                    // Đăng ký AppStateService mà không cần interface
+                    containerBuilder.RegisterType<AppStateService>().AsSelf().InstancePerLifetimeScope();
                 });
             }
             catch (Exception ex)

@@ -2,15 +2,14 @@ using System.Data.Common;
 using System.Text;
 using UserService.Commons;
 using UserService.Databases;
-using UserService.Databases.Schemas;
 using UserService.Filters;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Npgsql;
 using UserService.Settings;
+using System.Reflection;
 
 namespace UserService.Extensions
 {
@@ -71,7 +70,7 @@ namespace UserService.Extensions
         {
             services.AddSwaggerGen(opt =>
             {
-                opt.SwaggerDoc("v1", new OpenApiInfo { Title = "UserService", Version = "v1" });
+                opt.SwaggerDoc("v1", new OpenApiInfo { Title = "AuthService", Version = "v1", Description = "API for AuthService" });
 
                 opt.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, new OpenApiSecurityScheme()
                 {
@@ -85,6 +84,11 @@ namespace UserService.Extensions
 
                 // Chỉ hiển thị lock icon cho các API cần xác thực
                 opt.OperationFilter<AuthenticationRequirementOperationFilter>();
+
+                // Configure để hiển thị chú thích
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                opt.IncludeXmlComments(xmlPath);
             });
 
             return services;
