@@ -37,5 +37,9 @@ namespace CourseManagementService.Database.Schemas
         public virtual ICollection<Chapter> Chapters { get; set; }
 
         public virtual ICollection<CourseEnrollment> Enrollments { get; set; }
+
+        public DateTimeOffset CreatedAt { get; set; }
+
+        public DateTimeOffset UpdatedAt { get; set; }
     }
 }

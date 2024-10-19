@@ -1,4 +1,4 @@
-namespace CourseManagementService.Commons.Helpers
+namespace CourseManagementService.Common.Helpers
 {
     public static class ErrorResponseHelper
     {

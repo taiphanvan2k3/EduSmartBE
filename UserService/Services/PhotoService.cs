@@ -28,10 +28,8 @@ namespace UserService.Services
     public class PhotoService : BaseService, IPhotoService
     {
         private readonly Cloudinary _cloudinary;
-        private readonly ILogger<PhotoService> _logger;
-        private readonly IServiceProvider _serviceProvider;
-        private readonly IMapper _mapper;
-        public PhotoService(IOptions<CloudinarySettings> config, IServiceProvider serviceProvider, ILogger<PhotoService> logger, IMapper mapper)
+        public PhotoService(IOptions<CloudinarySettings> config, IServiceProvider serviceProvider, ILogger<PhotoService> logger, IMapper mapper) 
+            : base(serviceProvider, logger)
         {
             var acc = new Account(
                 config.Value.CloudName,
@@ -40,10 +38,9 @@ namespace UserService.Services
             );
 
             _cloudinary = new Cloudinary(acc);
-            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
+
         public async Task<ImageUploadResult> AddPhotoAsync(IFormFile file)
         {
             var methodName = GetActualAsyncMethodName();
@@ -52,7 +49,7 @@ namespace UserService.Services
                 _logger.LogInformation("[PhotoService] [{Method}] Start", methodName);
                 var uploadResult = new ImageUploadResult();
 
-                if(file.Length > 0)
+                if (file.Length > 0)
                 {
                     using var stream = file.OpenReadStream();
                     var uploadParams = new ImageUploadParams

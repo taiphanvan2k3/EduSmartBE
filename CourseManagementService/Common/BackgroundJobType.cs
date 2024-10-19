@@ -1,4 +1,4 @@
-namespace CourseManagementService.Commons
+namespace CourseManagementService.Common
 {
     public static class BackgroundJobType
     {
