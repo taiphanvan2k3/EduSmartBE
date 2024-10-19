@@ -17,19 +17,9 @@ namespace CourseManagementService.Controllers
         /// <para>Author: TaiPV</para>
         /// <para>Created at: 2024/10/07</para>
         /// </summary>
-        /// <remarks>
-        /// CourseType
-        ///     
-        ///     1: Tutorial
-        ///     2: Direct - A course that is live and interactive
-        ///
-        /// CurrencyType
-        ///     1: VNĐ
-        ///     2: USD
-        /// </remarks>
         /// <response code="200">Return list of courses</response>
         [HttpGet("courses")]
-        [ProducesResponseType(typeof(List<CourseDetailDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<CourseDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetEnrolledCourses()
         {
             try

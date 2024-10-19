@@ -6,6 +6,7 @@ namespace CourseManagementService.Services.Grpc
     public interface IGrpcUserService
     {
         public Task<bool> CheckIfTeacherExists(int teacherId);
+        public Task<ListOfUsersResponse> GetListOfTeachers(List<int> teacherIds);
     }
 
     public class GrpcUserService : BaseService, IGrpcUserService
@@ -28,6 +29,23 @@ namespace CourseManagementService.Services.Grpc
                 _logger.LogInformation("[{ServiceName}] {MethodName} Start", _serviceName, methodName);
                 var client = new User.UserClient(_channel);
                 return (await client.CheckUserExistAsync(new UserRequest { Id = teacherId })).IsExist;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[{ServiceName}] {MethodName} Error", _serviceName, methodName);
+                throw;
+            }
+        }
+
+        public async Task<ListOfUsersResponse> GetListOfTeachers(List<int> teacherIds)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                _logger.LogInformation("[{ServiceName}] {MethodName} Start", _serviceName, methodName);
+                var client = new User.UserClient(_channel);
+                var response = await client.GetListOfTeachersAsync(new UsersRequest { Ids = { teacherIds } });
+                return response;
             }
             catch (Exception e)
             {

@@ -20,7 +20,8 @@ message UsersRequest {
 message SimpleUserResponse {
     int32 id = 1;
     string userName = 2;
-    string avatar = 3;
+    string fullName = 3;
+    string avatarURL = 4;
 }
 
 message UserResponse {

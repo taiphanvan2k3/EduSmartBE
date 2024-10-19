@@ -83,7 +83,8 @@ namespace UserService.GrpcServices
                     {
                         Id = u.Id,
                         UserName = u.UserName,
-                        Avatar = u.UserInfo.AvatarURL
+                        FullName = $"{u.UserInfo.FirstName} {u.UserInfo.LastName}",
+                        AvatarURL = u.UserInfo.AvatarURL
                     })
                     .ToListAsync();
 

@@ -4,6 +4,6 @@ namespace CourseManagementService.Services.AppState
 {
     public class AppStateService
     {
-        public UserInfo UserInfo { get; set; }
+        public UserInfoState UserInfo { get; set; }
     }
 }
