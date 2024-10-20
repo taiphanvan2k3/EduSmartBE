@@ -77,5 +77,32 @@ namespace CourseManagementService.Database
 
             return modelBuilder;
         }
+
+        public static void ConfigureForBaseEntity(ModelBuilder modelBuilder)
+        {
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                var createdAtProperty = entityType.ClrType.GetProperty("CreatedAt");
+                var updatedAtProperty = entityType.ClrType.GetProperty("UpdatedAt");
+
+                if (createdAtProperty != null)
+                {
+                    modelBuilder.Entity(entityType.ClrType)
+                        .Property(createdAtProperty.Name)
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                        .ValueGeneratedOnAdd()
+                        .IsRequired();
+                }
+
+                if (updatedAtProperty != null)
+                {
+                    modelBuilder.Entity(entityType.ClrType)
+                        .Property(updatedAtProperty.Name)
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .IsRequired();
+                }
+            }
+        }
     }
 }

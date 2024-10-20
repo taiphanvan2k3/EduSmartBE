@@ -121,9 +121,9 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                 var courseDto = _mapper.Map<CourseDto>(newCourse);
                 courseDto.Tags = newCourse.Tags.Select(x => new LookupDto
                 {
-                    Id = x.TagId.ToString()
+                    Id = x.TagId.ToString(),
                 })
-                    .ToList();
+                .ToList();
                 courseDto.CurrencyCode = currencyTask.Result.Code;
 
                 response.Data.Add("course", courseDto);

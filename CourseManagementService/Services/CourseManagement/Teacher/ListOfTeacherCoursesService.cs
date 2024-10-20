@@ -37,7 +37,7 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                             || EF.Functions.ILike(x.BriefDescription, $"%{searchCondition.Keyword}%")
                             || EF.Functions.ILike(x.DetailedDescription, $"%{searchCondition.Keyword}%"))
                     )
-                    // .OrderByDescending(x => x.Cr)
+                    .OrderByDescending(x => x.UpdatedAt)
                     .Select(x => new CourseDto
                     {
                         Id = x.Id,
