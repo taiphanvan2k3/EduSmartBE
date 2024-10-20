@@ -1,4 +1,5 @@
 using CourseManagementService.Services.CourseManagement.Student;
+using CourseManagementService.Services.CourseManagement.Student.Schemas;
 using CourseManagementService.Services.CourseManagement.Teacher.Schemas;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,15 +8,18 @@ namespace CourseManagementService.Controllers
     [Route("api/student-course-management")]
     [ApiController]
     [Filters.Auth(Roles = "Student")]
-    public class StudentCourseManagementController(IListOfStudentCoursesService listOfStudentCoursesService) : ControllerBase
+    public class StudentCourseManagementController(IListOfStudentCoursesService listOfStudentCoursesService,
+        IStudentCourseDetailService studentCourseDetailService) : ControllerBase
     {
         private readonly IListOfStudentCoursesService _listOfStudentCoursesService = listOfStudentCoursesService
             ?? throw new ArgumentNullException(nameof(listOfStudentCoursesService));
+        private readonly IStudentCourseDetailService _studentCourseDetailService = studentCourseDetailService
+            ?? throw new ArgumentNullException(nameof(studentCourseDetailService));
 
         /// <summary>
         /// Get all courses that teacher created
-        /// <para>Author: TaiPV</para>
         /// <para>Created at: 2024/10/07</para>
+        /// <para>Created by: TaiPV</para>
         /// </summary>
         /// <response code="200">Return list of courses</response>
         [HttpGet("courses")]
@@ -26,6 +30,22 @@ namespace CourseManagementService.Controllers
             {
                 var course = await _listOfStudentCoursesService.GetEnrolledCourses();
                 return Ok(course);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.InnerException?.Message ?? e.Message);
+            }
+        }
+
+        [HttpPost()]
+        [Filters.Auth(Roles = "Student")]
+        public async Task<IActionResult> CreateCourseOrder([FromBody] EnrollCourseRequest request)
+        {
+            try
+            {
+                // TODO: MOve to another service (PaymentService)
+                await _studentCourseDetailService.EnrollCourse(request);
+                return Ok();
             }
             catch (Exception e)
             {

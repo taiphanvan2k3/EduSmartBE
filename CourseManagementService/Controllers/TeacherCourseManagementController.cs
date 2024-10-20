@@ -19,8 +19,8 @@ namespace CourseManagementService.Controllers
 
         /// <summary>
         /// Get all courses that teacher created
-        /// <para>Author: TaiPV</para>
         /// <para>Created at: 2024/10/07</para>
+        /// <para>Created by: TaiPV</para> 
         /// </summary>
         /// <response code="200">Return list of courses</response>
         [HttpGet("courses")]

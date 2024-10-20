@@ -1,5 +1,4 @@
 using CourseManagementService.Common;
-using CourseManagementService.Enumerations;
 
 namespace CourseManagementService.Services.CourseManagement.Teacher.Schemas
 {

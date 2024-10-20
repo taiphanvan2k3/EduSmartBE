@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace CourseManagementService.Database.Schemas
 {
-    public class Chapter
+    public class Chapter : BaseEntity
     {
         public Guid Id { get; set; }
 

@@ -1,4 +1,4 @@
-using CourseManagementService.Common.Schemas;
+using CourseManagementService.Services.CourseManagement.Public.Schemas;
 using CourseManagementService.Services.CourseManagement.Teacher.Schemas;
 using CourseManagementService.Services.Grpc;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +17,6 @@ namespace CourseManagementService.Services.CourseManagement.Student
         private readonly IGrpcUserService _grpcUserService = serviceProvider.GetService<IGrpcUserService>()
             ?? throw new ArgumentNullException(ServiceInjectionError("IGrpcUserService"));
 
-
         public async Task<List<CourseDetailWithTeacherDto>> GetEnrolledCourses()
         {
             var method = GetActualAsyncMethodName();
@@ -27,6 +26,7 @@ namespace CourseManagementService.Services.CourseManagement.Student
 
                 var courses = await _context.CourseEnrollments
                     .Where(x => x.StudentId == _appStateService.UserInfo.UserId)
+                    .OrderByDescending(x => x.EnrollmentDate)
                     .Select(c => new CourseDetailWithTeacherDto()
                     {
                         Id = c.Course.Id,

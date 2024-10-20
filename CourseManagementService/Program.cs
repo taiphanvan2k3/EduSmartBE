@@ -1,12 +1,11 @@
 using CourseManagementService.Common;
 using CourseManagementService.Database.InitDb;
 using CourseManagementService.Extensions;
-using CourseManagementService.Filters;
 using CourseManagementService.Middlewares;
-using CourseManagementService.Services.AppState;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.UseCustomLog(Constants.SERVICE_NAME);
@@ -18,6 +17,13 @@ builder.Services.AddSwaggerGenWithAuth();
 builder.Services.AddHttpContextAccessor(); // Add IHttpContextAccessor for getting HttpContext in services
 builder.Services.AddDataContext(builder.Configuration);
 builder.Services.AddScoped<IDbInitializer, DbInitializer>();
+
+// Tránh việc tạo nhiều kết nối tới Redis khi mỗi lần cần sử dụng
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var configuration = sp.GetRequiredService<IConfiguration>().GetConnectionString("RedisConnection");
+    return ConnectionMultiplexer.Connect(configuration);
+});
 
 builder.Services.AddCustomAuthentication(builder.Configuration);
 builder.Services.AddCustomHostedServices();
@@ -73,6 +79,7 @@ if (app.Environment.IsProduction())
 app.UseRouting();
 app.UseCors("AllowSpecificOrigin");
 
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 

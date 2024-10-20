@@ -15,6 +15,7 @@ namespace CourseManagementService.Database
         {
             base.OnModelCreating(modelBuilder);
             ModelCreate.OnModelCreating(modelBuilder);
+            ModelCreate.ConfigureForBaseEntity(modelBuilder);
         }
 
         public DbSet<Course> Courses { get; set; }
@@ -25,18 +26,35 @@ namespace CourseManagementService.Database
         public DbSet<Currency> Currencies { get; set; }
         public DbSet<CourseEnrollment> CourseEnrollments { get; set; }
 
+        public override int SaveChanges()
+        {
+            UpdateTimestamps();
+            return base.SaveChanges();
+        }
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            UpdateTimestamps();
+            return base.SaveChangesAsync(cancellationToken);
+        }
+
         /// <summary>
         /// Because PostgreSQL does not allow DateTimeOffsets with non-UTC time zones, we need to convert all DateTimeOffsets 
         /// to UTC before saving them to the database.
         /// </summary>
-        private void SetDateTimeOffsetsToUtc()
+        private void UpdateTimestamps()
         {
             foreach (var entry in ChangeTracker.Entries()
                 .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified))
             {
+                // Kiểm tra entity có CreatedAt, UpdatedAt không
+                var createdAtProperty = entry.Entity.GetType().GetProperty("CreatedAt");
+                var updatedAtProperty = entry.Entity.GetType().GetProperty("UpdatedAt");
+
                 var properties = entry.Entity.GetType().GetProperties()
                     .Where(p => p.PropertyType == typeof(DateTimeOffset) || p.PropertyType == typeof(DateTimeOffset?));
 
+                // Chuyển đổi các property kiểu DateTimeOffset sang UTC
                 foreach (var prop in properties)
                 {
                     var value = (DateTimeOffset?)prop.GetValue(entry.Entity);

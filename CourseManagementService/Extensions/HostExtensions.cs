@@ -2,6 +2,7 @@ using System.Reflection;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using CourseManagementService.Services.AppState;
+using CourseManagementService.Services.Cache;
 using Serilog;
 
 namespace CourseManagementService.Extensions
@@ -40,6 +41,11 @@ namespace CourseManagementService.Extensions
 
                     // Đăng ký AppStateService mà không cần interface
                     containerBuilder.RegisterType<AppStateService>().AsSelf().InstancePerLifetimeScope();
+
+                    // Chuyển lifetime scope của CacheService thành SingleInstance
+                    containerBuilder.RegisterType<CacheService>()
+                        .As<ICacheService>()
+                        .SingleInstance();                    
                 });
             }
             catch (Exception ex)

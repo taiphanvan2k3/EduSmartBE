@@ -8,6 +8,7 @@ using CourseManagementService.Common;
 using Microsoft.IdentityModel.Tokens;
 using CourseManagementService.Database;
 using CourseManagementService.Filters;
+using System.Reflection;
 
 namespace CourseManagementService.Extensions
 {
@@ -86,6 +87,11 @@ namespace CourseManagementService.Extensions
 
                 // Chỉ hiển thị lock icon cho các API cần xác thực
                 opt.OperationFilter<AuthenticationRequirementOperationFilter>();
+
+                // Configure để hiển thị chú thích
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                opt.IncludeXmlComments(xmlPath);
             });
 
             return services;
