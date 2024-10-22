@@ -5,11 +5,13 @@ service User {
     rpc GetUserInfo (UserRequest) returns (UserResponse);
     rpc CheckUserExist (UserRequest) returns (CheckUserExistResponse);
     rpc GetListOfTeachers (UsersRequest) returns (ListOfUsersResponse);
+    rpc GetTeachersByName(UserRequest) returns (ListOfUsersResponse);
 }
 
 // Dùng để lấy thông tin user theo id
 message UserRequest {
     int32 id = 1;
+    string name = 2;
 }
 
 // Dùng để lấy danh sách user theo mảng id
