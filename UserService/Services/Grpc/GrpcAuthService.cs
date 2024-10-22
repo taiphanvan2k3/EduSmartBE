@@ -33,7 +33,7 @@ namespace UserService.Services.Grpc
                     Id = userInfo.UserId,
                     FirstName = userInfo.FirstName,
                     LastName = userInfo.LastName,
-                    AvatarURL = userInfo.AvatarURL,
+                    AvatarURL = userInfo.AvatarURL ?? "",
                     Phone = userInfo.Phone,
                     Gender = userInfo.Gender
                 });
