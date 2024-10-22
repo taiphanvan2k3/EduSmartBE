@@ -1,6 +1,6 @@
 namespace CourseManagementService.Services.AppState.Schemas
 {
-    public class UserInfo
+    public class UserInfoState
     {
         public int UserId { get; set; }
 

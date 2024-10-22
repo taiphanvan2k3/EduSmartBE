@@ -1,6 +1,8 @@
 using System.Runtime.CompilerServices;
+using System.Security.Claims;
 using CourseManagementService.Database;
 using CourseManagementService.Services.AppState;
+using CourseManagementService.Services.AppState.Schemas;
 using Microsoft.EntityFrameworkCore;
 
 namespace CourseManagementService.Services
@@ -54,6 +56,29 @@ namespace CourseManagementService.Services
         protected virtual void LogError(string message, [CallerMemberName] string method = null)
         {
             _logger?.LogError("[{Type}] [{Method}] {Message}", GetType().Name, method, message);
+        }
+
+        protected virtual void LogError(Exception exception, [CallerMemberName] string method = null)
+        {
+            _logger?.LogError(exception, "[{Type}] [{Method}] {Message}", GetType().Name, method,
+                exception.InnerException?.Message ?? exception.Message);
+        }
+
+        protected UserInfoState GetCurrentUser()
+        {
+            var currentUser = _httpContextAccessor.HttpContext.User;
+            if (currentUser == null || currentUser.Identity == null || !currentUser.Identity.IsAuthenticated)
+            {
+                return null;
+            }
+
+            return new UserInfoState
+            {
+                UserId = int.Parse(currentUser.FindFirst("userId")?.Value ?? "0"),
+                UserName = currentUser.FindFirst("username")?.Value,
+                Email = currentUser.FindFirst(ClaimTypes.Email)?.Value,
+                Roles = currentUser.FindFirst(ClaimTypes.Role)?.Value.Split(',').ToList()
+            };
         }
     }
 }

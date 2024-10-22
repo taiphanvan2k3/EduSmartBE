@@ -1,5 +1,5 @@
 using AutoMapper;
-using CourseManagementService.Commons;
+using CourseManagementService.Common;
 using CourseManagementService.GrpcServices;
 using CourseManagementService.Services.CourseManagement.Teacher.Schemas;
 using CourseManagementService.Services.Grpc;
@@ -119,7 +119,11 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                 await _context.SaveChangesAsync();
 
                 var courseDto = _mapper.Map<CourseDto>(newCourse);
-                courseDto.TagIds = newCourse.Tags.Select(x => x.TagId).ToList();
+                courseDto.Tags = newCourse.Tags.Select(x => new LookupDto
+                {
+                    Id = x.TagId.ToString(),
+                })
+                .ToList();
                 courseDto.CurrencyCode = currencyTask.Result.Code;
 
                 response.Data.Add("course", courseDto);
@@ -246,9 +250,13 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                 await _context.SaveChangesAsync();
 
                 var courseDto = _mapper.Map<CourseDto>(course);
-                courseDto.TagIds = course.Tags.Select(x => x.TagId).ToList();
-                courseDto.CurrencyCode = currencyTask.Result.Code;
+                courseDto.Tags = course.Tags.Select(x => new LookupDto
+                {
+                    Id = x.TagId.ToString()
+                })
+                .ToList();
 
+                courseDto.CurrencyCode = currencyTask.Result.Code;
                 response.Data.Add("course", courseDto);
                 return response;
             }

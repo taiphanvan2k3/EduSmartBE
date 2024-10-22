@@ -83,8 +83,45 @@ namespace UserService.GrpcServices
                     {
                         Id = u.Id,
                         UserName = u.UserName,
-                        Avatar = u.UserInfo.AvatarURL
+                        FullName = $"{u.UserInfo.FirstName} {u.UserInfo.LastName}",
+                        AvatarURL = u.UserInfo.AvatarURL
                     })
+                    .ToListAsync();
+
+                var listOfUsers = new ListOfUsersResponse();
+                listOfUsers.Users.AddRange(users);
+
+                _logger.LogInformation("[GrpcUserService] [{Method}] End", methodName);
+                return listOfUsers;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[GrpcUserService] [{Method}] Error", methodName);
+                throw;
+            }
+        }
+
+        public override async Task<ListOfUsersResponse> GetTeachersByName(UserRequest request, ServerCallContext context)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                const int MAX_TEACHERS = 5;
+
+                // TODO: Optimize by using Redis Cache
+                _logger.LogInformation("[GrpcUserService] [{Method}] Start", methodName);
+                var users = await _context.Users
+                    .Where(u => u.UserRoles.Any(role => role.Role.Name == Constants.TEACHER_ROLE))
+                    .Where(u => EF.Functions.ILike(u.UserInfo.FirstName + " " + u.UserInfo.LastName, $"%{request.Name}%"))
+                    .OrderByDescending(u => u.UserInfo.LastName)
+                    .Select(u => new SimpleUserResponse()
+                    {
+                        Id = u.Id,
+                        UserName = u.UserName,
+                        FullName = $"{u.UserInfo.FirstName} {u.UserInfo.LastName}",
+                        AvatarURL = u.UserInfo.AvatarURL
+                    })
+                    .Take(MAX_TEACHERS)
                     .ToListAsync();
 
                 var listOfUsers = new ListOfUsersResponse();

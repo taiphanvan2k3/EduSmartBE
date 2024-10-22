@@ -20,7 +20,7 @@ namespace CourseManagementService.Filters
             }
 
             var appStateService = context.HttpContext.RequestServices.GetService<AppStateService>();
-            appStateService.UserInfo = new UserInfo
+            appStateService.UserInfo = new UserInfoState
             {
                 UserId = int.Parse(user.FindFirst("userId")?.Value ?? "0"),
                 UserName = user.FindFirst("username")?.Value,

@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace CourseManagementService.Database.Schemas
 {
-    public class Tag
+    public class Tag : BaseEntity
     {
         public int Id { get; set; }
 
