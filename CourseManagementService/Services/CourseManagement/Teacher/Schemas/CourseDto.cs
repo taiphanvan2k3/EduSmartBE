@@ -1,4 +1,4 @@
-using CourseManagementService.Enumerations;
+using CourseManagementService.Common;
 
 namespace CourseManagementService.Services.CourseManagement.Teacher.Schemas
 {
@@ -18,12 +18,16 @@ namespace CourseManagementService.Services.CourseManagement.Teacher.Schemas
 
         public string CurrencyCode { get; set; }
 
-        public CourseType Type { get; set; }
+        public int TotalStudents { get; set; }
 
-        public int TeacherId { get; set; }
+        public int TotalLessons { get; set; }
 
-        public int CategoryId { get; set; }
+        public int TotalMinutes { get; set; }
 
-        public List<int> TagIds { get; set; }
+        public LookupDto Type { get; set; }
+
+        public LookupDto Category { get; set; }
+
+        public List<LookupDto> Tags { get; set; }
     }
 }

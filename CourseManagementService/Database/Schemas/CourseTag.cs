@@ -1,6 +1,6 @@
 namespace CourseManagementService.Database.Schemas
 {
-    public class CourseTag
+    public class CourseTag : BaseEntity
     {
         public int Id { get; set; }
 

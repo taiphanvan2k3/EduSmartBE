@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using CourseManagementService.Commons.Helpers;
+using CourseManagementService.Common.Helpers;
 using CourseManagementService.Services.CourseManagement.Teacher;
 using CourseManagementService.Services.CourseManagement.Teacher.Schemas;
+using CourseManagementService.Common.Schemas;
 
 namespace CourseManagementService.Controllers
 {
@@ -18,31 +19,18 @@ namespace CourseManagementService.Controllers
 
         /// <summary>
         /// Get all courses that teacher created
-        /// <para>Author: TaiPV</para>
         /// <para>Created at: 2024/10/07</para>
+        /// <para>Created by: TaiPV</para> 
         /// </summary>
-        /// <remarks>
-        /// CourseType
-        ///     
-        ///     1: Tutorial
-        ///     2: Direct - A course that is live and interactive
-        ///
-        /// CurrencyType
-        ///     1: VNĐ
-        ///     2: USD
-        /// </remarks>
         /// <response code="200">Return list of courses</response>
         [HttpGet("courses")]
-        [ProducesResponseType(typeof(List<CourseCreateDto>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetCreatedCourses()
+        [ProducesResponseType(typeof(List<PaginatedList<CourseCreateDto>>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetCreatedCourses([FromQuery] CourseSearchCondition searchCondition)
         {
             try
             {
-                var course = await _listOfTeacherCoursesService.GetOwnCourses();
-                return Ok(new
-                {
-                    courses = course
-                });
+                var courses = await _listOfTeacherCoursesService.GetOwnCourses(searchCondition);
+                return Ok(courses);
             }
             catch (Exception e)
             {

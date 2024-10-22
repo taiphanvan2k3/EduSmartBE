@@ -3,7 +3,7 @@ using CourseManagementService.Enumerations;
 
 namespace CourseManagementService.Database.Schemas
 {
-    public class Course
+    public class Course : BaseEntity
     {
         public Guid Id { get; set; }
 

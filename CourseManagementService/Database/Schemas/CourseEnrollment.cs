@@ -6,7 +6,9 @@ namespace CourseManagementService.Database.Schemas
 
         public Guid CourseId { get; set; }
 
-        public DateTime EnrollmentDate { get; set; }
+        public DateTimeOffset EnrollmentDate { get; set; }
+
+        public DateTimeOffset? LeaveDate { get; set; }
 
         public virtual Course Course { get; set; }
     }

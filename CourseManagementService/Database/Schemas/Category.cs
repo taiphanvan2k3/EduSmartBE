@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace CourseManagementService.Database.Schemas
 {
-    public class Category
+    public class Category : BaseEntity
     {
         public int Id { get; set; }
 
