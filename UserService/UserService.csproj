@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -40,5 +42,6 @@
    <ItemGroup>
     <!-- gRPC Protobuf files -->
     <Protobuf Include="Protos/user.proto" GrpcServices="Server" />
+    <Protobuf Include="Protos/auth.proto" GrpcServices="Client" />
   </ItemGroup>
 </Project>

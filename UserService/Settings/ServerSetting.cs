@@ -1,4 +1,4 @@
-namespace AuthService.Settings
+namespace UserService.Settings
 {
     public class ServerSetting
     {

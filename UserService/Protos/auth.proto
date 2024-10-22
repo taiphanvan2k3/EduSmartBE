@@ -1,0 +1,19 @@
+syntax = "proto3";
+option csharp_namespace = "UserService.GrpcServices";
+
+service Auth {
+    rpc SaveUserProfile (SaveUserProfileRequest) returns (SaveUserProfileResponse);
+}
+
+message SaveUserProfileRequest {
+    int32 id = 1;
+    string firstName = 2;
+    string lastName = 3;
+    string avatarURL = 4;
+    string phone = 5;
+    int32 gender = 6;
+}
+
+message SaveUserProfileResponse {
+    bool success = 1;
+}
