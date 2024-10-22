@@ -49,7 +49,7 @@ namespace UserService.Services
                 _logger.LogInformation("[PhotoService] [{Method}] Start", methodName);
                 var uploadResult = new ImageUploadResult();
 
-                if (file.Length > 0)
+                if(file != null && file.Length > 0)
                 {
                     using var stream = file.OpenReadStream();
                     var uploadParams = new ImageUploadParams
