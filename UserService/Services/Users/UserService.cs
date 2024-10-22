@@ -1,6 +1,7 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using UserService.Commons;
+using UserService.Services.Grpc;
 using UserService.Services.Users.Schemas;
 using TblUser = UserService.Databases.Schemas.User;
 using TblUserInfo = UserService.Databases.Schemas.UserInfo;
@@ -52,15 +53,29 @@ namespace UserService.Services.Users
         /// <param name="message"></param>
         /// <returns></returns>
         public Task<ResponseInfo> DeleteUser(UserDto user);
+
+        /// <summary>
+        /// Update profile user
+        /// <para>Author: ManhTD</para>
+        /// <para>Created at: 12/10/2024</para>
+        /// </summary>
+        /// <param name="userInfo"></param>
+        /// <returns></returns>
+        public Task<ResponseInfo> UpdateProfileUser(int userId, UserUpdateDto userInfo, IFormFile file);
     }
 
     public class UserService(IServiceProvider serviceProvider,
         ILogger<UserService> logger,
-        IMapper mapper) : BaseService(serviceProvider, logger), IUserService
+        IMapper mapper,
+        IPhotoService photoService) : BaseService(serviceProvider, logger), IUserService
     {
-
         private readonly IMapper _mapper = mapper
             ?? throw new ArgumentNullException(nameof(mapper));
+            
+        private readonly IPhotoService _photoService = photoService ?? throw new ArgumentNullException(nameof(photoService));
+
+        private readonly IGrpcAuthService _grpcAuthService = serviceProvider.GetRequiredService<IGrpcAuthService>()
+            ?? throw new InvalidOperationException("Cannot get IGrpcAuthService");
 
         public async Task<ResponseInfo> AddUser(UserDto user)
         {
@@ -184,6 +199,54 @@ namespace UserService.Services.Users
         public Task<ResponseInfo> UpdateUser(UserDto user)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<ResponseInfo> UpdateProfileUser(int userId, UserUpdateDto userInfo, IFormFile file)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                _logger.LogInformation("[UserInfoService] [{Method}] Start", methodName);
+                var response = new ResponseInfo();
+                var userInfoDB = await _context.UserInfos.FindAsync(userId);
+                if(userInfoDB == null)
+                {
+                    response.StatusCode = StatusCodes.Status404NotFound;
+                    response.Message = "User not found";
+                    _logger.LogInformation("[UserInfoService] [{Method}] End", methodName);
+                    return response;
+                }
+
+                var uploadFileResult = await _photoService.AddPhotoAsync(file);
+                userInfoDB.FirstName = userInfo.FirstName;
+                userInfoDB.LastName = userInfo.LastName;
+                userInfoDB.AvatarURL = uploadFileResult.Url.ToString();
+                userInfoDB.Phone = userInfo.Phone;
+                userInfoDB.Gender = userInfo.Gender;
+
+                await _context.SaveChangesAsync();
+
+                await _grpcAuthService.SaveUserProfile(new UserInfo
+                {
+                    UserId = userInfoDB.UserId,
+                    FirstName = userInfo.FirstName,
+                    LastName = userInfo.LastName,
+                    AvatarURL = uploadFileResult.Url.ToString(),
+                    Phone = userInfo.Phone,
+                    Gender = userInfo.Gender
+                });
+
+                response.Message = "Update profile user successfully";
+                response.Data.Add("userInfo", userInfoDB);
+
+                _logger.LogInformation("[UserInfoService] [{Method}] End", methodName);
+                return response;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[UserInfoService] [{Method}] Error", methodName);
+                throw;
+            }
         }
     }
 }

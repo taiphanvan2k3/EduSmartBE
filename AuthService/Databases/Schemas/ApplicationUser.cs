@@ -12,6 +12,8 @@ namespace AuthService.Databases.Schemas
 
         public string Phone { get; set; }
 
+        public int Gender { get; set; }
+
         public bool IsOnline { get; set; }
 
         public bool IsActive { get; set; }

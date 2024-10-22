@@ -1,8 +1,8 @@
-namespace UserService.Services.UserInfos.Schemas
+namespace UserService.Services.Users.Schemas
 {
     public class UserProfileUpdateRequest
     {
-         public UserInfoDto UserInfo { get; set; }
+         public UserUpdateDto UserInfo { get; set; }
          public IFormFile File { get; set; }  
     }
 }

@@ -50,7 +50,11 @@ await dbInit.Initialize();
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.InjectStylesheet("/swagger/custom-swagger.css");
+        options.InjectJavascript("/swagger/custom-swagger.js");
+    });
 }
 
 if (app.Environment.IsProduction())
