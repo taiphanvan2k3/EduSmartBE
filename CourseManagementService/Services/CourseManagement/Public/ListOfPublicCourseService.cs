@@ -13,7 +13,26 @@ namespace CourseManagementService.Services.CourseManagement.Public
 {
     public interface IListOfPublicCourseService
     {
+        /// <summary>
+        /// Get courses by keyword
+        /// <para>Created at: 2024/10/22</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="condition">keyword to search</param>
+        public Task<ListOfSearchItems> GetCoursesByKeyword(SearchCondition condition);
+
+        /// <summary>
+        /// Get popular courses
+        /// <para>Created at: 2024/10/20</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
         public Task<PaginatedList<CourseDetailWithTeacherDto>> GetPopularCourses();
+
+        /// <summary>
+        /// Get recommended courses
+        /// <para>Created at: 2024/10/20</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
         public Task<PaginatedList<CourseDetailWithTeacherDto>> GetRecommendedCourses();
     }
 
@@ -28,6 +47,68 @@ namespace CourseManagementService.Services.CourseManagement.Public
             ?? throw new ArgumentNullException(ServiceInjectionError("IGrpcUserService"));
         private readonly ICacheService _cacheService = serviceProvider.GetRequiredService<ICacheService>()
             ?? throw new InvalidOperationException(ServiceInjectionError("ICacheService"));
+
+        public async Task<ListOfSearchItems> GetCoursesByKeyword(SearchCondition condition)
+        {
+            var method = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", method);
+
+                var cacheKey = CacheManager.CourseSearch.Key(condition.Keyword, condition.CurrentPage, condition.PageSize);
+                var cacheValue = _cacheService.GetData<ListOfSearchItems>(cacheKey);
+                if (cacheValue != null)
+                {
+                    LogInfo("End", method);
+                    return cacheValue;
+                }
+
+                var listOfSearchItems = new ListOfSearchItems();
+
+                Task<List<CourseSearchItem>> cousesTask = _context.Courses
+                    .Where(c => EF.Functions.ILike(c.Name, $"%{condition.Keyword}%"))
+                    .OrderByDescending(c => c.Enrollments.Count)
+                    .ThenByDescending(c => c.UpdatedAt)
+                    .Select(c => new CourseSearchItem()
+                    {
+                        Id = c.Id,
+                        Name = c.Name,
+                        ThumbnailURL = c.ThumbnailURL,
+                        Teacher = new TeacherDetail()
+                        {
+                            Id = c.TeacherId
+                        }
+                    })
+                    .Skip((condition.CurrentPage - 1) * condition.PageSize)
+                    .Take(condition.PageSize)
+                    .ToListAsync();
+
+                var teachersTask = _grpcUserService.GetTeachersByName(condition.Keyword);
+                await Task.WhenAll(cousesTask, teachersTask);
+
+                await FillTeacherInfo(cousesTask.Result);
+
+                listOfSearchItems.Courses = cousesTask.Result;
+                listOfSearchItems.Teachers = teachersTask.Result.Users.Select(x => new TeacherSearchItem()
+                {
+                    Id = x.Id,
+                    FullName = x.FullName,
+                    AvatarURL = x.AvatarURL
+                })
+                .ToList();
+
+                _cacheService.SetData(cacheKey, listOfSearchItems,
+                    DateTimeOffset.Now.AddMinutes(CacheManager.CourseSearch.ExpireTimeInMinutes));
+
+                LogInfo("End", method);
+                return listOfSearchItems;
+            }
+            catch (Exception e)
+            {
+                LogError(e, method);
+                throw;
+            }
+        }
 
         public async Task<PaginatedList<CourseDetailWithTeacherDto>> GetPopularCourses()
         {
@@ -191,7 +272,7 @@ namespace CourseManagementService.Services.CourseManagement.Public
             return (enrolledCourseIds, enrolledCourseCategories);
         }
 
-        private async Task FillTeacherInfo(List<CourseDetailWithTeacherDto> courses)
+        private async Task FillTeacherInfo<T>(List<T> courses) where T : ICourseWithTeacher
         {
             var teacherIds = courses.Select(x => x.Teacher.Id).Distinct().ToList();
             var teachers = await _grpcUserService.GetListOfTeachers(teacherIds);

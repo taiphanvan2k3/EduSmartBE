@@ -15,8 +15,6 @@ namespace CourseManagementService.Services.Cache
         /// <returns></returns>
         T GetData<T>(string key);
 
-        public object GetData(string key, Type type);
-
         /// <summary>
         /// Set data to cache by key
         /// <para>Author: TaiPV</para>
@@ -51,16 +49,6 @@ namespace CourseManagementService.Services.Cache
                 return JsonSerializer.Deserialize<T>(value);
             }
             return default;
-        }
-
-        public object GetData(string key, Type type)
-        {
-            var value = _cacheDb.StringGet(key);
-            if (value.HasValue)
-            {
-                return JsonSerializer.Deserialize(value, type);  // Deserialize using the dynamic type
-            }
-            return null;  // Return null if not found
         }
 
         public object RemoveData(string key)
