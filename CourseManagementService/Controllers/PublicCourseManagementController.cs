@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CourseManagementService.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/public-courses")]
     [ApiController]
     public class PublicCourseManagementController(IListOfPublicCourseService listOfPublicCourseService) : ControllerBase
     {
@@ -20,7 +20,6 @@ namespace CourseManagementService.Controllers
         /// <para>Created by: TaiPV</para>  
         /// </summary>
         /// <remarks>
-        /// 
         /// NOTE:
         /// 
         ///     - This API is used to search courses by keyword
@@ -57,9 +56,16 @@ namespace CourseManagementService.Controllers
         /// <para>Created at: 2024/10/20</para>
         /// <para>Created by: TaiPV</para> 
         /// </summary>
+        /// <remarks>
+        /// !!! IMPORTANT:
+        /// 
+        ///     - This API is public but use authentication to do some actions
+        ///     So, PASS the TOKEN in the header if user is logged-in
+        /// </remarks>
+        /// <returns></returns>
         [Authorize] // Adding this attribute to the method to send Bearer token when using Swagger 
         [AllowAnonymous]
-        [HttpGet("popular-courses")]
+        [HttpGet("popular")]
         [ProducesResponseType(typeof(PaginatedList<CourseDetailWithTeacherDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetPopularCourses()
         {
@@ -72,10 +78,15 @@ namespace CourseManagementService.Controllers
         /// <para>Created at: 2024/10/20</para>
         /// <para>Created by: TaiPV</para>
         /// </summary>
-        /// <returns></returns>
+        /// <remarks>
+        /// !!! IMPORTANT:
+        /// 
+        ///     - This API is public but use authentication to do some actions
+        ///     So, PASS the TOKEN in the header if user is logged-in
+        /// </remarks>
         [Authorize] // Adding this attribute to the method to send Bearer token when using Swagger 
         [AllowAnonymous]
-        [HttpGet("recommended-courses")]
+        [HttpGet("recommendation")]
         [ProducesResponseType(typeof(PaginatedList<CourseDetailWithTeacherDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetRecommendedCourses()
         {
