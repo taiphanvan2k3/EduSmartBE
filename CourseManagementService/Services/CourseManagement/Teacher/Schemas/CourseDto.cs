@@ -24,6 +24,8 @@ namespace CourseManagementService.Services.CourseManagement.Teacher.Schemas
 
         public int TotalMinutes { get; set; }
 
+        public bool IsRegistered { get; set; }
+
         public LookupDto Type { get; set; }
 
         public LookupDto Category { get; set; }
