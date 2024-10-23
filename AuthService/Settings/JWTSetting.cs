@@ -10,6 +10,6 @@ namespace AuthService.Settings
 
         public int TokenExpirationInMinutes { get; set; }
 
-        public int RefreshTokenExpirationInDays { get; set; }
+        public int RefreshTokenExpirationInMinutes { get; set; }
     }
 }
