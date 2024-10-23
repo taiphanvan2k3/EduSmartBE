@@ -65,7 +65,7 @@ namespace AuthService.Services.Auth
                     Token = refreshToken,
                     UserId = userId,
                     IPAddress = ipAddress,
-                    Expires = DateTime.UtcNow.AddDays(_jwtSetting.RefreshTokenExpirationInDays),
+                    Expires = DateTime.UtcNow.AddMinutes(_jwtSetting.RefreshTokenExpirationInMinutes),
                     CreatedAt = DateTime.UtcNow
                 };
 
@@ -206,7 +206,6 @@ namespace AuthService.Services.Auth
             {
                 Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddMinutes(_jwtSetting.TokenExpirationInMinutes),
-
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
@@ -220,7 +219,7 @@ namespace AuthService.Services.Auth
             return new RefreshTokenResponse
             {
                 Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
-                Expires = DateTime.UtcNow.AddMinutes(_jwtSetting.RefreshTokenExpirationInDays),
+                Expires = DateTime.UtcNow.AddMinutes(_jwtSetting.RefreshTokenExpirationInMinutes),
                 Created = DateTime.UtcNow
             };
         }
