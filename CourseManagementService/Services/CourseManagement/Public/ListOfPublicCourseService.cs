@@ -22,6 +22,14 @@ namespace CourseManagementService.Services.CourseManagement.Public
         public Task<ListOfSearchItems> GetCoursesByKeyword(SearchCondition condition);
 
         /// <summary>
+        /// Get courses by category
+        /// </summary>
+        /// <param name="categoryId">Category ID</param>
+        /// <param name="condition">Search condition</param>
+        /// <returns></returns>
+        public Task<PaginatedList<CourseDetailWithTeacherDto>> GetCoursesByCategory(int categoryId, PublicCourseSearchCondition condition);
+
+        /// <summary>
         /// Get popular courses
         /// <para>Created at: 2024/10/20</para>
         /// <para>Created by: TaiPV</para>
@@ -237,6 +245,77 @@ namespace CourseManagementService.Services.CourseManagement.Public
 
                 _cacheService.SetData(cacheKey, courses, DateTimeOffset.Now.AddMinutes(CacheManager.RecommendedCourses.ExpireTimeInMinutes));
                 LogInfo("End", method);
+                return courses;
+            }
+            catch (Exception e)
+            {
+                LogError(e, method);
+                throw;
+            }
+        }
+
+        public async Task<PaginatedList<CourseDetailWithTeacherDto>> GetCoursesByCategory(int categoryId, PublicCourseSearchCondition condition)
+        {
+            var method = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", method);
+
+                var currentUser = GetCurrentUser();
+                var cacheKey = CacheManager.CourseSearchByCategory.Key(categoryId, currentUser?.UserId ?? 0, condition);
+                var cacheValue = _cacheService.GetData<PaginatedList<CourseDetailWithTeacherDto>>(cacheKey);
+
+                if (cacheValue != null)
+                {
+                    return cacheValue;
+                }
+
+                PaginatedList<CourseDetailWithTeacherDto> courses = await _context.Courses
+                    .Where(c => c.CategoryId == categoryId
+                        && (string.IsNullOrEmpty(condition.Keyword)
+                            || EF.Functions.ILike(c.Name, $"%{condition.Keyword}%")
+                            || EF.Functions.ILike(c.BriefDescription, $"%{condition.Keyword}%")
+                            || EF.Functions.ILike(c.DetailedDescription, $"%{condition.Keyword}%")))
+                    .SingleSort(condition)
+                    .Select(c => new CourseDetailWithTeacherDto()
+                    {
+                        Id = c.Id,
+                        Name = c.Name,
+                        BriefDescription = c.BriefDescription,
+                        DetailedDescription = c.DetailedDescription,
+                        Price = c.Price,
+                        CurrencyCode = c.Currency.Code,
+                        Type = new LookupDto()
+                        {
+                            Id = EnumHelper.ConvertEnumToInt(c.Type).ToString(),
+                            Name = c.Type.ToString()
+                        },
+                        Category = new LookupDto()
+                        {
+                            Id = c.Category.Id.ToString(),
+                            Name = c.Category.Name
+                        },
+                        Tags = c.Tags.Select(x => new LookupDto()
+                        {
+                            Id = x.Tag.Id.ToString(),
+                            Name = x.Tag.Name
+                        })
+                        .ToList(),
+                        ThumbnailURL = c.ThumbnailURL,
+                        TotalStudents = c.Enrollments.Count,
+                        Teacher = new TeacherDetail()
+                        {
+                            Id = c.TeacherId
+                        },
+                        IsRegistered = currentUser != null && c.Enrollments.Any(x => x.StudentId == currentUser.UserId)
+                    })
+                    .ToPaginatedListAsync(condition.CurrentPage, condition.PageSize);
+
+                await FillTeacherInfo(courses.Items);
+
+                _cacheService.SetData(cacheKey, courses, DateTimeOffset.Now.AddMinutes(CacheManager.CourseSearchByCategory.ExpireTimeInMinutes));
+                LogInfo("End", method);
+
                 return courses;
             }
             catch (Exception e)
