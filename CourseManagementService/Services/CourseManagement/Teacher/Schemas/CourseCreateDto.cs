@@ -13,7 +13,7 @@ namespace CourseManagementService.Services.CourseManagement.Teacher.Schemas
 
         public string DetailedDescription { get; set; }
 
-        public string ThumbnailURL { get; set; }
+        public IFormFile Thumbnail { get; set; }
 
         [Range(0, double.MaxValue, ErrorMessage = "Price must be greater than or equal to 0")]
         public decimal Price { get; set; }
