@@ -2,6 +2,7 @@ using CourseManagementService.Common;
 using CourseManagementService.Database.InitDb;
 using CourseManagementService.Extensions;
 using CourseManagementService.Middlewares;
+using CourseManagementService.Settings;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
@@ -13,6 +14,8 @@ builder.AddAutoFact();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGenWithAuth();
+
+builder.Services.Configure<CloudinarySetting>(builder.Configuration.GetSection("CloudinarySettings"));
 
 builder.Services.AddHttpContextAccessor(); // Add IHttpContextAccessor for getting HttpContext in services
 builder.Services.AddDataContext(builder.Configuration);

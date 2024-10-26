@@ -56,7 +56,7 @@ namespace CourseManagementService.Controllers
         ///     2: USD
         /// </remarks>
         [HttpPost("courses")]
-        public async Task<IActionResult> CreateCourse([FromBody] CourseCreateDto courseCreateDto)
+        public async Task<IActionResult> CreateCourse([FromForm] CourseCreateDto courseCreateDto)
         {
             try
             {
