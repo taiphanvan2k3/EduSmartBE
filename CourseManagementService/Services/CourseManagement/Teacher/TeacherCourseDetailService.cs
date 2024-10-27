@@ -270,11 +270,26 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                 course.Name = courseUpdateDto.Name;
                 course.BriefDescription = courseUpdateDto.BriefDescription;
                 course.DetailedDescription = courseUpdateDto.DetailedDescription;
-                course.ThumbnailURL = courseUpdateDto.ThumbnailURL;
                 course.Price = courseUpdateDto.Price;
                 course.Type = courseUpdateDto.Type;
                 course.CategoryId = courseUpdateDto.CategoryId;
                 course.CurrencyId = (int)courseUpdateDto.Currency;
+
+                if (course.ThumbnailURL.StartsWith(Constants.CLOUDINARY_URL_PREFIX) 
+                    && course.ThumbnailURL != Constants.DEFAULT_COURSE_THUMBNAIL)
+                {
+                    await StartDeleteImageFromCloudinaryJob(course.ThumbnailURL);
+                }
+
+                if (courseUpdateDto.Thumbnail != null)
+                {
+                    course.ThumbnailURL = Constants.INPROGRESS_THUMBNAIL;
+                    await StartUploadImageToCloudinaryJob(courseUpdateDto.Thumbnail, course.Id);
+                }
+                else
+                {
+                    course.ThumbnailURL = Constants.DEFAULT_COURSE_THUMBNAIL;
+                }
 
                 await _context.CourseTags.Where(x => x.CourseId == id).ExecuteDeleteAsync();
                 course.Tags = courseUpdateDto.TagIds
@@ -374,6 +389,26 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                 {
                     { "FilePath", $"{uploadFolderPath}/{courseId}.jpg" },
                     { "CourseId", courseId }
+                }
+            };
+
+            await _commonProducer.EnqueueDataAsync(backgroundJobData);
+        }
+
+        private async Task StartDeleteImageFromCloudinaryJob(string publicURL)
+        {
+            var publicId = Utils.ExtractPublicId(publicURL);
+            if (string.IsNullOrEmpty(publicId))
+            {
+                return;
+            }
+
+            var backgroundJobData = new BackgroundJobData
+            {
+                JobType = BackgroundJobType.DeleteImageFromCloudinary,
+                Data = new Dictionary<string, dynamic>
+                {
+                    { "PublicId", publicId }
                 }
             };
 

@@ -24,5 +24,22 @@ namespace CourseManagementService.Common.Helpers
             using var stream = new FileStream(filePath, FileMode.Create);
             await file.CopyToAsync(stream);
         }
+
+        public static string ExtractPublicId(string url)
+        {
+            try
+            {
+                // Example http://res.cloudinary.com/da1aqhx1g/image/upload/v1729529214/q0joipmzjgfxdkugh9tj.png
+                var uri = new Uri(url);
+                var segments = uri.AbsolutePath.Split('/');
+                var fileName = segments.Last(); // e.g., "q0joipmzjgfxdkugh9tj.png"
+                var publicId = Path.GetFileNameWithoutExtension(fileName); // "q0joipmzjgfxdkugh9tj"
+                return publicId;
+            }
+            catch
+            {
+                return "";
+            }
+        }
     }
 }
