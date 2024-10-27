@@ -37,13 +37,13 @@ namespace CourseManagementService.Controllers
             }
         }
 
-        [HttpPost()]
+        [HttpPost("enrollment")]
         [Filters.Auth(Roles = "Student")]
         public async Task<IActionResult> CreateCourseOrder([FromBody] EnrollCourseRequest request)
         {
             try
             {
-                // TODO: MOve to another service (PaymentService)
+                // TODO: Move to another service (PaymentService)
                 await _studentCourseDetailService.EnrollCourse(request);
                 return Ok();
             }

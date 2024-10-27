@@ -9,9 +9,9 @@ namespace CourseManagementService.Services.CourseManagement.Teacher.Schemas
         [MaxLength(200)]
         public string Name { get; set; }
 
-        public string BriefDescription { get; set; }
+        public string BriefDescription { get; set; } = string.Empty;
 
-        public string DetailedDescription { get; set; }
+        public string DetailedDescription { get; set; } = string.Empty;
 
         public IFormFile Thumbnail { get; set; }
 

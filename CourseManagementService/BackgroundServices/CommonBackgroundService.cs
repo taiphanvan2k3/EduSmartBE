@@ -29,9 +29,12 @@ namespace CourseManagementService.BackgroundServices
                 switch (data.JobType)
                 {
                     case BackgroundJobType.UploadImageToCloudinary:
-                        var photoService = scope.ServiceProvider.GetRequiredService<IPhotoService>();
                         var teacherCourseDetailService = scope.ServiceProvider.GetRequiredService<ITeacherCourseDetailService>();
-                        await UploadImageToCloudinaryAsync(photoService, teacherCourseDetailService, data.Data);
+                        await UploadImageToCloudinaryAsync(scope.ServiceProvider.GetRequiredService<IPhotoService>(), 
+                            teacherCourseDetailService, data.Data);
+                        break;
+                    case BackgroundJobType.DeleteImageFromCloudinary:
+                        await DeleteImageFromCloudinaryAsync(scope.ServiceProvider.GetRequiredService<IPhotoService>(), data.Data);
                         break;
                     default:
                         throw new ArgumentException("Unsupported job type.");
@@ -63,6 +66,19 @@ namespace CourseManagementService.BackgroundServices
                 {
                     File.Delete(filePath);
                 }
+            }
+        }
+
+        private static async Task DeleteImageFromCloudinaryAsync(IPhotoService photoService, Dictionary<string, dynamic> data)
+        {
+            try
+            {
+                var publicId = data["PublicId"] as string;
+                await photoService.DeletePhotoAsync(publicId);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Upload image to cloudinary failed: " + e.InnerException?.Message ?? e.Message);
             }
         }
     }
