@@ -3,6 +3,7 @@ using CourseManagementService.Common.Helpers;
 using CourseManagementService.Services.CourseManagement.Teacher;
 using CourseManagementService.Services.CourseManagement.Teacher.Schemas;
 using CourseManagementService.Common.Schemas;
+using CourseManagementService.Common;
 
 namespace CourseManagementService.Controllers
 {
@@ -52,11 +53,13 @@ namespace CourseManagementService.Controllers
         ///     2: Direct - A course that is live and interactive
         ///
         /// CurrencyType
+        /// 
         ///     1: VNĐ
         ///     2: USD
         /// </remarks>
         [HttpPost("courses")]
-        public async Task<IActionResult> CreateCourse([FromBody] CourseCreateDto courseCreateDto)
+        [ProducesResponseType(typeof(CourseDto), StatusCodes.Status200OK)]
+        public async Task<IActionResult> CreateCourse([FromForm] CourseCreateDto courseCreateDto)
         {
             try
             {
@@ -105,7 +108,8 @@ namespace CourseManagementService.Controllers
         ///     2: USD
         /// </remarks>
         [HttpPut("courses/{id}")]
-        public async Task<IActionResult> UpdateCourse([FromRoute] Guid id, [FromBody] CourseUpdateDto courseUpdateDto)
+        [ProducesResponseType(typeof(CourseDto), StatusCodes.Status200OK)]
+        public async Task<IActionResult> UpdateCourse([FromRoute] Guid id, [FromForm] CourseUpdateDto courseUpdateDto)
         {
             try
             {
@@ -142,6 +146,7 @@ namespace CourseManagementService.Controllers
         /// <param name="id">Id of course is need for delete</param>
         /// <returns></returns>
         [HttpDelete("courses/{id}")]
+        [ProducesResponseType(typeof(SuccessResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> DeleteCourse([FromRoute] Guid id)
         {
             try
@@ -149,10 +154,7 @@ namespace CourseManagementService.Controllers
                 var response = await _teacherCourseDetailService.DeleteCourse(id);
                 if (response.StatusCode == StatusCodes.Status200OK)
                 {
-                    return Ok(new
-                    {
-                        message = response.Message
-                    });
+                    return Ok(new SuccessResponse(response.Message));
                 }
 
                 return StatusCode(response.StatusCode, ErrorResponseHelper

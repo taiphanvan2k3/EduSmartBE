@@ -1,13 +1,16 @@
 using AutoMapper;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
+using CourseManagementService.Services.Medias.Schemas;
+using CourseManagementService.Settings;
 using Microsoft.Extensions.Options;
-using UserService.Settings;
 
-namespace UserService.Services
+namespace CourseManagementService.Services.Medias
 {
     public interface IPhotoService
     {
+        Task<ImageUploadResult> UploadImageFromLocalAsync(ImageUploadInfo imageUploadInfo);
+
         /// <summary>
         /// Add photo to cloudinary
         /// <para>Author: ManhTD</para>
@@ -28,7 +31,7 @@ namespace UserService.Services
     public class PhotoService : BaseService, IPhotoService
     {
         private readonly Cloudinary _cloudinary;
-        public PhotoService(IOptions<CloudinarySettings> config, IServiceProvider serviceProvider, ILogger<PhotoService> logger, IMapper mapper)
+        public PhotoService(IOptions<CloudinarySetting> config, IServiceProvider serviceProvider, ILogger<PhotoService> logger, IMapper mapper)
             : base(serviceProvider, logger)
         {
             var acc = new Account(
@@ -39,6 +42,36 @@ namespace UserService.Services
 
             _cloudinary = new Cloudinary(acc);
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+        public async Task<ImageUploadResult> UploadImageFromLocalAsync(ImageUploadInfo imageUploadInfo)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var uploadResult = new ImageUploadResult();
+
+                var fileStream = new FileStream(imageUploadInfo.LocalImagePath, FileMode.Open, FileAccess.Read);
+                if (fileStream != null)
+                {
+                    using var stream = fileStream;
+                    var uploadParams = new ImageUploadParams
+                    {
+                        File = new FileDescription(imageUploadInfo.CouseId.ToString(), stream),
+                        Transformation = new Transformation().Quality(80).FetchFormat("auto")
+                    };
+                    uploadResult = await _cloudinary.UploadAsync(uploadParams);
+                }
+
+                LogInfo("End", methodName);
+                return uploadResult;
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
         }
 
         public async Task<ImageUploadResult> AddPhotoAsync(IFormFile file)

@@ -2,6 +2,7 @@ using CourseManagementService.Common;
 using CourseManagementService.Common.Helpers;
 using CourseManagementService.Common.Schemas;
 using CourseManagementService.Extensions;
+using CourseManagementService.Services.Cache;
 using CourseManagementService.Services.CourseManagement.Teacher.Schemas;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,6 +22,8 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
         : BaseService(serviceProvider, logger), IListOfTeacherCoursesService
     {
         private readonly string _serviceName = nameof(ListOfTeacherCoursesService);
+        private readonly ICacheService _cacheService = serviceProvider.GetRequiredService<ICacheService>()
+            ?? throw new InvalidDataException(ServiceInjectionError("ICacheService"));
 
         public async Task<PaginatedList<CourseDto>> GetOwnCourses(CourseSearchCondition searchCondition)
         {
@@ -29,10 +32,18 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
             {
                 _logger.LogInformation("[{ServiceName}] {MethodName} Start", _serviceName, methodName);
 
+                var cacheKey = CacheManager.OwnedCourses.Key(_appStateService.UserInfo.UserId);
+                var cachedCourses = _cacheService.GetData<PaginatedList<CourseDto>>(cacheKey);
+                if (cachedCourses != null)
+                {
+                    LogInfo("End (Cache hit)", methodName);
+                    return cachedCourses;
+                }
+
                 PaginatedList<CourseDto> courses = await _context.Courses
                     .Where(x => x.TeacherId == _appStateService.UserInfo.UserId
                         && (!searchCondition.CategoryId.HasValue || x.CategoryId == searchCondition.CategoryId)
-                        && (string.IsNullOrEmpty(searchCondition.Keyword) 
+                        && (string.IsNullOrEmpty(searchCondition.Keyword)
                             || EF.Functions.ILike(x.Name, $"%{searchCondition.Keyword}%")
                             || EF.Functions.ILike(x.BriefDescription, $"%{searchCondition.Keyword}%")
                             || EF.Functions.ILike(x.DetailedDescription, $"%{searchCondition.Keyword}%"))
@@ -70,6 +81,8 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                         TotalMinutes = 0,
                     })
                     .ToPaginatedListAsync(currentPage: searchCondition.CurrentPage, pageSize: searchCondition.PageSize);
+
+                _cacheService.SetData(cacheKey, courses, DateTimeOffset.Now.AddMinutes(CacheManager.OwnedCourses.ExpireTimeInMinutes));
 
                 _logger.LogInformation("[{ServiceName}] {MethodName} End", _serviceName, methodName);
                 return courses;

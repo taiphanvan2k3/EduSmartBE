@@ -7,8 +7,6 @@ using Microsoft.AspNetCore.Mvc.Routing;
 using UserService.EventProcessing;
 using UserService.AsyncDataServices;
 using UserService.GrpcServices;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.UseCustomLog(Constants.SERVICE_NAME);
