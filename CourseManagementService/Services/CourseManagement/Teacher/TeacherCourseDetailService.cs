@@ -1,10 +1,15 @@
 using AutoMapper;
+using CourseManagementService.BackgroundServices;
 using CourseManagementService.Common;
+using CourseManagementService.Common.Helpers;
 using CourseManagementService.GrpcServices;
+using CourseManagementService.Services.Cache;
 using CourseManagementService.Services.CourseManagement.Teacher.Schemas;
 using CourseManagementService.Services.Grpc;
+using CourseManagementService.Services.Medias;
 using Grpc.Net.Client;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 using TblCourse = CourseManagementService.Database.Schemas.Course;
 using TblCourseTag = CourseManagementService.Database.Schemas.CourseTag;
 
@@ -32,6 +37,16 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
         public Task<ResponseInfo> UpdateCourse(Guid id, CourseUpdateDto courseUpdateDto);
 
         /// <summary>
+        /// Update course thumbnail
+        /// <para>Author: TaiPV</para>
+        /// <para>Created at: 2024/10/26</para>
+        /// </summary>
+        /// <param name="id"> Id of the course</param>
+        /// <param name="thumbnailURL">URL of the thumbnail</param>
+        /// <returns></returns>
+        public Task<ResponseInfo> UpdateCourseThumbnail(Guid id, string thumbnailURL);
+
+        /// <summary>
         /// Delete a course
         /// <para>Author: TaiPV</para>
         /// <para>Created at: 2024/10/06</para>
@@ -46,11 +61,17 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
     {
         private readonly string _serviceName = nameof(TeacherCourseDetailService);
         private readonly IConfiguration _configuration = serviceProvider.GetRequiredService<IConfiguration>()
-            ?? throw new InvalidOperationException("Cannot get IConfiguration");
+            ?? throw new InvalidOperationException(ServiceInjectionError("IConfiguration"));
+        private readonly IPhotoService _photoService = serviceProvider.GetRequiredService<IPhotoService>()
+            ?? throw new InvalidOperationException(ServiceInjectionError("IPhotoService"));
         private readonly IMapper _mapper = serviceProvider.GetRequiredService<IMapper>()
-            ?? throw new InvalidOperationException("Cannot get IMapper");
+            ?? throw new InvalidOperationException(ServiceInjectionError("IMapper"));
         private readonly IGrpcUserService _grpcUserService = serviceProvider.GetRequiredService<IGrpcUserService>()
-            ?? throw new InvalidOperationException("Cannot get IGrpcUserService");
+            ?? throw new InvalidOperationException(ServiceInjectionError("IGrpcUserService"));
+        private readonly CommonProducer _commonProducer = serviceProvider.GetRequiredService<CommonProducer>()
+            ?? throw new InvalidOperationException(ServiceInjectionError("CommonProducer"));
+        private readonly ICacheService _cacheService = serviceProvider.GetRequiredService<ICacheService>()
+            ?? throw new InvalidOperationException(ServiceInjectionError("ICacheService"));
 
         public async Task<ResponseInfo> CreateCourse(CourseCreateDto courseCreateDto)
         {
@@ -104,7 +125,9 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                     Name = courseCreateDto.Name,
                     BriefDescription = courseCreateDto.BriefDescription,
                     DetailedDescription = courseCreateDto.DetailedDescription,
-                    ThumbnailURL = courseCreateDto.ThumbnailURL,
+                    ThumbnailURL = courseCreateDto.Thumbnail != null
+                        ? Constants.INPROGRESS_THUMBNAIL
+                        : Constants.DEFAULT_COURSE_THUMBNAIL,
                     Price = courseCreateDto.Price,
                     Type = courseCreateDto.Type,
                     TeacherId = _appStateService.UserInfo.UserId,
@@ -117,6 +140,14 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
 
                 await _context.Courses.AddAsync(newCourse);
                 await _context.SaveChangesAsync();
+
+                // Clear the cache of owned courses
+                ClearOwnedCoursesCache(_appStateService.UserInfo.UserId);
+
+                if (courseCreateDto.Thumbnail != null)
+                {
+                    await StartUploadImageToCloudinaryJob(courseCreateDto.Thumbnail, newCourse.Id);
+                }
 
                 var courseDto = _mapper.Map<CourseDto>(newCourse);
                 courseDto.Tags = newCourse.Tags.Select(x => new LookupDto
@@ -171,8 +202,11 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                 }
 
                 await _context.Courses.Where(x => x.Id == id).ExecuteDeleteAsync();
-                response.Message = "Course deleted successfully";
 
+                // Clear the cache of owned courses
+                ClearOwnedCoursesCache(_appStateService.UserInfo.UserId);
+
+                response.Message = "Course deleted successfully";
                 return response;
             }
             catch (Exception e)
@@ -236,11 +270,26 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                 course.Name = courseUpdateDto.Name;
                 course.BriefDescription = courseUpdateDto.BriefDescription;
                 course.DetailedDescription = courseUpdateDto.DetailedDescription;
-                course.ThumbnailURL = courseUpdateDto.ThumbnailURL;
                 course.Price = courseUpdateDto.Price;
                 course.Type = courseUpdateDto.Type;
                 course.CategoryId = courseUpdateDto.CategoryId;
                 course.CurrencyId = (int)courseUpdateDto.Currency;
+
+                if (course.ThumbnailURL.StartsWith(Constants.CLOUDINARY_URL_PREFIX) 
+                    && course.ThumbnailURL != Constants.DEFAULT_COURSE_THUMBNAIL)
+                {
+                    await StartDeleteImageFromCloudinaryJob(course.ThumbnailURL);
+                }
+
+                if (courseUpdateDto.Thumbnail != null)
+                {
+                    course.ThumbnailURL = Constants.INPROGRESS_THUMBNAIL;
+                    await StartUploadImageToCloudinaryJob(courseUpdateDto.Thumbnail, course.Id);
+                }
+                else
+                {
+                    course.ThumbnailURL = Constants.DEFAULT_COURSE_THUMBNAIL;
+                }
 
                 await _context.CourseTags.Where(x => x.CourseId == id).ExecuteDeleteAsync();
                 course.Tags = courseUpdateDto.TagIds
@@ -248,6 +297,9 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                     .ToList();
 
                 await _context.SaveChangesAsync();
+
+                // Clear the cache of owned courses
+                ClearOwnedCoursesCache(_appStateService.UserInfo.UserId);
 
                 var courseDto = _mapper.Map<CourseDto>(course);
                 courseDto.Tags = course.Tags.Select(x => new LookupDto
@@ -263,6 +315,36 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
             catch (Exception e)
             {
                 _logger.LogError(e, "[{ServiceName}] {MethodName} Error", _serviceName, methodName);
+                throw;
+            }
+        }
+
+        public async Task<ResponseInfo> UpdateCourseThumbnail(Guid id, string thumbnailURL)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var response = new ResponseInfo();
+
+                var course = await _context.Courses.FindAsync(id);
+                if (course == null)
+                {
+                    response.Error = "NotFound";
+                    response.Message = "Course does not exist";
+                    response.StatusCode = StatusCodes.Status404NotFound;
+                    return response;
+                }
+
+                course.ThumbnailURL = thumbnailURL;
+                await _context.SaveChangesAsync();
+
+                LogInfo("End", methodName);
+                return response;
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
                 throw;
             }
         }
@@ -290,6 +372,53 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                 .CountAsync();
 
             return matchingTagCount == tagIds.Count;
+        }
+
+        private async Task StartUploadImageToCloudinaryJob(IFormFile file, Guid courseId)
+        {
+            // Save the file to the local storage
+            var uploadFolderPath = Path.Combine(Directory.GetCurrentDirectory(), Constants.UPLOAD_FOLDER_NAME);
+            Utils.CreateUploadFolderIfNotExist(uploadFolderPath);
+            await Utils.SaveFileLocally(uploadFolderPath, $"{courseId}.jpg", file);
+
+            // Start the background job to upload the file to Cloudinary
+            var backgroundJobData = new BackgroundJobData
+            {
+                JobType = BackgroundJobType.UploadImageToCloudinary,
+                Data = new Dictionary<string, dynamic>
+                {
+                    { "FilePath", $"{uploadFolderPath}/{courseId}.jpg" },
+                    { "CourseId", courseId }
+                }
+            };
+
+            await _commonProducer.EnqueueDataAsync(backgroundJobData);
+        }
+
+        private async Task StartDeleteImageFromCloudinaryJob(string publicURL)
+        {
+            var publicId = Utils.ExtractPublicId(publicURL);
+            if (string.IsNullOrEmpty(publicId))
+            {
+                return;
+            }
+
+            var backgroundJobData = new BackgroundJobData
+            {
+                JobType = BackgroundJobType.DeleteImageFromCloudinary,
+                Data = new Dictionary<string, dynamic>
+                {
+                    { "PublicId", publicId }
+                }
+            };
+
+            await _commonProducer.EnqueueDataAsync(backgroundJobData);
+        }
+
+        private void ClearOwnedCoursesCache(int userId)
+        {
+            var cacheKey = CacheManager.OwnedCourses.Key(userId);
+            _cacheService.RemoveData(cacheKey);
         }
     }
 }

@@ -16,7 +16,7 @@ namespace UserService.Services.Users
         /// <para>Author: ManhTD</para>
         /// <para>Created at: 18/09/2024</para>
         /// </summary>
-        /// <param name="message"></param>
+        /// <param name="user"></param>
         /// <returns></returns>
         public Task<ResponseInfo> AddUser(UserDto user);
 
@@ -41,7 +41,7 @@ namespace UserService.Services.Users
         /// <para>Author: ManhTD</para>
         /// <para>Created at: 18/09/2024</para>
         /// </summary>
-        /// <param name="message"></param>
+        /// <param name="user"></param>
         /// <returns></returns>
         public Task<ResponseInfo> UpdateUser(UserDto user);
 
@@ -50,7 +50,7 @@ namespace UserService.Services.Users
         /// <para>Author: ManhTD</para>
         /// <para>Created at: 18/09/2024</para>
         /// </summary>
-        /// <param name="message"></param>
+        /// <param name="user"></param>
         /// <returns></returns>
         public Task<ResponseInfo> DeleteUser(UserDto user);
 
@@ -59,7 +59,6 @@ namespace UserService.Services.Users
         /// <para>Author: ManhTD</para>
         /// <para>Created at: 12/10/2024</para>
         /// </summary>
-        /// <param name="userInfo"></param>
         /// <returns></returns>
         public Task<ResponseInfo> UpdateProfileUser(int userId, UserUpdateDto userInfo, IFormFile file);
     }
@@ -71,12 +70,12 @@ namespace UserService.Services.Users
     {
         private readonly IMapper _mapper = mapper
             ?? throw new ArgumentNullException(nameof(mapper));
-            
+
         private readonly IPhotoService _photoService = photoService ?? throw new ArgumentNullException(nameof(photoService));
 
         private readonly IGrpcAuthService _grpcAuthService = serviceProvider.GetRequiredService<IGrpcAuthService>()
             ?? throw new InvalidOperationException("Cannot get IGrpcAuthService");
-            
+
         public async Task<ResponseInfo> AddUser(UserDto user)
         {
             var methodName = GetActualAsyncMethodName();
@@ -190,7 +189,7 @@ namespace UserService.Services.Users
                 throw;
             }
         }
-        
+
         public Task<ResponseInfo> DeleteUser(UserDto user)
         {
             throw new NotImplementedException();
@@ -209,7 +208,7 @@ namespace UserService.Services.Users
                 _logger.LogInformation("[UserInfoService] [{Method}] Start", methodName);
                 var response = new ResponseInfo();
                 var userInfoDB = await _context.UserInfos.FindAsync(userId);
-                if(userInfoDB == null)
+                if (userInfoDB == null)
                 {
                     response.StatusCode = StatusCodes.Status404NotFound;
                     response.Message = "User not found";
@@ -218,7 +217,7 @@ namespace UserService.Services.Users
                 }
 
                 // Delete file in cloudinary before upload
-                if(!string.IsNullOrEmpty(userInfoDB.AvatarURL) && userInfoDB.AvatarURL.Contains("res.cloudinary.com"))
+                if (!string.IsNullOrEmpty(userInfoDB.AvatarURL) && userInfoDB.AvatarURL.Contains("res.cloudinary.com"))
                 {
                     string publicId = ExtractPublicId(userInfoDB.AvatarURL);
                     await _photoService.DeletePhotoAsync(publicId);

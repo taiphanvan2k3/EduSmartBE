@@ -9,11 +9,11 @@ namespace CourseManagementService.Services.CourseManagement.Teacher.Schemas
         [MaxLength(200)]
         public string Name { get; set; }
 
-        public string BriefDescription { get; set; }
+        public string BriefDescription { get; set; } = string.Empty;
 
-        public string DetailedDescription { get; set; }
+        public string DetailedDescription { get; set; } = string.Empty;
 
-        public string ThumbnailURL { get; set; }
+        public IFormFile Thumbnail { get; set; }
 
         [Range(0, double.MaxValue, ErrorMessage = "Price must be greater than or equal to 0")]
         public decimal Price { get; set; }

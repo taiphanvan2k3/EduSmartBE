@@ -17,6 +17,12 @@ namespace CourseManagementService.Services.Cache
             public static int ExpireTimeInMinutes => 30;
         }
 
+        public static class OwnedCourses
+        {
+            public static string Key(int userId) => $"OwnedCourses_{userId}";
+            public static int ExpireTimeInMinutes => 12 * 60;
+        }
+
         public static class CourseDetails
         {
             public static string Key(int courseId) => $"CourseDetails_{courseId}";
