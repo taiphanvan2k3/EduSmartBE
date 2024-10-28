@@ -74,11 +74,17 @@ await dbInit.Initialize();
 
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
-    app.UseSwagger();
+    app.UseSwagger(options =>
+    {
+        options.RouteTemplate = "auth/swagger/{documentName}/swagger.json";
+    });
+
     app.UseSwaggerUI(options =>
     {
-        options.InjectStylesheet("/swagger/custom-swagger.css");
-        options.InjectJavascript("/swagger/custom-swagger.js");
+        options.SwaggerEndpoint("/auth/swagger/v1/swagger.json", "Auth API V1");
+        options.RoutePrefix = "auth/swagger"; // Prefix cho Swagger UI
+        options.InjectStylesheet("/auth/swagger/custom-swagger.css"); // Đường dẫn cho file CSS
+        options.InjectJavascript("/auth/swagger/custom-swagger.js"); // Đường dẫn cho file JavaScript
     });
 }
 

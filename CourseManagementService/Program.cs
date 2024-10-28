@@ -66,11 +66,18 @@ await dbInit.Initialize();
 
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
-    app.UseSwagger();
+    app.UseSwagger(options =>
+    {
+        options.RouteTemplate = "course/swagger/{documentName}/swagger.json";
+    });
+
+
     app.UseSwaggerUI(options =>
     {
-        options.InjectStylesheet("/swagger/custom-swagger.css");
-        options.InjectJavascript("/swagger/custom-swagger.js");
+        options.SwaggerEndpoint("/course/swagger/v1/swagger.json", "Course API V1");
+        options.RoutePrefix = "course/swagger"; // Prefix cho Swagger UI
+        options.InjectStylesheet("/course/swagger/custom-swagger.css"); // Đường dẫn cho file CSS
+        options.InjectJavascript("/course/swagger/custom-swagger.js"); // Đường dẫn cho file JavaScript
     });
 }
 
