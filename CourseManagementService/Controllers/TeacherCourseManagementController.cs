@@ -7,7 +7,7 @@ using CourseManagementService.Common;
 
 namespace CourseManagementService.Controllers
 {
-    [Route("api/teacher-course-management")]
+    [Route("course/api/teacher-course-management")]
     [ApiController]
     [Filters.Auth(Roles = "Teacher")]
     public class TeacherCourseManagementController(ITeacherCourseDetailService teacherCourseDetailService,
