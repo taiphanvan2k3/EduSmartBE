@@ -68,11 +68,28 @@ namespace UserService.Controllers
             {
                 var userId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "userId")?.Value;
 
-                var result = await _userService.UpdateProfileUser(Int32.Parse(userId), userProfileUpdateRequest.UserInfo, userProfileUpdateRequest.File);
+                var result = await _userService.UpdateProfileUser(Int32.Parse(userId), userProfileUpdateRequest);
                 return Ok(new
                 {
                     imageInfo = result
                 });
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ErrorResponseHelper.GetContentOfInternalServerResponse(e));
+            }
+        }
+
+        [HttpGet("me")]
+        [Filters.Auth]
+        [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetUserDetail()
+        {
+            try
+            {
+                var userId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "userId")?.Value;
+                var user = await _userService.GetUserDetail(Int32.Parse(userId));
+                return Ok(user);
             }
             catch (Exception e)
             {

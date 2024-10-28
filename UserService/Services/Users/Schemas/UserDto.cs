@@ -16,6 +16,8 @@ namespace UserService.Services.Users.Schemas
 
         public int Gender { get; set; }
 
+        public string Phone { get; set; }
+
         public string GenderName { get; set; }
 
         public bool IsActive { get; set; }
