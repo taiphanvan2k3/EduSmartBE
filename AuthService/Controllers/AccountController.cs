@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AuthService.Controllers
 {
-    [Route("auth/api/auth/account")]
+    [Route("auth-service/api/account")]
     [ApiController]
     public class AccountController(IAccountDetailService accountDetailService) : ControllerBase
     {

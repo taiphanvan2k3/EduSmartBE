@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CourseManagementService.Controllers
 {
-    [Route("course/api/categories")]
+    [Route("course-service/api/categories")]
     [ApiController]
     public class CategoryManagementController(IListOfCategoriesService listOfCategoriesService,
         IListOfPublicCourseService listOfPublicCourseService) : ControllerBase
