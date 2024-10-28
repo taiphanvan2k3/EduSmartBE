@@ -10,7 +10,7 @@ using AuthService.Commons.Helpers;
 
 namespace AuthService.Controllers
 {
-    [Route("auth/api/permission")]
+    [Route("auth-service/api/permission")]
     [Authorize(Roles = "Admin")]
     [ApiController]
     public class PermissionController(IScreenService screenService, IFunctionService functionService,

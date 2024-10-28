@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CourseManagementService.Controllers
 {
-    [Route("course/api/public-courses")]
+    [Route("course-service/api/public-courses")]
     [ApiController]
     public class PublicCourseManagementController(IListOfPublicCourseService listOfPublicCourseService) : ControllerBase
     {
