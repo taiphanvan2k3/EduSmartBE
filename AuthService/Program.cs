@@ -76,15 +76,15 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     app.UseSwagger(options =>
     {
-        options.RouteTemplate = "auth/swagger/{documentName}/swagger.json";
+        options.RouteTemplate = "auth-service/swagger/{documentName}/swagger.json";
     });
 
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/auth/swagger/v1/swagger.json", "Auth API V1");
-        options.RoutePrefix = "auth/swagger"; // Prefix cho Swagger UI
-        options.InjectStylesheet("/auth/swagger/custom-swagger.css"); // Đường dẫn cho file CSS
-        options.InjectJavascript("/auth/swagger/custom-swagger.js"); // Đường dẫn cho file JavaScript
+        options.SwaggerEndpoint("/auth-service/swagger/v1/swagger.json", "Auth API V1");
+        options.RoutePrefix = "auth-service/swagger"; // Prefix cho Swagger UI
+        options.InjectStylesheet("/auth-service/swagger/custom-swagger.css"); // Đường dẫn cho file CSS
+        options.InjectJavascript("/auth-service/swagger/custom-swagger.js"); // Đường dẫn cho file JavaScript
     });
 }
 
