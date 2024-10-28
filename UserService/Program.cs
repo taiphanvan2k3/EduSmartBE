@@ -47,11 +47,18 @@ await dbInit.Initialize();
 
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
-    app.UseSwagger();
+    app.UseSwagger(options =>
+    {
+        options.RouteTemplate = "user/swagger/{documentName}/swagger.json";
+    });
+
+
     app.UseSwaggerUI(options =>
     {
-        options.InjectStylesheet("/swagger/custom-swagger.css");
-        options.InjectJavascript("/swagger/custom-swagger.js");
+        options.SwaggerEndpoint("/user/swagger/v1/swagger.json", "User API V1");
+        options.RoutePrefix = "user/swagger"; // Prefix cho Swagger UI
+        options.InjectStylesheet("/user/swagger/custom-swagger.css"); // Đường dẫn cho file CSS
+        options.InjectJavascript("/user/swagger/custom-swagger.js"); // Đường dẫn cho file JavaScript
     });
 }
 
@@ -64,6 +71,7 @@ app.UseHttpsRedirection();
 app.UseRouting();
 app.UseCors("AllowSpecificOrigin");
 
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 

@@ -70,7 +70,7 @@ namespace UserService.Extensions
         {
             services.AddSwaggerGen(opt =>
             {
-                opt.SwaggerDoc("v1", new OpenApiInfo { Title = "AuthService", Version = "v1", Description = "API for AuthService" });
+                opt.SwaggerDoc("v1", new OpenApiInfo { Title = "UserService", Version = "v1", Description = "API for UserService" });
 
                 opt.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, new OpenApiSecurityScheme()
                 {

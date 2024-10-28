@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CourseManagementService.Controllers
 {
-    [Route("api/chapters")]
+    [Route("course/api/chapters")]
     [ApiController]
     public class ChapterManagementController(IListOfChaptersService listOfChaptersService, IChapterDetailService chapterDetailService) : ControllerBase
     {
