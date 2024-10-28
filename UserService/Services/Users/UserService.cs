@@ -60,7 +60,15 @@ namespace UserService.Services.Users
         /// <para>Created at: 12/10/2024</para>
         /// </summary>
         /// <returns></returns>
-        public Task<ResponseInfo> UpdateProfileUser(int userId, UserUpdateDto userInfo, IFormFile file);
+        public Task<ResponseInfo> UpdateProfileUser(int userId, UserProfileUpdateRequest userProfileUpdateRequest);
+
+        /// <summary>
+        /// Get user detail
+        /// <para>Author: ManhTD</para>
+        /// <para>Created at: 28/10/2024</para>
+        /// </summary>
+        /// <returns></returns>
+        public Task<ResponseInfo> GetUserDetail(int userId);
     }
 
     public class UserService(IServiceProvider serviceProvider,
@@ -200,7 +208,7 @@ namespace UserService.Services.Users
             throw new NotImplementedException();
         }
 
-        public async Task<ResponseInfo> UpdateProfileUser(int userId, UserUpdateDto userInfo, IFormFile file)
+        public async Task<ResponseInfo> UpdateProfileUser(int userId, UserProfileUpdateRequest userProfileUpdateRequest)
         {
             var methodName = GetActualAsyncMethodName();
             try
@@ -224,23 +232,23 @@ namespace UserService.Services.Users
 
                 }
 
-                var uploadFileResult = await _photoService.AddPhotoAsync(file);
-                userInfoDB.FirstName = userInfo.FirstName;
-                userInfoDB.LastName = userInfo.LastName;
+                var uploadFileResult = await _photoService.AddPhotoAsync(userProfileUpdateRequest.File);
+                userInfoDB.FirstName = userProfileUpdateRequest.FirstName;
+                userInfoDB.LastName = userProfileUpdateRequest.LastName;
                 userInfoDB.AvatarURL = uploadFileResult.Url?.ToString();
-                userInfoDB.Phone = userInfo.Phone;
-                userInfoDB.Gender = userInfo.Gender;
+                userInfoDB.Phone = userProfileUpdateRequest.Phone;
+                userInfoDB.Gender = userProfileUpdateRequest.Gender;
 
                 await _context.SaveChangesAsync();
 
                 await _grpcAuthService.SaveUserProfile(new UserInfo
                 {
                     UserId = userInfoDB.UserId,
-                    FirstName = userInfo.FirstName,
-                    LastName = userInfo.LastName,
+                    FirstName = userProfileUpdateRequest.FirstName,
+                    LastName = userProfileUpdateRequest.LastName,
                     AvatarURL = uploadFileResult.Url?.ToString(),
-                    Phone = userInfo.Phone,
-                    Gender = userInfo.Gender
+                    Phone = userProfileUpdateRequest.Phone,
+                    Gender = userProfileUpdateRequest.Gender
                 });
 
                 response.Message = "Update profile user successfully";
@@ -252,6 +260,48 @@ namespace UserService.Services.Users
             catch (Exception e)
             {
                 _logger.LogError(e, "[UserInfoService] [{Method}] Error", methodName);
+                throw;
+            }
+        }
+
+        public async Task<ResponseInfo> GetUserDetail(int userId)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                _logger.LogInformation("[UserService] [{Method}] Start", methodName);
+                var response = new ResponseInfo();
+
+                var user = await _context.Users
+                    .Where(u => u.Id == userId)
+                    .Select(u => new
+                    {
+                        Email = u.Email,
+                        Username = u.UserName,
+                        FirstName = u.UserInfo.FirstName,
+                        LastName = u.UserInfo.LastName,
+                        AvatarURL = u.UserInfo.AvatarURL,
+                        Phone = u.UserInfo.Phone
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (user == null)
+                {
+                    response.StatusCode = StatusCodes.Status404NotFound;
+                    response.Message = "User not found";
+
+                    _logger.LogInformation("[UserService] [{Method}] End", methodName);
+                    return response;
+                }
+
+                response.Data.Add("user", user);
+
+                _logger.LogInformation("[UserService] [{Method}] End", methodName);
+                return response;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[UserService] [{Method}] Error", methodName);
                 throw;
             }
         }
