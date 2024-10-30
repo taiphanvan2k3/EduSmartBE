@@ -56,7 +56,8 @@ namespace UserService.Controllers
         /// <response code="403">Người dùng không có quyền thực hiện thao tác này.</response>
         /// <response code="500">Lỗi nội bộ hệ thống.</response>
         [Filters.Auth]
-        [HttpPut("profile")]
+        [HttpPut("me/profile")]
+        [ProducesResponseType(typeof(UserProfileUpdateRequest), StatusCodes.Status200OK)]
         public async Task<IActionResult> UpdateProfileUser([FromForm] UserProfileUpdateRequest userProfileUpdateRequest)
         {
             if(!ModelState.IsValid)
@@ -69,10 +70,7 @@ namespace UserService.Controllers
                 var userId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "userId")?.Value;
 
                 var result = await _userService.UpdateProfileUser(Int32.Parse(userId), userProfileUpdateRequest);
-                return Ok(new
-                {
-                    imageInfo = result
-                });
+                return result.StatusCode == 200 ? Ok(result.Data) : Ok(result);
             }
             catch (Exception e)
             {
