@@ -97,8 +97,11 @@ namespace UserService.Controllers
             try
             {
                 var userId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "userId")?.Value;
-                var user = await _userService.GetUserDetail(Int32.Parse(userId));
-                return Ok(user);
+                var responseInfo = await _userService.GetUserDetail(int.Parse(userId));
+                return Ok(new
+                {
+                    userInfo = responseInfo.Data["userInfo"]
+                });
             }
             catch (Exception e)
             {
