@@ -215,7 +215,10 @@ namespace UserService.Services.Users
             {
                 _logger.LogInformation("[UserInfoService] [{Method}] Start", methodName);
                 var response = new ResponseInfo();
-                var userInfoDB = await _context.UserInfos.FindAsync(userId);
+                var userInfoDB = await _context.UserInfos
+                    .Include(u => u.User)
+                    .FirstOrDefaultAsync(u => u.UserId == userId);
+
                 if (userInfoDB == null)
                 {
                     response.StatusCode = StatusCodes.Status404NotFound;
@@ -224,7 +227,7 @@ namespace UserService.Services.Users
                     return response;
                 }
 
-                // Delete file in cloudinary before upload
+                // Delete file in Cloudinary before upload
                 if (!string.IsNullOrEmpty(userInfoDB.AvatarURL) && userInfoDB.AvatarURL.Contains("res.cloudinary.com"))
                 {
                     string publicId = ExtractPublicId(userInfoDB.AvatarURL);
@@ -241,18 +244,30 @@ namespace UserService.Services.Users
 
                 await _context.SaveChangesAsync();
 
-                await _grpcAuthService.SaveUserProfile(new UserInfo
+                var userInfo = new UserInfo
                 {
                     UserId = userInfoDB.UserId,
+                    Username = userInfoDB.User.UserName,
+                    Email = userInfoDB.User.Email,
                     FirstName = userProfileUpdateRequest.FirstName,
                     LastName = userProfileUpdateRequest.LastName,
                     AvatarURL = uploadFileResult.Url?.ToString(),
                     Phone = userProfileUpdateRequest.Phone,
                     Gender = userProfileUpdateRequest.Gender
-                });
+                };
+
+                var isUpdateSuccess = await _grpcAuthService.SaveUserProfile(userInfo);
+                if (!isUpdateSuccess)
+                {
+                    response.StatusCode = StatusCodes.Status500InternalServerError;
+                    response.Error = "Sync profile user with auth service failed";
+                    response.Message = "Update profile user failed";
+                    _logger.LogInformation("[UserInfoService] [{Method}] End", methodName);
+                    return response;
+                }
 
                 response.Message = "Update profile user successfully";
-                response.Data.Add("userInfo", userInfoDB);
+                response.Data.Add("userInfo", userInfo);
 
                 _logger.LogInformation("[UserInfoService] [{Method}] End", methodName);
                 return response;

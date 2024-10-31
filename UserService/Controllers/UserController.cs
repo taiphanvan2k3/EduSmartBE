@@ -15,7 +15,7 @@ namespace UserService.Controllers
             ?? throw new ArgumentNullException(nameof(listOfUsersService));
 
         private readonly IUserService _userService = userService ?? throw new ArgumentNullException(nameof(userService));
-        
+
         [Filters.Auth(Roles = "Admin")]
         [HttpGet]
         [ProducesResponseType(typeof(PaginatedList<UserDto>), StatusCodes.Status200OK)]
@@ -60,7 +60,7 @@ namespace UserService.Controllers
         [ProducesResponseType(typeof(UserProfileUpdateRequest), StatusCodes.Status200OK)]
         public async Task<IActionResult> UpdateProfileUser([FromForm] UserProfileUpdateRequest userProfileUpdateRequest)
         {
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
                 return BadRequest(ErrorResponseHelper.GetContentOfBadRequestResponse(ModelState.Values.SelectMany(x => x.Errors)
                     .Select(x => x.ErrorMessage).ToList()));
@@ -69,8 +69,19 @@ namespace UserService.Controllers
             {
                 var userId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "userId")?.Value;
 
-                var result = await _userService.UpdateProfileUser(Int32.Parse(userId), userProfileUpdateRequest);
-                return result.StatusCode == 200 ? Ok(result.Data) : Ok(result);
+                var responseInfo = await _userService.UpdateProfileUser(int.Parse(userId), userProfileUpdateRequest);
+                if (responseInfo.StatusCode == StatusCodes.Status200OK)
+                {
+                    return Ok(new
+                    {
+                        userInfo = responseInfo.Data["userInfo"]
+                    });
+                }
+                else
+                {
+                    return StatusCode(responseInfo.StatusCode, ErrorResponseHelper.GetContentOfAnyError(
+                        responseInfo.StatusCode, responseInfo.Error, responseInfo.Message));
+                }
             }
             catch (Exception e)
             {

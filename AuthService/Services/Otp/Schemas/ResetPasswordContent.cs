@@ -8,6 +8,6 @@ namespace AuthService.Services.Otp.Schemas
     public class ResetPasswordContent : OtpContentBase
     {
         [Required]
-        public string NewPassword { get; set; }
+        public string NewPassword { get; set; } = string.Empty;
     }
 }
