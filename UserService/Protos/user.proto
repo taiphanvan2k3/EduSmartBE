@@ -6,6 +6,7 @@ service User {
     rpc CheckUserExist (UserRequest) returns (CheckUserExistResponse);
     rpc GetListOfTeachers (UsersRequest) returns (ListOfUsersResponse);
     rpc GetTeachersByName(UserRequest) returns (ListOfUsersResponse);
+    rpc DeleteUser(UserRequest) returns (MessageResponse);
 }
 
 // Dùng để lấy thông tin user theo id
@@ -40,4 +41,9 @@ message ListOfUsersResponse {
 
 message CheckUserExistResponse {
     bool isExist = 1;
+}
+
+message MessageResponse {
+    int32 statusCode = 1;
+    string message = 2;
 }

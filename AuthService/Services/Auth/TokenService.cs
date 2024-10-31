@@ -4,8 +4,8 @@ using System.Security.Cryptography;
 using System.Text;
 using AuthService.BackgroundServices;
 using AuthService.Commons;
+using AuthService.Services.Account.Schemas;
 using AuthService.Services.Auth.Schemas;
-using AuthService.Services.User.Schemas;
 using AuthService.Settings;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -105,7 +105,7 @@ namespace AuthService.Services.Auth
                     .Select(x => new UserInfo
                     {
                         Id = x.Id,
-                        UserName = x.UserName,
+                        Username = x.UserName,
                         Email = x.Email,
                     })
                     .FirstOrDefaultAsync();
@@ -194,7 +194,7 @@ namespace AuthService.Services.Auth
             var key = Encoding.ASCII.GetBytes(_jwtSetting.SecretKey);
             var claims = new List<Claim>
             {
-                new("username", userInfo.UserName),
+                new("username", userInfo.Username),
                 new(ClaimTypes.Email, userInfo.Email),
                 new("userId", userInfo.Id.ToString()),
                 new("iss", _jwtSetting.Issuer),

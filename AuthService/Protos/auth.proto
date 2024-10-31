@@ -2,7 +2,7 @@ syntax = "proto3";
 option csharp_namespace = "AuthService.GrpcServices";
 
 service Auth {
-    rpc SaveUserProfile (SaveUserProfileRequest) returns (SaveUserProfileResponse);
+    rpc SaveUserProfile(SaveUserProfileRequest) returns (SaveUserProfileResponse);
 }
 
 message SaveUserProfileRequest {
