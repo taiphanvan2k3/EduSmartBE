@@ -300,7 +300,6 @@ namespace UserService.Services.Users
                         AvatarURL = u.UserInfo.AvatarURL,
                         Phone = u.UserInfo.Phone,
                         Gender = u.UserInfo.Gender,
-                        GenderName = Utils.GetGenderName(u.UserInfo.Gender),
                         IsActive = u.IsActive,
                         Roles = u.UserRoles.Select(r => r.Role.Name).ToList(),
                         CreatedAt = u.CreatedAt

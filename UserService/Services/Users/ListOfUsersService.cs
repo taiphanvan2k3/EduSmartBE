@@ -39,7 +39,6 @@ namespace UserService.Services.Users
                         LastName = x.UserInfo.LastName,
                         AvatarURL = x.UserInfo.AvatarURL,
                         Gender = x.UserInfo.Gender,
-                        GenderName = Utils.GetGenderName(x.UserInfo.Gender),
                         IsActive = x.IsActive,
                         Roles = x.UserRoles.Select(ur => ur.Role.Name).ToList(),
                         CreatedAt = x.CreatedAt

@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using AuthService.Databases;
 using Grpc.Core;
-using Microsoft.EntityFrameworkCore;
 
 namespace AuthService.GrpcServices
 {
@@ -14,7 +13,7 @@ namespace AuthService.GrpcServices
             ?? throw new ArgumentNullException(nameof(logger));
 
         protected static string GetActualAsyncMethodName([CallerMemberName] string name = null) => name;
-        
+
         public override async Task<SaveUserProfileResponse> SaveUserProfile(SaveUserProfileRequest request, ServerCallContext serverContext)
         {
             var methodName = GetActualAsyncMethodName();
@@ -22,7 +21,7 @@ namespace AuthService.GrpcServices
             {
                 _logger.LogInformation("[GrpcAuthServices] [{Method}] Start", methodName);
                 var user = await _context.Users.FindAsync(request.Id);
-                if(user is null)
+                if (user is null)
                 {
                     return new SaveUserProfileResponse
                     {

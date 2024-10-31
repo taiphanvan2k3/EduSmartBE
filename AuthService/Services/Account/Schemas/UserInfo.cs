@@ -1,10 +1,10 @@
-namespace AuthService.Services.User.Schemas
+namespace AuthService.Services.Account.Schemas
 {
     public class UserInfo
     {
         public int Id { get; set; }
 
-        public string UserName { get; set; }
+        public string Username { get; set; }
 
         public string Email { get; set; }
 
@@ -12,7 +12,7 @@ namespace AuthService.Services.User.Schemas
 
         public string LastName { get; set; }
 
-        public string AvatarUrl { get; set; }
+        public string AvatarURL { get; set; }
 
         public string Phone { get; set; }
 
