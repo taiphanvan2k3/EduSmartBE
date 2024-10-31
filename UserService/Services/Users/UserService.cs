@@ -1,6 +1,7 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using UserService.Commons;
+using UserService.Commons.Helpers;
 using UserService.Services.Grpc;
 using UserService.Services.Users.Schemas;
 using TblUser = UserService.Databases.Schemas.User;
@@ -287,20 +288,26 @@ namespace UserService.Services.Users
                 _logger.LogInformation("[UserService] [{Method}] Start", methodName);
                 var response = new ResponseInfo();
 
-                var user = await _context.Users
+                var userInfo = await _context.Users
                     .Where(u => u.Id == userId)
-                    .Select(u => new
+                    .Select(u => new UserDto
                     {
-                        Email = u.Email,
+                        Id = u.Id,
                         Username = u.UserName,
+                        Email = u.Email,
                         FirstName = u.UserInfo.FirstName,
                         LastName = u.UserInfo.LastName,
                         AvatarURL = u.UserInfo.AvatarURL,
-                        Phone = u.UserInfo.Phone
+                        Phone = u.UserInfo.Phone,
+                        Gender = u.UserInfo.Gender,
+                        GenderName = Utils.GetGenderName(u.UserInfo.Gender),
+                        IsActive = u.IsActive,
+                        Roles = u.UserRoles.Select(r => r.Role.Name).ToList(),
+                        CreatedAt = u.CreatedAt
                     })
                     .FirstOrDefaultAsync();
 
-                if (user == null)
+                if (userInfo == null)
                 {
                     response.StatusCode = StatusCodes.Status404NotFound;
                     response.Message = "User not found";
@@ -309,8 +316,7 @@ namespace UserService.Services.Users
                     return response;
                 }
 
-                response.Data.Add("user", user);
-
+                response.Data.Add("userInfo", userInfo);
                 _logger.LogInformation("[UserService] [{Method}] End", methodName);
                 return response;
             }
