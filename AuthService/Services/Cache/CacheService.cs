@@ -75,7 +75,7 @@ namespace AuthService.Services.Cache
 
         public bool SetData<T>(string key, T value, DateTimeOffset timeEnd)
         {
-            var expireTime = timeEnd.DateTime.Subtract(DateTime.Now);
+            var expireTime = timeEnd.DateTime.Subtract(DateTimeOffset.UtcNow.DateTime);
 
             if (_cacheDb == null)
             {

@@ -17,7 +17,7 @@ namespace CourseManagementService.Controllers
             ?? throw new ArgumentNullException(nameof(studentCourseDetailService));
 
         /// <summary>
-        /// Get all courses that teacher created
+        /// Get all courses that student enrolled
         /// <para>Created at: 2024/10/07</para>
         /// <para>Created by: TaiPV</para>
         /// </summary>

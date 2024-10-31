@@ -170,10 +170,11 @@ namespace AuthService.Services.Account
                 var cacheKey = CacheKeyManager.GetConfirmDeleteAccountKey(user.Email);
                 var otpData = new OtpWrapperBase()
                 {
-                    OtpCode = otpCode
+                    OtpCode = otpCode,
+                    OtpExpiry = DateTimeOffset.Now.AddMinutes(2)
                 };
 
-                var isOtpSaved = _cacheService.SetData(cacheKey, otpData, DateTimeOffset.Now.AddMinutes(2));
+                var isOtpSaved = _cacheService.SetData(cacheKey, otpData, otpData.OtpExpiry);
                 if (!isOtpSaved)
                 {
                     responseInfo.Error = "SaveOtpFailed";
