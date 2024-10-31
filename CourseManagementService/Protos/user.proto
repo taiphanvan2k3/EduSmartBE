@@ -1,5 +1,6 @@
 syntax = "proto3";
 option csharp_namespace = "CourseManagementService.GrpcServices";
+import "google/protobuf/wrappers.proto";
 
 service User {
     rpc GetUserInfo (UserRequest) returns (UserResponse);
@@ -23,7 +24,7 @@ message SimpleUserResponse {
     int32 id = 1;
     string userName = 2;
     string fullName = 3;
-    string avatarURL = 4;
+    google.protobuf.StringValue avatarURL = 4;
 }
 
 message UserResponse {
