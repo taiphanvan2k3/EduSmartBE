@@ -13,6 +13,17 @@ namespace AuthService.Controllers
         private readonly IAccountDetailService _accountDetailService = accountDetailService
             ?? throw new ArgumentNullException(nameof(accountDetailService));
 
+        /// <summary>
+        /// Active/Inactive user
+        /// <para>Created at: 2024/10/12</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <remarks>
+        /// NOTE: 
+        /// 
+        ///     This API is only used for the admin role (in Admin page)
+        ///     
+        /// </remarks>
         [HttpPut("{userId}/activate")]
         [Filters.Auth(Roles = "Admin")]
         public async Task<IActionResult> ActivateUser([FromRoute] int userId, [FromBody] UserActivationContent activationContent)
@@ -38,6 +49,13 @@ namespace AuthService.Controllers
             }
         }
 
+        /// <summary>
+        /// Change password
+        /// <para>Created at: 2024/10/17</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="changePasswordContent"></param>
+        /// <returns></returns>
         [HttpPut("password")]
         [Filters.Auth]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordContent changePasswordContent)
@@ -62,6 +80,11 @@ namespace AuthService.Controllers
             }
         }
 
+        /// <summary>
+        /// Send email to verify the account deletion
+        /// <para>Created at: 2024/10/17</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
         [HttpPost("delete-account-verification")]
         [Filters.Auth]
         public async Task<IActionResult> VerifyAccountDeletion()
@@ -82,6 +105,11 @@ namespace AuthService.Controllers
             }
         }
 
+        /// <summary>
+        /// Delete account permanently
+        /// <para>Created at: 2024/10/17</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
         [HttpDelete]
         [Filters.Auth]
         public async Task<IActionResult> DeleteAccount([FromBody] OtpWrapperBase otpWrapperBase)

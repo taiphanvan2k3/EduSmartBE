@@ -5,12 +5,12 @@ using AuthService.Commons.Helpers;
 using AuthService.Databases.Schemas;
 using AuthService.Enumerations;
 using AuthService.Extensions;
+using AuthService.Services.Account.Schemas;
 using AuthService.Services.Auth.Schemas;
 using AuthService.Services.Cache;
 using AuthService.Services.MailSender.Schemas;
 using AuthService.Services.Otp.Schemas;
 using AuthService.Services.Otp.Schemas.Wrappers;
-using AuthService.Services.User.Schemas;
 using AuthService.Settings;
 using Google.Apis.Auth;
 using Microsoft.AspNetCore.Identity;
@@ -462,12 +462,12 @@ namespace AuthService.Services.Auth
                 {
                     OtpCode = otp,
                     ResetPasswordToken = token,
-                    OtpExpiry = DateTimeOffset.UtcNow.AddMinutes(2)
+                    OtpExpiry = DateTimeOffset.Now.AddMinutes(2)
                 };
 
                 // Lưu mã OTP vào cache
                 var cacheKey = CacheKeyManager.GetResetPasswordKey(user.Email);
-                var isOtpSaved = _cacheService.SetData(cacheKey, otpData, DateTimeOffset.UtcNow.AddMinutes(2));
+                var isOtpSaved = _cacheService.SetData(cacheKey, otpData, otpData.OtpExpiry);
                 if (!isOtpSaved)
                 {
                     responseInfo.Error = "SaveOtpFailed";
@@ -650,11 +650,11 @@ namespace AuthService.Services.Auth
             return new UserInfo()
             {
                 Id = user.Id,
-                UserName = user.UserName,
+                Username = user.UserName,
                 Email = user.Email,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
-                AvatarUrl = user.AvatarURL,
+                AvatarURL = user.AvatarURL,
                 CreatedAt = DateTimeOffset.Now,
                 Roles = [.. (await _userManager.GetRolesAsync(user))],
                 IsActive = user.IsActive,

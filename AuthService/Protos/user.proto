@@ -1,0 +1,17 @@
+syntax = "proto3";
+option csharp_namespace = "AuthService.GrpcServices";
+
+service User {
+    rpc DeleteUser(UserRequest) returns (MessageResponse);
+}
+
+// Dùng để lấy thông tin user theo id
+message UserRequest {
+    int32 id = 1;
+    string name = 2;
+}
+
+message MessageResponse {
+    int32 statusCode = 1;
+    string message = 2;
+}
