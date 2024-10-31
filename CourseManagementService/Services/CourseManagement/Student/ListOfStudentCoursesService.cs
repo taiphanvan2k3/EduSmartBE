@@ -43,7 +43,8 @@ namespace CourseManagementService.Services.CourseManagement.Student
                     .ToListAsync();
 
                 var studentIds = courses.Select(x => x.Teacher.Id).Distinct().ToList();
-                var teachersDict = courses.ToDictionary(x => x.Teacher.Id, x => x.Teacher);
+                var teachersDict = courses.GroupBy(x => x.Teacher.Id)
+                    .ToDictionary(g => g.Key, g => g.First().Teacher);
 
                 // Get teachers' info from UserService
                 var teachers = await _grpcUserService.GetListOfTeachers(studentIds);
