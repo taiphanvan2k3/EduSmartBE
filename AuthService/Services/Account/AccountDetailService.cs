@@ -5,6 +5,7 @@ using AuthService.Commons.Helpers;
 using AuthService.Databases.Schemas;
 using AuthService.Services.Account.Schemas;
 using AuthService.Services.Cache;
+using AuthService.Services.Grpc;
 using AuthService.Services.MailSender.Schemas;
 using AuthService.Services.Otp.Schemas.Wrappers;
 using Microsoft.AspNetCore.Identity;
@@ -60,6 +61,8 @@ namespace AuthService.Services.Account
             ?? throw new InvalidCastException(ServiceInjectionError("MailProducer"));
         private readonly ICacheService _cacheService = serviceProvider.GetRequiredService<ICacheService>()
             ?? throw new InvalidOperationException(ServiceInjectionError("ICacheService"));
+        private readonly IGrpcUserService _grpcUserService = serviceProvider.GetRequiredService<IGrpcUserService>()
+            ?? throw new InvalidOperationException(ServiceInjectionError("IGrpcUserService"));
 
         public async Task<ResponseInfo> ActivateUser(int userId, bool isActive)
         {
@@ -107,7 +110,7 @@ namespace AuthService.Services.Account
                 LogInfo("Start", method);
                 var responseInfo = new ResponseInfo();
 
-                var user = await _userManager.FindByNameAsync(_appStateService.UserInfo.UserName);
+                var user = await _userManager.FindByNameAsync(_appStateService.UserInfo.Username);
                 if (user == null)
                 {
                     responseInfo.Error = "NotFound";
@@ -146,7 +149,7 @@ namespace AuthService.Services.Account
                 LogInfo("Start", method);
                 var responseInfo = new ResponseInfo();
 
-                var user = await _userManager.FindByNameAsync(_appStateService.UserInfo.UserName);
+                var user = await _userManager.FindByNameAsync(_appStateService.UserInfo.Username);
                 if (user == null)
                 {
                     responseInfo.Error = "NotFound";
@@ -202,7 +205,7 @@ namespace AuthService.Services.Account
                 _logger.LogInformation("[AuthService][{Method}] Start", method);
                 var responseInfo = new ResponseInfo();
 
-                var user = await _userManager.FindByNameAsync(_appStateService.UserInfo.UserName);
+                var user = await _userManager.FindByNameAsync(_appStateService.UserInfo.Username);
                 if (user == null)
                 {
                     responseInfo.Error = "UserNotFound";
@@ -222,18 +225,24 @@ namespace AuthService.Services.Account
                     return responseInfo;
                 }
 
-                var isDeleteUserTask = _userManager.DeleteAsync(user);
-                var deleteCoursePermissionTask = _context.CoursePermissions
-                    .Where(cp => cp.AssistantId == user.Id).ExecuteDeleteAsync();
-                await Task.WhenAll(isDeleteUserTask, deleteCoursePermissionTask);
-
-                // TODO: Delete all user's data in other services
-
-                if (!isDeleteUserTask.Result.Succeeded)
+                var isDeleteUserTask = await _userManager.DeleteAsync(user);
+                if (!isDeleteUserTask.Succeeded)
                 {
                     responseInfo.Error = "DeleteUserFailed";
                     responseInfo.StatusCode = StatusCodes.Status500InternalServerError;
-                    responseInfo.Message = isDeleteUserTask.Result.Errors.FirstOrDefault()?.Description;
+                    responseInfo.Message = isDeleteUserTask.Errors.FirstOrDefault()?.Description;
+                    return responseInfo;
+                }
+
+                var deleteCoursePermissionTask = await _context.CoursePermissions
+                    .Where(cp => cp.AssistantId == user.Id).ExecuteDeleteAsync();
+
+                var result = await _grpcUserService.DeleteAccount(user.Id);
+                if (result.StatusCode != StatusCodes.Status200OK)
+                {
+                    responseInfo.Error = "SyncDataFailedInOtherServices";
+                    responseInfo.StatusCode = StatusCodes.Status500InternalServerError;
+                    responseInfo.Message = result.Message;
                     return responseInfo;
                 }
 

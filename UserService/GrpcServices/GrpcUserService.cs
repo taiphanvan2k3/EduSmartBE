@@ -136,5 +136,36 @@ namespace UserService.GrpcServices
                 throw;
             }
         }
+
+        public override async Task<MessageResponse> DeleteUser(UserRequest request, ServerCallContext context)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                _logger.LogInformation("[GrpcUserService] [{Method}] Start", methodName);
+
+                var user = await _context.Users.FindAsync(request.Id)
+                    ?? throw new RpcException(new Status(StatusCode.NotFound, "User not found"));
+
+                _context.Users.Remove(user);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("[GrpcUserService] [{Method}] End", methodName);
+                return new MessageResponse
+                {
+                    Message = "User deleted successfully",
+                    StatusCode = 200
+                };
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[GrpcUserService] [{Method}] Error", methodName);
+                return new MessageResponse
+                {
+                    Message = $"Error when deleting user. Details: {e.InnerException?.Message ?? e.Message}",
+                    StatusCode = 500
+                };
+            }
+        }
     }
 }
