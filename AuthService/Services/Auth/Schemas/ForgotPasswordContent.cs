@@ -6,6 +6,6 @@ namespace AuthService.Services.Auth.Schemas
     {
         [Required]
         [EmailAddress(ErrorMessage = "Invalid email address")]
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
     }
 }

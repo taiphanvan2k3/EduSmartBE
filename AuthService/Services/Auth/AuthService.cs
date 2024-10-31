@@ -131,6 +131,8 @@ namespace AuthService.Services.Auth
             {
                 _logger.LogInformation("[AuthService][CheckLogin] Start");
                 var responseInfo = new ResponseInfo();
+
+                loginRequest.Email = loginRequest.Email.Trim().ToLower();
                 var user = await _userManager.FindByEmailAsync(loginRequest.Email)
                     ?? await _userManager.FindByNameAsync(loginRequest.Username);
 
@@ -349,7 +351,7 @@ namespace AuthService.Services.Auth
                 var responseInfo = new ResponseInfo();
                 var user = new ApplicationUser()
                 {
-                    Email = signUpRequest.Email,
+                    Email = signUpRequest.Email.ToLower(),
                     UserName = !string.IsNullOrEmpty(signUpRequest.Username)
                         ? signUpRequest.Username
                         : signUpRequest.Email.Split('@')[0],
@@ -444,6 +446,7 @@ namespace AuthService.Services.Auth
                 _logger.LogInformation("[AuthService][ForgotPassword] Start");
                 var responseInfo = new ResponseInfo();
 
+                forgotPasswordContent.Email = forgotPasswordContent.Email.Trim().ToLower();
                 var user = await _userManager.FindByEmailAsync(forgotPasswordContent.Email);
                 if (user == null)
                 {
@@ -455,15 +458,16 @@ namespace AuthService.Services.Auth
 
                 string otp = Utils.GenerateOtp();
                 string token = await _userManager.GeneratePasswordResetTokenAsync(user);
-                var otpData = new ResetPasswordWrapper()
+                var otpData = new ResetPasswordWrapper
                 {
                     OtpCode = otp,
-                    ResetPasswordToken = token
+                    ResetPasswordToken = token,
+                    OtpExpiry = DateTimeOffset.UtcNow.AddMinutes(2)
                 };
 
                 // Lưu mã OTP vào cache
                 var cacheKey = CacheKeyManager.GetResetPasswordKey(user.Email);
-                var isOtpSaved = _cacheService.SetData(cacheKey, otpData, DateTimeOffset.Now.AddMinutes(2));
+                var isOtpSaved = _cacheService.SetData(cacheKey, otpData, DateTimeOffset.UtcNow.AddMinutes(2));
                 if (!isOtpSaved)
                 {
                     responseInfo.Error = "SaveOtpFailed";
@@ -501,6 +505,8 @@ namespace AuthService.Services.Auth
             {
                 _logger.LogInformation("[AuthService][{Method}] Start", method);
                 var responseInfo = new ResponseInfo();
+
+                email = email?.Trim().ToLower();
                 (string cacheKey, Type otpWrapperType) = Utils.GetOtpCacheKey(email, otpType);
 
                 var otpData = otpWrapperType switch
@@ -519,7 +525,19 @@ namespace AuthService.Services.Auth
                 }
 
                 // Gia hạn thời gian sống của mã OTP
-                _cacheService.SetData(cacheKey, otpData, DateTimeOffset.Now.AddMinutes(1));
+                if (otpData.OtpExpiry - DateTimeOffset.Now < TimeSpan.FromMinutes(1))
+                {
+                    otpData.OtpExpiry = otpData.OtpExpiry.AddMinutes(1);
+                }
+
+                if (otpData is ResetPasswordWrapper resetPasswordOtpData)
+                {
+                    _cacheService.SetData(cacheKey, resetPasswordOtpData, otpData.OtpExpiry);
+                }
+                else
+                {
+                    _cacheService.SetData(cacheKey, otpData, otpData.OtpExpiry);
+                }
 
                 responseInfo.Message = "OTP is valid";
                 _logger.LogInformation("[AuthService][{Method}] End", method);
@@ -540,6 +558,7 @@ namespace AuthService.Services.Auth
                 _logger.LogInformation("[AuthService][{Method}] Start", method);
                 var responseInfo = new ResponseInfo();
 
+                resetPasswordContent.Email = resetPasswordContent.Email.Trim().ToLower();
                 var user = await _userManager.FindByEmailAsync(resetPasswordContent.Email);
                 if (user == null)
                 {
@@ -570,6 +589,7 @@ namespace AuthService.Services.Auth
                     return responseInfo;
                 }
 
+                _cacheService.RemoveData(cacheKey);
                 responseInfo.Message = "Reset password successfully";
                 _logger.LogInformation("[AuthService][{Method}] End", method);
                 return responseInfo;
@@ -638,7 +658,8 @@ namespace AuthService.Services.Auth
                 CreatedAt = DateTimeOffset.Now,
                 Roles = [.. (await _userManager.GetRolesAsync(user))],
                 IsActive = user.IsActive,
-                Phone = user.Phone
+                Phone = user.Phone,
+                Gender = user.Gender
             };
         }
 
