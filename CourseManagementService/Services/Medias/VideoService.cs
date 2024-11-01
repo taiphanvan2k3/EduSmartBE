@@ -1,6 +1,7 @@
 using Azure.Storage;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using Azure.Storage.Sas;
 using CourseManagementService.Common;
 using CourseManagementService.Settings;
 using Microsoft.Extensions.Options;
@@ -13,11 +14,11 @@ namespace CourseManagementService.Services.Medias
     }
 
     public class VideoService(IServiceProvider serviceProvider,
-        IOptions<AzureBlobStoragSetting> azureBlobStoragSetting,
+        IOptions<AzureBlobStorageSetting> azureBlobStorageSetting,
         ILogger<VideoService> logger) : BaseService(serviceProvider, logger), IVideoService
     {
-        private readonly string _containerName = azureBlobStoragSetting.Value.ContainerName;
-        private readonly BlobServiceClient _blobServiceClient = new(azureBlobStoragSetting.Value.ConnectionString);
+        private readonly string _containerName = azureBlobStorageSetting.Value.ContainerName;
+        private readonly BlobServiceClient _blobServiceClient = new(azureBlobStorageSetting.Value.ConnectionString);
 
         public async Task<ResponseInfo> UploadVideoAsync(IFormFile file)
         {
@@ -51,6 +52,7 @@ namespace CourseManagementService.Services.Medias
 
                 responseInfo.Message = "Upload video successfully";
                 responseInfo.Data.Add("videoUrl", blobClient.Uri.ToString());
+                responseInfo.Data.Add("videoSasUrl", GenerateSASToken(blobClient.Uri.ToString()));
 
                 return responseInfo;
             }
@@ -59,6 +61,24 @@ namespace CourseManagementService.Services.Medias
                 LogError(e, method);
                 throw;
             }
+        }
+
+        private string GenerateSASToken(string baseBlobURL, int expireTimeInMinutes = 60)
+        {
+            var blobClient = new BlobClient(new Uri(baseBlobURL));
+            var sasBuilder = new BlobSasBuilder
+            {
+                BlobContainerName = blobClient.BlobContainerName,
+                BlobName = blobClient.Name,
+                Resource = "b", // b: blob, sb: blob snapshot, c: container,...
+                StartsOn = DateTimeOffset.UtcNow,
+                ExpiresOn = DateTimeOffset.UtcNow.AddMinutes(expireTimeInMinutes)
+            };
+
+            sasBuilder.SetPermissions(BlobSasPermissions.Read);
+
+            var sasToken = sasBuilder.ToSasQueryParameters(new StorageSharedKeyCredential(_blobServiceClient.AccountName, azureBlobStorageSetting.Value.Key1)).ToString();
+            return $"{blobClient.Uri}?{sasToken}";
         }
     }
 }
