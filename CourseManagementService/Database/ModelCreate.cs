@@ -113,6 +113,16 @@ namespace CourseManagementService.Database
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
+            modelBuilder.Entity<VideoLesson>(entity =>
+            {
+                entity.ToTable("VideoLessons");
+                entity.HasKey(e => e.Id);
+
+                entity.Property(vl => vl.UploadStatus)
+                    .HasConversion<string>()
+                    .HasMaxLength(50);
+            });
+
             modelBuilder.Entity<QuizAnswer>(entity =>
             {
                 entity.ToTable("QuizAnswers");
