@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using CourseManagementService.Enumerations;
+using Microsoft.EntityFrameworkCore;
 
 namespace CourseManagementService.Database.Schemas
 {
@@ -7,9 +8,10 @@ namespace CourseManagementService.Database.Schemas
     {
         public Guid Id { get; set; }
 
-        public string PublicVideoURL { get; set; }
-
+        [Comment("URL without SAS token")]
         [Required]
+        public string BaseBlobURL { get; set; }
+
         [MaxLength(200)]
         public string ThumbnailURL { get; set; }
 

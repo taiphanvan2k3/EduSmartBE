@@ -16,14 +16,8 @@ builder.AddAutoFact();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGenWithAuth();
 
-builder.Services.Configure<FormOptions>(options =>
-{
-    options.MultipartBodyLengthLimit = 1024 * 1024 * 200; // Tăng giới hạn lên 200 MB hoặc phù hợp với nhu cầu
-});
-
-
+builder.Services.Configure<AzureBlobStorageSetting>(builder.Configuration.GetSection("AzureBlobStorageSetting"));
 builder.Services.Configure<CloudinarySetting>(builder.Configuration.GetSection("CloudinarySettings"));
-builder.Services.Configure<AzureBlobStoragSetting>(builder.Configuration.GetSection("AzureBlobStoragSetting"));
 
 builder.Services.AddHttpContextAccessor(); // Add IHttpContextAccessor for getting HttpContext in services
 builder.Services.AddDataContext(builder.Configuration);
