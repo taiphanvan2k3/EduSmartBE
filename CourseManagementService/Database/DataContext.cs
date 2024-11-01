@@ -25,6 +25,13 @@ namespace CourseManagementService.Database
         public DbSet<Category> Categories { get; set; }
         public DbSet<Currency> Currencies { get; set; }
         public DbSet<CourseEnrollment> CourseEnrollments { get; set; }
+        public DbSet<Lesson> Lessons { get; set; }
+        public DbSet<QuizLesson> QuizLessons { get; set; }
+        public DbSet<QuizAnswer> QuizAnswers { get; set; }
+        public DbSet<VideoLesson> VideoLessons { get; set; }
+        public DbSet<CourseRating> CourseRatings { get; set; }
+        public DbSet<LessonRating> LessonRatings { get; set; }
+        public DbSet<LessonTracking> LessonTrackings { get; set; }
 
         public override int SaveChanges()
         {
