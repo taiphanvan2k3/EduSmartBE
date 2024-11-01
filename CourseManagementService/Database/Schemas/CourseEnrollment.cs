@@ -8,6 +8,8 @@ namespace CourseManagementService.Database.Schemas
 
         public DateTimeOffset EnrollmentDate { get; set; }
 
+        public DateTimeOffset? CompletionDate { get; set; }
+
         public DateTimeOffset? LeaveDate { get; set; }
 
         public virtual Course Course { get; set; }

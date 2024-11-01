@@ -25,6 +25,9 @@ namespace CourseManagementService.Database
                 entity.Property(c => c.Type)
                     .HasConversion<string>()
                     .HasMaxLength(50);
+
+                entity.Property(c => c.IsPublished)
+                    .HasDefaultValue(true);
             });
 
             modelBuilder.Entity<Tag>(entity =>
@@ -73,6 +76,80 @@ namespace CourseManagementService.Database
                     .WithMany(c => c.Enrollments)
                     .HasForeignKey(e => e.CourseId)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<Lesson>(entity =>
+            {
+                entity.ToTable("Lessons");
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(l => l.QuizLesson)
+                    .WithOne(ql => ql.Lesson)
+                    .HasForeignKey<QuizLesson>(ql => ql.LessonId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(l => l.VideoLesson)
+                    .WithOne(vl => vl.Lesson)
+                    .HasForeignKey<VideoLesson>(vl => vl.LessonId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.Property(l => l.IsRatingAllowed)
+                    .HasDefaultValue(true);
+                entity.Property(l => l.IsCommentAllowed)
+                    .HasDefaultValue(true);
+                entity.Property(l => l.LessonType)
+                    .HasConversion<string>()
+                    .HasMaxLength(50);
+            });
+
+            modelBuilder.Entity<QuizLesson>(entity =>
+            {
+                entity.ToTable("QuizLessons");
+                entity.HasKey(e => e.Id);
+
+                entity.HasMany(ql => ql.Answers)
+                    .WithOne(qa => qa.QuizLesson)
+                    .HasForeignKey(qa => qa.QuizLessonId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<QuizAnswer>(entity =>
+            {
+                entity.ToTable("QuizAnswers");
+                entity.HasKey(e => e.Id);
+            });
+
+            modelBuilder.Entity<CourseRating>(entity =>
+            {
+                entity.ToTable("CourseRatings");
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(cr => cr.Course)
+                    .WithMany(c => c.Ratings)
+                    .HasForeignKey(cr => cr.CourseId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<LessonRating>(entity =>
+            {
+                entity.ToTable("LessonRatings");
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(lr => lr.Lesson)
+                    .WithMany(l => l.Ratings)
+                    .HasForeignKey(lr => lr.LessonId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<LessonTracking>(entity =>
+            {
+                entity.ToTable("LessonTrackings");
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(lt => lt.Lesson)
+                    .WithMany(l => l.LessonTrackings)
+                    .HasForeignKey(lt => lt.LessonId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             return modelBuilder;
