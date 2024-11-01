@@ -25,6 +25,8 @@ namespace CourseManagementService.Database.Schemas
 
         public int TeacherId { get; set; }
 
+        public bool IsPublished { get; set; } = true;
+
         public int CategoryId { get; set; }
 
         public virtual Category Category { get; set; }
@@ -37,5 +39,7 @@ namespace CourseManagementService.Database.Schemas
         public virtual ICollection<Chapter> Chapters { get; set; }
 
         public virtual ICollection<CourseEnrollment> Enrollments { get; set; }
+
+        public virtual ICollection<CourseRating> Ratings { get; set; }
     }
 }
