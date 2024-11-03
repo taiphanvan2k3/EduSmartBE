@@ -35,7 +35,7 @@ namespace CourseManagementService.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.InnerException?.Message ?? e.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, e.InnerException?.Message ?? e.Message);
             }
         }
 
@@ -84,7 +84,7 @@ namespace CourseManagementService.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.InnerException?.Message ?? e.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, e.InnerException?.Message ?? e.Message);
             }
         }
 
@@ -134,7 +134,7 @@ namespace CourseManagementService.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.InnerException?.Message ?? e.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, e.InnerException?.Message ?? e.Message);
             }
         }
 
@@ -162,7 +162,7 @@ namespace CourseManagementService.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.InnerException?.Message ?? e.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, e.InnerException?.Message ?? e.Message);
             }
         }
     }
