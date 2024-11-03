@@ -58,7 +58,7 @@ namespace CourseManagementService.Services.Medias
                     using var stream = fileStream;
                     var uploadParams = new ImageUploadParams
                     {
-                        File = new FileDescription(imageUploadInfo.CouseId.ToString(), stream),
+                        File = new FileDescription(imageUploadInfo.ResourceId.ToString(), stream),
                         Transformation = new Transformation().Quality(80).FetchFormat("auto")
                     };
                     uploadResult = await _cloudinary.UploadAsync(uploadParams);

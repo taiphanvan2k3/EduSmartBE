@@ -1,4 +1,5 @@
 using System.Text;
+using Xabe.FFmpeg;
 
 namespace CourseManagementService.Common.Helpers
 {
@@ -18,11 +19,12 @@ namespace CourseManagementService.Common.Helpers
             }
         }
 
-        public static async Task SaveFileLocally(string folderPath, string fileName, IFormFile file)
+        public static async Task<string> SaveFileLocally(string folderPath, string fileName, IFormFile file)
         {
             var filePath = Path.Combine(folderPath, fileName);
             using var stream = new FileStream(filePath, FileMode.Create);
             await file.CopyToAsync(stream);
+            return filePath;
         }
 
         public static string ExtractPublicId(string url)
@@ -40,6 +42,13 @@ namespace CourseManagementService.Common.Helpers
             {
                 return "";
             }
+        }
+
+        public static async Task<int> GetDurationOfVideo(string filePath)
+        {
+            var mediaInfo = await FFmpeg.GetMediaInfo(filePath);
+            var totalSeconds = mediaInfo.Duration.TotalSeconds;
+            return (int)totalSeconds;
         }
     }
 }

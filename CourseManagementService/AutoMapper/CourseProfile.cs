@@ -5,9 +5,9 @@ using TblCourse = CourseManagementService.Database.Schemas.Course;
 
 namespace CourseManagementService.AutoMapper
 {
-    public class MappingProfile : Profile
+    public class CourseProfile : Profile
     {
-        public MappingProfile()
+        public CourseProfile()
         {
             CreateMap<CourseCreateDto, TblCourse>();
             CreateMap<TblCourse, CourseDto>()

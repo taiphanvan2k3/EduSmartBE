@@ -19,7 +19,7 @@ namespace CourseManagementService.Database.Schemas
 
         public Chapter Chapter { get; set; }
 
-        public long DurationInMinutes { get; set; }
+        public long DurationInSeconds { get; set; }
 
         public LessonType LessonType { get; set; }
 
