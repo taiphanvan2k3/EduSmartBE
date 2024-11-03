@@ -32,7 +32,7 @@ namespace CourseManagementService.Extensions
                 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
                 builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
                 {
-                    // Tự động đăng ký các Model nằm trong thư mục Models
+                    // Tự động đăng ký các Service nằm trong thư mục Services
                     var assembly = Assembly.GetExecutingAssembly();
                     containerBuilder.RegisterAssemblyTypes(assembly)
                         .Where(t => t.Name.EndsWith("Service") && t.Namespace.Contains("Services"))

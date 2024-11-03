@@ -68,8 +68,8 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
             ?? throw new InvalidOperationException(ServiceInjectionError("IMapper"));
         private readonly IGrpcUserService _grpcUserService = serviceProvider.GetRequiredService<IGrpcUserService>()
             ?? throw new InvalidOperationException(ServiceInjectionError("IGrpcUserService"));
-        private readonly CommonProducer _commonProducer = serviceProvider.GetRequiredService<CommonProducer>()
-            ?? throw new InvalidOperationException(ServiceInjectionError("CommonProducer"));
+        private readonly MediaProducer _mediaProducer = serviceProvider.GetRequiredService<MediaProducer>()
+            ?? throw new InvalidOperationException(ServiceInjectionError("MediaProducer"));
         private readonly ICacheService _cacheService = serviceProvider.GetRequiredService<ICacheService>()
             ?? throw new InvalidOperationException(ServiceInjectionError("ICacheService"));
 
@@ -126,7 +126,7 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                     BriefDescription = courseCreateDto.BriefDescription,
                     DetailedDescription = courseCreateDto.DetailedDescription,
                     ThumbnailURL = courseCreateDto.Thumbnail != null
-                        ? Constants.INPROGRESS_THUMBNAIL
+                        ? Constants.IN_PROGRESS_THUMBNAIL
                         : Constants.DEFAULT_COURSE_THUMBNAIL,
                     Price = courseCreateDto.Price,
                     Type = courseCreateDto.Type,
@@ -283,7 +283,7 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
 
                 if (courseUpdateDto.Thumbnail != null)
                 {
-                    course.ThumbnailURL = Constants.INPROGRESS_THUMBNAIL;
+                    course.ThumbnailURL = Constants.IN_PROGRESS_THUMBNAIL;
                     await StartUploadImageToCloudinaryJob(courseUpdateDto.Thumbnail, course.Id);
                 }
                 else
@@ -384,7 +384,7 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
             // Start the background job to upload the file to Cloudinary
             var backgroundJobData = new BackgroundJobData
             {
-                JobType = BackgroundJobType.UploadImageToCloudinary,
+                JobType = BackgroundJobType.UpdateCourseThumbnail,
                 Data = new Dictionary<string, dynamic>
                 {
                     { "FilePath", $"{uploadFolderPath}/{courseId}.jpg" },
@@ -392,7 +392,7 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                 }
             };
 
-            await _commonProducer.EnqueueDataAsync(backgroundJobData);
+            await _mediaProducer.EnqueueDataAsync(backgroundJobData);
         }
 
         private async Task StartDeleteImageFromCloudinaryJob(string publicURL)
@@ -405,14 +405,14 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
 
             var backgroundJobData = new BackgroundJobData
             {
-                JobType = BackgroundJobType.DeleteImageFromCloudinary,
+                JobType = BackgroundJobType.DeleteCourseThumbnail,
                 Data = new Dictionary<string, dynamic>
                 {
                     { "PublicId", publicId }
                 }
             };
 
-            await _commonProducer.EnqueueDataAsync(backgroundJobData);
+            await _mediaProducer.EnqueueDataAsync(backgroundJobData);
         }
 
         private void ClearOwnedCoursesCache(int userId)

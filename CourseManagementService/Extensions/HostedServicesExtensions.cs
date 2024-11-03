@@ -16,8 +16,8 @@ namespace CourseManagementService.Extensions
         {
             var commonChannel = Channel.CreateUnbounded<BackgroundJobData>();
             services.AddSingleton(commonChannel);
-            services.AddHostedService<CommonBackgroundService>();
-            services.AddSingleton<CommonProducer>();
+            services.AddHostedService<MediaBackgroundService>();
+            services.AddSingleton<MediaProducer>();
         }
     }
 }
