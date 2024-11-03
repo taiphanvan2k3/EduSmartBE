@@ -2,7 +2,9 @@ namespace CourseManagementService.Common
 {
     public static class BackgroundJobType
     {
-        public const string UploadImageToCloudinary = "UploadImageToCloudinary";
-        public const string DeleteImageFromCloudinary = "DeleteImageFromCloudinary";
+        public const string UpdateCourseThumbnail = "UpdateCourseThumbnail";
+        public const string DeleteCourseThumbnail = "DeleteCourseThumbnail";
+        public const string UpdateLessonVideo = "UpdateVideoLesson";
+        public const string UpdateLessonThumbnail = "UpdateLessonThumbnail";
     }
 }

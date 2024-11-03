@@ -7,6 +7,7 @@ namespace CourseManagementService.Services.ChapterManagement
 {
     public interface IChapterDetailService
     {
+        public Task<bool> IsExistingChapter(Guid chapterId);
         public Task<ResponseInfo> CreateChapter(ChapterDetailCreate chapterDetail);
         public Task<ResponseInfo> UpdateChapter(ChapterDetail chapterDetail);
         public Task<ResponseInfo> DeleteChapters(List<string> chapterIds);
@@ -15,6 +16,25 @@ namespace CourseManagementService.Services.ChapterManagement
     public class ChapterDetailService(IServiceProvider serviceProvider, ILogger<ChapterDetailService> logger) : BaseService(serviceProvider, logger), IChapterDetailService
     {
         private readonly string _serviceName = nameof(ChapterDetailService);
+
+        public async Task<bool> IsExistingChapter(Guid chapterId)
+        {
+            var method = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", method);
+                var isExist = await _context.Chapters
+                    .AnyAsync(c => c.Id == chapterId);
+
+                LogInfo("End", method);
+                return isExist;
+            }
+            catch (Exception e)
+            {
+                LogError(e, method);
+                throw;
+            }
+        }
 
         public async Task<ResponseInfo> CreateChapter(ChapterDetailCreate chapterDetail)
         {
