@@ -184,7 +184,10 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson
                 var videoLessonDetail = _mapper.Map<VideoLessonDetail>(videoLessonEntity);
                 responseInfo.Data.Add("lesson", videoLessonDetail);
 
-                await StartUploadImageToCloudinaryJob(videoLessonInfo.Thumbnail, videoLessonEntity.Id);
+                if (videoLessonInfo.Thumbnail != null)
+                {
+                    await StartUploadImageToCloudinaryJob(videoLessonInfo.Thumbnail, videoLessonEntity.Id);
+                }
                 await StartUploadVideoJob(videoLessonInfo.Video, videoLessonEntity.Id);
                 LogInfo("End", methodName);
                 return responseInfo;
