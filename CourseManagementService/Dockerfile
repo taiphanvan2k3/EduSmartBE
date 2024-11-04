@@ -11,6 +11,12 @@ RUN dotnet publish "CourseManagementService.csproj" -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
+
+# Cài đặt FFmpeg trên Debian
+RUN apt-get update && \
+    apt-get install -y ffmpeg && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /app/publish .
 EXPOSE 80
 ENTRYPOINT ["dotnet", "CourseManagementService.dll"]

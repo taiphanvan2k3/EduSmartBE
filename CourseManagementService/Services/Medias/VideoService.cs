@@ -96,14 +96,20 @@ namespace CourseManagementService.Services.Medias
             {
                 LogInfo("Start", method);
                 var responseInfo = new ResponseInfo();
-                var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
+
+                var connectionTimeout = TimeSpan.FromMinutes(10); // Timeout dài hơn cho các tệp lớn
+                var blobServiceClient = CreateBlobServiceClient(azureBlobStorageSetting.Value.ConnectionString, 
+                    connectionTimeout);
+
+                var containerClient = blobServiceClient.GetBlobContainerClient(_containerName);
                 var blobClient = containerClient.GetBlobClient(videoUploadInfo.LessonId.ToString());
 
-                var options = GetBlobUploadOptions("video/mp4");
+                var options = GetBlobUploadOptions("video/mp4", maximumConcurrency: 8, maximumTransferSize: 8 * 1024 * 1024);
+
                 using var stream = new FileStream(videoUploadInfo.LocalPath, FileMode.Open);
                 await blobClient.UploadAsync(stream, options);
 
-                responseInfo.Message = "Upload image successfully";
+                responseInfo.Message = "Upload video successfully";
                 responseInfo.Data.Add("baseUrlWithoutSAS", blobClient.Uri.ToString());
 
                 LogInfo("End", method);
@@ -180,6 +186,18 @@ namespace CourseManagementService.Services.Medias
                     MaximumTransferSize = maximumTransferSize
                 }
             };
+        }
+
+        private static BlobServiceClient CreateBlobServiceClient(string connectionString, TimeSpan connectionTimeout)
+        {
+            var options = new BlobClientOptions
+            {
+                Retry =
+                {
+                    NetworkTimeout = connectionTimeout
+                }
+            };
+            return new BlobServiceClient(connectionString, options);
         }
     }
 }
