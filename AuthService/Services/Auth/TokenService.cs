@@ -95,7 +95,7 @@ namespace AuthService.Services.Auth
                 {
                     return new ResponseInfo
                     {
-                        StatusCode = StatusCodes.Status401Unauthorized,
+                        StatusCode = StatusCodes.Status400BadRequest,
                         Message = "Refresh token is invalid"
                     };
                 }
@@ -114,7 +114,7 @@ namespace AuthService.Services.Auth
                 {
                     return new ResponseInfo
                     {
-                        StatusCode = StatusCodes.Status401Unauthorized,
+                        StatusCode = StatusCodes.Status404NotFound,
                         Message = "User not found"
                     };
                 }
@@ -129,6 +129,7 @@ namespace AuthService.Services.Auth
                     refreshToken = tokens.RefreshToken
                 });
                 responseInfo.Data.Add("AccessTokenExpireIn", _jwtSetting.TokenExpirationInMinutes);
+                responseInfo.Data.Add("RefreshTokenExpireIn", _jwtSetting.RefreshTokenExpirationInMinutes);
 
                 await _commonProducer.EnqueueDataAsync(new BackgroundJobData
                 {

@@ -671,6 +671,11 @@ namespace AuthService.Controllers
                     return Ok(new
                     {
                         meta = responseInfo.Data["meta"],
+                        expires = new
+                        {
+                            accessToken = responseInfo.Data["AccessTokenExpireIn"],
+                            refreshToken = responseInfo.Data["RefreshTokenExpireIn"]
+                        }
                     });
                 }
 
