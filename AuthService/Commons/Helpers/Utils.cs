@@ -14,14 +14,7 @@ namespace AuthService.Commons.Helpers
 
             if (string.IsNullOrEmpty(fullName))
             {
-                if (string.IsNullOrEmpty(username))
-                {
-                    fullName = username;
-                }
-                else
-                {
-                    fullName = "Unknown Name";
-                }
+                return $"https://api.dicebear.com/9.x/miniavs/svg?seed={username}";
             }
 
             return string.IsNullOrEmpty(avatarUrl)
@@ -43,6 +36,31 @@ namespace AuthService.Commons.Helpers
             return otp.ToString();
         }
 
+        public static string GenerateRandomPassword(int length = 8)
+        {
+            const string lowerChars = "abcdefghijklmnopqrstuvwxyz";
+            const string upperChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const string specialChars = "!@#$%^&*()-_=+[]{}|;:,.<>?";
+            const string allChars = lowerChars + upperChars + "0123456789" + specialChars;
+
+            using var rng = RandomNumberGenerator.Create();
+            var result = new char[length];
+
+            // Đảm bảo có ít nhất một ký tự viết thường, một ký tự viết hoa, và một ký tự đặc biệt
+            result[0] = lowerChars[RandomNumber(rng, lowerChars.Length)];
+            result[1] = upperChars[RandomNumber(rng, upperChars.Length)];
+            result[2] = specialChars[RandomNumber(rng, specialChars.Length)];
+
+            // Điền các ký tự còn lại
+            for (int i = 3; i < length; i++)
+            {
+                result[i] = allChars[RandomNumber(rng, allChars.Length)];
+            }
+
+            // Xáo trộn kết quả để các ký tự yêu cầu không ở vị trí cố định
+            return new string(ShuffleArray(result, rng));
+        }
+
         public static (string, Type) GetOtpCacheKey(string email, OtpType otpType)
         {
             return otpType switch
@@ -51,6 +69,27 @@ namespace AuthService.Commons.Helpers
                 OtpType.DeleteAccount => (CacheKeyManager.GetConfirmDeleteAccountKey(email), typeof(OtpWrapperBase)),
                 _ => throw new ArgumentOutOfRangeException(nameof(otpType), otpType, null)
             };
+        }
+
+        private static int RandomNumber(RandomNumberGenerator rng, int maxExclusive)
+        {
+            var randomNumber = new byte[1];
+            do
+            {
+                rng.GetBytes(randomNumber);
+            } while (randomNumber[0] >= maxExclusive * (byte.MaxValue / maxExclusive));
+
+            return randomNumber[0] % maxExclusive;
+        }
+
+        private static char[] ShuffleArray(char[] array, RandomNumberGenerator rng)
+        {
+            for (int i = array.Length - 1; i > 0; i--)
+            {
+                int j = RandomNumber(rng, i + 1);
+                (array[i], array[j]) = (array[j], array[i]);
+            }
+            return array;
         }
     }
 }

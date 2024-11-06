@@ -360,7 +360,13 @@ namespace AuthService.Services.Auth
                     AvatarURL = Utils.GetDefaultAvatarUrl(signUpRequest.AvatarURL, $"{signUpRequest.LastName} {signUpRequest.FirstName}", signUpRequest.Username),
                 };
 
-                var result = await _userManager.CreateAsync(user, signUpRequest.Password);
+                var password = signUpRequest.Password;
+                if (signUpRequest.Provider != ProviderType.Email)
+                {
+                    password = Utils.GenerateRandomPassword();
+                }
+
+                var result = await _userManager.CreateAsync(user, password);
                 if (!result.Succeeded)
                 {
                     responseInfo.StatusCode = StatusCodes.Status401Unauthorized;
