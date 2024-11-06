@@ -41,7 +41,8 @@ namespace AuthService.Commons.Helpers
             const string lowerChars = "abcdefghijklmnopqrstuvwxyz";
             const string upperChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             const string specialChars = "!@#$%^&*()-_=+[]{}|;:,.<>?";
-            const string allChars = lowerChars + upperChars + "0123456789" + specialChars;
+            const string numberChars = "0123456789";
+            const string allChars = lowerChars + upperChars + numberChars + specialChars;
 
             using var rng = RandomNumberGenerator.Create();
             var result = new char[length];
@@ -50,9 +51,10 @@ namespace AuthService.Commons.Helpers
             result[0] = lowerChars[RandomNumber(rng, lowerChars.Length)];
             result[1] = upperChars[RandomNumber(rng, upperChars.Length)];
             result[2] = specialChars[RandomNumber(rng, specialChars.Length)];
+            result[3] = numberChars[RandomNumber(rng, numberChars.Length)];
 
             // Điền các ký tự còn lại
-            for (int i = 3; i < length; i++)
+            for (int i = 4; i < length; i++)
             {
                 result[i] = allChars[RandomNumber(rng, allChars.Length)];
             }
