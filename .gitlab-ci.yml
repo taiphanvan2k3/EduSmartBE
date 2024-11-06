@@ -27,7 +27,7 @@ restore_and_build_service:
         fi
       done
   rules:
-    - if: '$CI_COMMIT_BRANCH != "main"' # Unnecessary to build projects when pushing to main branch
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"' # Unnecessary to build projects when pushing to main branch
       changes:
         - 'AuthService/**/*'
         - 'UserService/**/*'
