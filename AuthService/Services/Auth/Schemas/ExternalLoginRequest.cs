@@ -25,8 +25,5 @@ namespace AuthService.Services.Auth.Schemas
         public string Email { get; set; }
 
         public string Picture { get; set; }
-
-        [Required]
-        public Role Role { get; set; }
     }
 }
