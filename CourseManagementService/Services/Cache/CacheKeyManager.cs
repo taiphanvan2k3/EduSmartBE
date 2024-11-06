@@ -7,7 +7,7 @@ namespace CourseManagementService.Services.Cache
     {
         public static class PopularCourses
         {
-            public static string Key => "PopularCourses";
+            public static string Key(int userId) => $"PopularCourses_{userId}";
             public static int ExpireTimeInMinutes => 10;
         }
 
