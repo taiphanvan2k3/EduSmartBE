@@ -3,12 +3,12 @@ using CourseManagementService.Services.CourseManagement.Student.Schemas;
 using CourseManagementService.Services.CourseManagement.Teacher.Schemas;
 using Microsoft.AspNetCore.Mvc;
 
-namespace CourseManagementService.Controllers
+namespace CourseManagementService.Controllers.CourseManagement
 {
     [Route("course-service/api/student-course-management")]
     [ApiController]
     [Filters.Auth(Roles = "Student")]
-    public class StudentCourseManagementController(IListOfStudentCoursesService listOfStudentCoursesService,
+    public class StudentCourseController(IListOfStudentCoursesService listOfStudentCoursesService,
         IStudentCourseDetailService studentCourseDetailService) : ControllerBase
     {
         private readonly IListOfStudentCoursesService _listOfStudentCoursesService = listOfStudentCoursesService

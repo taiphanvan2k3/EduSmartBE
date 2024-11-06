@@ -5,11 +5,11 @@ using CourseManagementService.Services.CourseManagement.Public.Schemas;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace CourseManagementService.Controllers
+namespace CourseManagementService.Controllers.CourseManagement
 {
     [Route("course-service/api/public-courses")]
     [ApiController]
-    public class PublicCourseManagementController(IListOfPublicCourseService listOfPublicCourseService) : ControllerBase
+    public class PublicCourseController(IListOfPublicCourseService listOfPublicCourseService) : ControllerBase
     {
         private readonly IListOfPublicCourseService _listOfPublicCourseService = listOfPublicCourseService
             ?? throw new ArgumentNullException(nameof(listOfPublicCourseService));
@@ -26,7 +26,6 @@ namespace CourseManagementService.Controllers
         ///     - The keyword can be course name or teacher name
         ///     - The length of keyword must be at least 3 characters
         /// </remarks>
-        /// <returns></returns>
         [HttpGet("search")]
         [ProducesResponseType(typeof(ListOfSearchItems), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetCoursesByKeyword([FromQuery] SearchCondition condition)
@@ -62,7 +61,6 @@ namespace CourseManagementService.Controllers
         ///     - This API is public but use authentication to do some actions
         ///     So, PASS the TOKEN in the header if user is logged-in
         /// </remarks>
-        /// <returns></returns>
         [Authorize] // Adding this attribute to the method to send Bearer token when using Swagger 
         [AllowAnonymous]
         [HttpGet("popular")]
