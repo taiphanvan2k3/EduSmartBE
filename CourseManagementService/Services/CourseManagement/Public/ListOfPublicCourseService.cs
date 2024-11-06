@@ -73,7 +73,7 @@ namespace CourseManagementService.Services.CourseManagement.Public
 
                 var listOfSearchItems = new ListOfSearchItems();
 
-                Task<List<CourseSearchItem>> cousesTask = _context.Courses
+                Task<List<CourseSearchItem>> coursesTask = _context.Courses
                     .Where(c => EF.Functions.ILike(c.Name, $"%{condition.Keyword}%"))
                     .OrderByDescending(c => c.Enrollments.Count)
                     .ThenByDescending(c => c.UpdatedAt)
@@ -92,11 +92,11 @@ namespace CourseManagementService.Services.CourseManagement.Public
                     .ToListAsync();
 
                 var teachersTask = _grpcUserService.GetTeachersByName(condition.Keyword);
-                await Task.WhenAll(cousesTask, teachersTask);
+                await Task.WhenAll(coursesTask, teachersTask);
 
-                await FillTeacherInfo(cousesTask.Result);
+                await FillTeacherInfo(coursesTask.Result);
 
-                listOfSearchItems.Courses = cousesTask.Result;
+                listOfSearchItems.Courses = coursesTask.Result;
                 listOfSearchItems.Teachers = teachersTask.Result.Users.Select(x => new TeacherSearchItem()
                 {
                     Id = x.Id,
@@ -125,7 +125,8 @@ namespace CourseManagementService.Services.CourseManagement.Public
             {
                 LogInfo("Start", method);
 
-                var cacheKey = CacheManager.PopularCourses.Key;
+                UserInfoState currentUser = GetCurrentUser();
+                var cacheKey = CacheManager.PopularCourses.Key(currentUser?.UserId ?? 0);
                 var cacheValue = _cacheService.GetData<PaginatedList<CourseDetailWithTeacherDto>>(cacheKey);
 
                 if (cacheValue != null)
