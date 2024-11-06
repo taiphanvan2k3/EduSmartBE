@@ -5,12 +5,12 @@ using CourseManagementService.Services.CourseManagement.Teacher.Schemas;
 using CourseManagementService.Common.Schemas;
 using CourseManagementService.Common;
 
-namespace CourseManagementService.Controllers
+namespace CourseManagementService.Controllers.CourseManagement
 {
     [Route("course-service/api/teacher-course-management")]
     [ApiController]
     [Filters.Auth(Roles = "Teacher")]
-    public class TeacherCourseManagementController(ITeacherCourseDetailService teacherCourseDetailService,
+    public class TeacherCourseController(ITeacherCourseDetailService teacherCourseDetailService,
         IListOfTeacherCoursesService listOfTeacherCoursesService) : ControllerBase
     {
         private readonly ITeacherCourseDetailService _teacherCourseDetailService = teacherCourseDetailService
@@ -45,7 +45,6 @@ namespace CourseManagementService.Controllers
         /// <para>Created at: 2024/10/02</para>
         /// </summary>
         /// <param name="courseCreateDto">Course information is need for create</param>
-        /// <returns></returns>
         /// <remarks>
         /// CourseType
         ///     
@@ -144,7 +143,6 @@ namespace CourseManagementService.Controllers
         /// <para>Created at: 2024/10/06</para>
         /// </summary>
         /// <param name="id">Id of course is need for delete</param>
-        /// <returns></returns>
         [HttpDelete("courses/{id}")]
         [ProducesResponseType(typeof(SuccessResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> DeleteCourse([FromRoute] Guid id)
