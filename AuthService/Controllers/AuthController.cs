@@ -237,6 +237,7 @@ namespace AuthService.Controllers
         ///         message: "Server error message ..."
         ///     }
         /// </response>
+        [ApiExplorerSettings(IgnoreApi = true)]
         [HttpPost("login-google-by-token")]
         public async Task<IActionResult> LoginGoogleByToken([FromBody] GoogleLoginRequest request)
         {
@@ -389,6 +390,7 @@ namespace AuthService.Controllers
         ///         message: "Server error message ..."
         ///     }
         /// </response>
+        [ApiExplorerSettings(IgnoreApi = true)]
         [HttpPost("login-google-by-code")]
         public async Task<IActionResult> LoginGoogleByCode([FromBody] GoogleLoginRequest request)
         {
@@ -453,11 +455,6 @@ namespace AuthService.Controllers
         /// </summary>
         /// <param name="request"></param>
         /// <remarks>
-        /// Role
-        /// 
-        ///     1 - Admin. But you cannot pass this role
-        ///     2 - Teacher
-        ///     3 - Student
         /// Provider
         /// 
         ///     Email
@@ -558,11 +555,6 @@ namespace AuthService.Controllers
                         .Select(x => x.ErrorMessage).ToList()));
             }
 
-            if (request.UserInfo.Role == Role.Admin)
-            {
-                return BadRequest(ErrorResponseHelper.GetContentOfBadRequestResponse("Create account with Admin role is not allowed"));
-            }
-
             try
             {
                 var responseInfo = await _authService.ExternalLogin(request);
@@ -581,6 +573,20 @@ namespace AuthService.Controllers
                     {
                         userInfo = responseInfo.Data["userInfo"],
                         meta = responseInfo.Data["meta"],
+                    });
+                }
+
+                if (responseInfo.StatusCode == StatusCodes.Status409Conflict)
+                {
+                    var userInfo = responseInfo.Data.TryGetValue("userInfo", out dynamic value)
+                        ? value : new { error = "Cannot get user info from your JWT" };
+
+                    return StatusCode(responseInfo.StatusCode, new
+                    {
+                        statusCode = responseInfo.StatusCode,
+                        error = responseInfo.Error,
+                        message = responseInfo.Message,
+                        data = new { userInfo }
                     });
                 }
 
@@ -696,6 +702,10 @@ namespace AuthService.Controllers
         /// <param name="request">Contains user registration information</param>
         /// <returns></returns>
         /// <remarks>
+        /// Note:
+        /// 
+        ///     You don't need to pass the password when signing up with social providers.
+        ///     The password is required when signing up with email.
         /// Role
         /// 
         ///     1 - Admin. But you cannot pass this role
