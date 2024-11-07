@@ -84,7 +84,8 @@ namespace UserService.GrpcServices
                         Id = u.Id,
                         UserName = u.UserName,
                         FullName = $"{u.UserInfo.FirstName} {u.UserInfo.LastName}",
-                        AvatarURL = u.UserInfo.AvatarURL
+                        AvatarURL = u.UserInfo.AvatarURL,
+                        Email = u.Email
                     })
                     .ToListAsync();
 
@@ -119,7 +120,8 @@ namespace UserService.GrpcServices
                         Id = u.Id,
                         UserName = u.UserName,
                         FullName = $"{u.UserInfo.FirstName} {u.UserInfo.LastName}",
-                        AvatarURL = u.UserInfo.AvatarURL
+                        AvatarURL = u.UserInfo.AvatarURL,
+                        Email = u.Email
                     })
                     .Take(MAX_TEACHERS)
                     .ToListAsync();

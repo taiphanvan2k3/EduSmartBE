@@ -25,6 +25,7 @@ message SimpleUserResponse {
     string userName = 2;
     string fullName = 3;
     google.protobuf.StringValue avatarURL = 4;
+    google.protobuf.StringValue email = 5;
 }
 
 message UserResponse {

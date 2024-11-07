@@ -4,12 +4,12 @@ using CourseManagementService.Common;
 using CourseManagementService.Common.Helpers;
 using CourseManagementService.GrpcServices;
 using CourseManagementService.Services.Cache;
+using CourseManagementService.Services.CourseManagement.Public.Schemas;
 using CourseManagementService.Services.CourseManagement.Teacher.Schemas;
 using CourseManagementService.Services.Grpc;
 using CourseManagementService.Services.Medias;
 using Grpc.Net.Client;
 using Microsoft.EntityFrameworkCore;
-using Serilog;
 using TblCourse = CourseManagementService.Database.Schemas.Course;
 using TblCourseTag = CourseManagementService.Database.Schemas.CourseTag;
 

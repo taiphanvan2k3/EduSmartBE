@@ -1,6 +1,6 @@
 using CourseManagementService.Common;
 
-namespace CourseManagementService.Services.CourseManagement.Teacher.Schemas
+namespace CourseManagementService.Services.CourseManagement.Public.Schemas
 {
     public class CourseDto
     {
@@ -19,10 +19,6 @@ namespace CourseManagementService.Services.CourseManagement.Teacher.Schemas
         public string CurrencyCode { get; set; }
 
         public int TotalStudents { get; set; }
-
-        public int TotalLessons { get; set; }
-
-        public int TotalMinutes { get; set; }
 
         public bool IsRegistered { get; set; }
 

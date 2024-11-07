@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using CourseManagementService.Enumerations;
 
 namespace CourseManagementService.Services.LessonManagement.VideoLesson.Schemas
 {
@@ -17,5 +16,7 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson.Schemas
         public bool IsCommentAllowed { get; set; } = true;
 
         public bool IsRatingAllowed { get; set; } = true;
+
+        public int? Order { get; set; }
     }
 }

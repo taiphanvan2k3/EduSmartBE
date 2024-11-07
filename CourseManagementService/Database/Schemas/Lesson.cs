@@ -34,6 +34,8 @@ namespace CourseManagementService.Database.Schemas
 
         public bool IsRatingAllowed { get; set; } = true;
 
+        public int Order { get; set; }
+
         [Comment("This lesson is a quiz lesson")]
         public virtual QuizLesson QuizLesson { get; set; }
 

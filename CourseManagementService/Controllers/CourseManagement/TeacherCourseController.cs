@@ -4,6 +4,7 @@ using CourseManagementService.Services.CourseManagement.Teacher;
 using CourseManagementService.Services.CourseManagement.Teacher.Schemas;
 using CourseManagementService.Common.Schemas;
 using CourseManagementService.Common;
+using CourseManagementService.Services.CourseManagement.Public.Schemas;
 
 namespace CourseManagementService.Controllers.CourseManagement
 {

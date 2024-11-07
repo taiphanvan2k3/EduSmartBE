@@ -3,6 +3,7 @@ using CourseManagementService.Common.Helpers;
 using CourseManagementService.Common.Schemas;
 using CourseManagementService.Extensions;
 using CourseManagementService.Services.Cache;
+using CourseManagementService.Services.CourseManagement.Public.Schemas;
 using CourseManagementService.Services.CourseManagement.Teacher.Schemas;
 using Microsoft.EntityFrameworkCore;
 
@@ -74,11 +75,7 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                             Name = t.Tag.Name,
                         })
                         .ToList(),
-                        TotalStudents = x.Enrollments.Count,
-
-                        // TODO: Count total lessons and total minutes
-                        TotalLessons = 0,
-                        TotalMinutes = 0,
+                        TotalStudents = x.Enrollments.Count
                     })
                     .ToPaginatedListAsync(currentPage: searchCondition.CurrentPage, pageSize: searchCondition.PageSize);
 

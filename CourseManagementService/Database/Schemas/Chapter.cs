@@ -10,11 +10,14 @@ namespace CourseManagementService.Database.Schemas
         [MaxLength(200)]
         public string Name { get; set; }
 
-        [Required]
         public int Order { get; set; }
+
+        public bool IsPublished { get; set; }
 
         public Guid CourseId { get; set; }
 
         public virtual Course Course { get; set; }
+
+        public virtual ICollection<Lesson> Lessons { get; set; }
     }
 }

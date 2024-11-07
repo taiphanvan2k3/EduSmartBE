@@ -35,6 +35,12 @@ namespace CourseManagementService.Services.Cache
         /// <param name="key">key of data</param>
         /// <returns></returns>
         object RemoveData(string key);
+
+        /// <summary>
+        /// Remove data from cache by pattern
+        /// </summary>
+        /// <param name="pattern"></param>
+        Task RemoveDataByPattern(string pattern);
     }
 
     public class CacheService(IConnectionMultiplexer connectionMultiplexer) : ICacheService
@@ -65,6 +71,25 @@ namespace CourseManagementService.Services.Cache
             }
 
             return null;
+        }
+
+        public async Task RemoveDataByPattern(string pattern)
+        {
+            if (_cacheDb == null)
+            {
+                return;
+            }
+
+            var endpoints = _cacheDb.Multiplexer.GetEndPoints();
+            var server = _cacheDb.Multiplexer.GetServer(endpoints[0]);
+            var keys = server.Keys(pattern: pattern + "*");
+            List<Task> tasks = [];
+            foreach (var key in keys)
+            {
+                tasks.Add(_cacheDb.KeyDeleteAsync(key));
+            }
+
+            await Task.WhenAll(tasks);
         }
 
         public bool SetData<T>(string key, T value, DateTimeOffset timeEnd)
