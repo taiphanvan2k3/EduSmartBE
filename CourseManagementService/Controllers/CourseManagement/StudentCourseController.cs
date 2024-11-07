@@ -1,6 +1,6 @@
+using CourseManagementService.Services.CourseManagement.Public.Schemas;
 using CourseManagementService.Services.CourseManagement.Student;
 using CourseManagementService.Services.CourseManagement.Student.Schemas;
-using CourseManagementService.Services.CourseManagement.Teacher.Schemas;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CourseManagementService.Controllers.CourseManagement

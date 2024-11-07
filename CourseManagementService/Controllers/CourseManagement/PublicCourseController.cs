@@ -1,5 +1,7 @@
 using CourseManagementService.Common.Helpers;
 using CourseManagementService.Common.Schemas;
+using CourseManagementService.Services.ChapterManagement;
+using CourseManagementService.Services.ChapterManagement.Schemas;
 using CourseManagementService.Services.CourseManagement.Public;
 using CourseManagementService.Services.CourseManagement.Public.Schemas;
 using Microsoft.AspNetCore.Authorization;
@@ -9,10 +11,16 @@ namespace CourseManagementService.Controllers.CourseManagement
 {
     [Route("course-service/api/public-courses")]
     [ApiController]
-    public class PublicCourseController(IListOfPublicCourseService listOfPublicCourseService) : ControllerBase
+    public class PublicCourseController(IListOfPublicCourseService listOfPublicCourseService,
+        IListOfChaptersService listOfChaptersService,
+        IPublicCourseDetailService publicCourseDetailService) : ControllerBase
     {
         private readonly IListOfPublicCourseService _listOfPublicCourseService = listOfPublicCourseService
             ?? throw new ArgumentNullException(nameof(listOfPublicCourseService));
+        private readonly IListOfChaptersService _listOfChaptersService = listOfChaptersService
+            ?? throw new ArgumentNullException(nameof(listOfChaptersService));
+        private readonly IPublicCourseDetailService _publicCourseDetailService = publicCourseDetailService
+            ?? throw new ArgumentNullException(nameof(publicCourseDetailService));
 
         /// <summary>
         /// [Public API] Get list of courses by keyword
@@ -90,6 +98,50 @@ namespace CourseManagementService.Controllers.CourseManagement
         {
             var courses = await _listOfPublicCourseService.GetRecommendedCourses();
             return Ok(courses);
+        }
+
+        /// <summary>
+        /// [Public API] Get course detail by course id
+        /// <para>Created at: 2024/10/20</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="id">Course id</param>
+        /// <returns></returns>
+        [Authorize]
+        [AllowAnonymous]
+        [HttpGet("{id}")]
+        [ProducesResponseType(typeof(CourseDetail), StatusCodes.Status200OK)]
+        public async Task<IActionResult> Get(Guid id)
+        {
+            var courses = await _publicCourseDetailService.GetCourseDetail(id);
+            return Ok(courses);
+        }
+
+        /// <summary>
+        /// Get list of chapters by course id
+        /// <para>Created at: 2024/10/24</para>
+        /// <para>Created by: ManhTD</para>
+        /// <para>Created at: 2024/11/07</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="id">Id of course</param>
+        /// <returns></returns>
+        /// <response code="200">Return list of chapters</response>
+        /// <response code="404">Not found</response>
+        /// <response code="500">Internal server error</response>
+        [HttpGet("{id}/chapters")]
+        [ProducesResponseType(typeof(List<ChapterDetail>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetChaptersByCourseId(Guid id)
+        {
+            try
+            {
+                var chapters = await _listOfChaptersService.GetListOfChaptersByCourseId(id);
+                return Ok(chapters);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+            }
         }
     }
 }

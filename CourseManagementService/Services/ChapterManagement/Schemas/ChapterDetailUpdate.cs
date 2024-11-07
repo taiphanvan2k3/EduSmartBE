@@ -1,15 +1,17 @@
 using System.ComponentModel.DataAnnotations;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace CourseManagementService.Services.ChapterManagement.Schemas
 {
-    public class ChapterDetailCreate : IValidatableObject
+    public class ChapterDetailUpdate : IValidatableObject
     {
+        [SwaggerIgnore]
+        public Guid Id { get; set; }
+
         [Required]
         public string Name { get; set; }
 
         public int Order { get; set; }
-
-        public Guid CourseId { get; set; }
 
         public bool IsPublished { get; set; }
 

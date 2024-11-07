@@ -57,6 +57,14 @@ namespace CourseManagementService.Database
             {
                 entity.ToTable("Chapters");
                 entity.HasKey(e => e.Id);
+
+                entity.HasMany(ch => ch.Lessons)
+                    .WithOne(l => l.Chapter)
+                    .HasForeignKey(l => l.ChapterId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.Property(ch => ch.IsPublished)
+                    .HasDefaultValue(true);
             });
 
             modelBuilder.Entity<Currency>(entity =>

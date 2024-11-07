@@ -14,7 +14,8 @@ namespace CourseManagementService.Controllers
 
         protected dynamic HandleResponseInfo(ResponseInfo responseInfo, string resourceId = "", string resourceName = "")
         {
-            if (responseInfo.StatusCode == StatusCodes.Status200OK)
+            if (responseInfo.StatusCode == StatusCodes.Status200OK 
+                || responseInfo.StatusCode == StatusCodes.Status201Created)
             {
                 var data = responseInfo.Data.TryGetValue(resourceName, out var resource) ? resource : null;
                 if (data != null)
