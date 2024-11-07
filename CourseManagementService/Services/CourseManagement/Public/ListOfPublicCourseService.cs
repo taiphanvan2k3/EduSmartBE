@@ -364,6 +364,7 @@ namespace CourseManagementService.Services.CourseManagement.Public
                 {
                     course.Teacher.FullName = teacher.FullName;
                     course.Teacher.AvatarURL = teacher.AvatarURL;
+                    course.Teacher.Email = teacher.Email;
                 }
             }
         }

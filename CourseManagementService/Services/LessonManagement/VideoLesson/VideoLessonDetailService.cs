@@ -5,6 +5,7 @@ using CourseManagementService.Common;
 using CourseManagementService.Common.Helpers;
 using CourseManagementService.Enumerations;
 using CourseManagementService.Services.ChapterManagement;
+using CourseManagementService.Services.LessonManagement.LessonBase;
 using CourseManagementService.Services.LessonManagement.VideoLesson.Schemas;
 using CourseManagementService.Services.Medias;
 using CourseManagementService.Services.Medias.Schemas;
@@ -155,6 +156,12 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson
                     return responseInfo;
                 }
 
+                int videoOrder = videoLessonInfo.Order
+                    ?? await _context.Lessons
+                        .Where(l => l.ChapterId == videoLessonInfo.ChapterId
+                            && (!videoLessonInfo.IsPublished || l.IsPublished))
+                        .CountAsync();
+
                 var currentUser = GetCurrentUser();
                 var lessonEntity = new TblLesson
                 {
@@ -166,7 +173,8 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson
                     IsPublished = videoLessonInfo.IsPublished,
                     IsCommentAllowed = videoLessonInfo.IsCommentAllowed,
                     IsRatingAllowed = videoLessonInfo.IsRatingAllowed,
-                    CreatedBy = currentUser.UserId
+                    CreatedBy = currentUser.UserId,
+                    Order = videoOrder + 1
                 };
 
                 var videoLessonEntity = new TblVideoLesson()

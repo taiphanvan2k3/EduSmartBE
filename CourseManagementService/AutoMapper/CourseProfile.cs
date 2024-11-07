@@ -1,5 +1,6 @@
 using AutoMapper;
 using CourseManagementService.Common;
+using CourseManagementService.Services.CourseManagement.Public.Schemas;
 using CourseManagementService.Services.CourseManagement.Teacher.Schemas;
 using TblCourse = CourseManagementService.Database.Schemas.Course;
 
