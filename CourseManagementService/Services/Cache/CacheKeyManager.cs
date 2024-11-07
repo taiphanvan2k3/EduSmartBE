@@ -23,12 +23,6 @@ namespace CourseManagementService.Services.Cache
             public static int ExpireTimeInMinutes => 12 * 60;
         }
 
-        public static class CourseDetails
-        {
-            public static string Key(int courseId) => $"CourseDetails_{courseId}";
-            public static int ExpireTimeInMinutes => 60;
-        }
-
         public static class CourseSearch
         {
             public static string Key(string keyword, int currentPage, int pageSize) => $"CourseSearch_{keyword}_{currentPage}_{pageSize}";
@@ -43,6 +37,13 @@ namespace CourseManagementService.Services.Cache
                 return $"CourseSearchByCategory_{categoryId}_{Utils.ConvertStringToBase64(tailPart)}";
             }
             public static int ExpireTimeInMinutes => 5;
+        }
+
+        public static class CourseDetail
+        {
+            public static string PrefixKey => "CourseDetail";
+            public static string Key(Guid courseId, int userId) => $"CourseDetail_{courseId}_{userId}";
+            public static int ExpireTimeInMinutes => 30;
         }
     }
 }
