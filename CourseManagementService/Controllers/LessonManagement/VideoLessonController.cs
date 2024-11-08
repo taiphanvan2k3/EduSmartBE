@@ -69,7 +69,7 @@ namespace CourseManagementService.Controllers.LessonManagement
                 }
 
                 var responseInfo = await _videoLessonDetailService.CreateVideoLesson(lessonInfo);
-                return HandleResponseInfo(responseInfo, resourceName: "lesson");
+                return HandleResponseInfo(responseInfo, resourceName: "Lesson");
             }
             catch (Exception e)
             {
@@ -101,7 +101,7 @@ namespace CourseManagementService.Controllers.LessonManagement
                 }
 
                 var responseInfo = await _videoLessonDetailService.UpdateVideoLesson(id, lessonInfo);
-                return HandleResponseInfo(responseInfo, resourceName: "lesson");
+                return HandleResponseInfo(responseInfo, resourceName: "Lesson");
             }
             catch (Exception e)
             {

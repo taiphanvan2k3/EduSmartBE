@@ -50,5 +50,16 @@ namespace CourseManagementService.Common.Helpers
             var totalSeconds = mediaInfo.Duration.TotalSeconds;
             return (int)totalSeconds;
         }
+
+        public static string ConvertSecondsToDuration(long totalSeconds)
+        {
+            var timeSpan = TimeSpan.FromSeconds(totalSeconds);
+            if (totalSeconds < 3600)
+            {
+                return timeSpan.ToString(@"mm\:ss");
+            }
+
+            return timeSpan.ToString(@"hh\:mm\:ss");
+        }
     }
 }

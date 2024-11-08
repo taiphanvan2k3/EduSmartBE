@@ -190,7 +190,7 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson
                 await _context.SaveChangesAsync();
 
                 var videoLessonDetail = _mapper.Map<VideoLessonDetail>(videoLessonEntity);
-                responseInfo.Data.Add("lesson", videoLessonDetail);
+                responseInfo.Data.Add("Lesson", videoLessonDetail);
 
                 if (videoLessonInfo.Thumbnail != null)
                 {
@@ -275,7 +275,7 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson
                 responseInfo.Message = "Update video lesson successfully";
 
                 var videoLessonDetail = _mapper.Map<VideoLessonDetail>(videoLessonEntity);
-                responseInfo.Data.Add("lesson", videoLessonDetail);
+                responseInfo.Data.Add("Lesson", videoLessonDetail);
                 LogInfo("End", methodName);
                 return responseInfo;
             }

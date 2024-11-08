@@ -1,4 +1,5 @@
 using CourseManagementService.Common;
+using CourseManagementService.Common.Helpers;
 using CourseManagementService.Enumerations;
 using CourseManagementService.Services.ChapterManagement.Schemas;
 using CourseManagementService.Services.LessonManagement.TextLesson.Schemas;
@@ -64,6 +65,8 @@ namespace CourseManagementService.Services.ChapterManagement
                     })
                     .FirstOrDefaultAsync();
 
+                chapter.Duration = Utils.ConvertSecondsToDuration(chapter.Lessons.Sum(l => l.DurationInSeconds));
+
                 LogInfo("End", method);
                 return chapter;
             }
@@ -110,6 +113,11 @@ namespace CourseManagementService.Services.ChapterManagement
                             .ToList()
                     })
                     .ToListAsync();
+
+                foreach (var chapter in chapters)
+                {
+                    chapter.Duration = Utils.ConvertSecondsToDuration(chapter.Lessons.Sum(l => l.DurationInSeconds));
+                }
 
                 LogInfo("End", method);
                 return chapters;
