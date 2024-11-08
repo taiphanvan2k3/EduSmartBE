@@ -1,4 +1,5 @@
 using CourseManagementService.Common;
+using Newtonsoft.Json;
 
 namespace CourseManagementService.Services.CourseManagement.Public.Schemas
 {
@@ -19,6 +20,19 @@ namespace CourseManagementService.Services.CourseManagement.Public.Schemas
         public string CurrencyCode { get; set; }
 
         public int TotalStudents { get; set; }
+
+        [JsonIgnore]
+        public List<long> TotalSecondsByChapter { get; set; }
+
+        public long TotalSeconds
+        {
+            get
+            {
+                return TotalSecondsByChapter.Sum();
+            }
+        }
+
+        public int TotalLessons { get; set; }
 
         public bool IsRegistered { get; set; }
 

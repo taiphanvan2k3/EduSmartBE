@@ -72,10 +72,13 @@ app.UseRouting();
 app.UseCors("AllowSpecificOrigin");
 
 app.UseStaticFiles();
+
+// Đặt trước middleware Authentication và Authorization để mới có thể handle response khi không được phép truy cập 
+app.UseMiddleware<CustomUnauthorizedMiddleware>();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseMiddleware<CustomUnauthorizedMiddleware>();
 app.MapGrpcService<GrpcUserService>();
 app.MapControllers();
 

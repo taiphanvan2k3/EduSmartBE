@@ -1,4 +1,5 @@
 using System.Text.Json;
+using AuthService.Commons.Helpers;
 
 namespace AuthService.Middlewares
 {
@@ -20,22 +21,22 @@ namespace AuthService.Middlewares
             if (context.Response.StatusCode == StatusCodes.Status401Unauthorized)
             {
                 context.Response.ContentType = "application/json";
-                var response = new
+                var response = new ErrorResponse
                 {
-                    statusCode = 401,
-                    error = "Unauthorized",
-                    message = "You need to be authenticated to access this resource.",
+                    StatusCode = 401,
+                    Error = "Unauthorized",
+                    Message = "You need to be authenticated to access this resource.",
                 };
                 await context.Response.WriteAsync(JsonSerializer.Serialize(response));
             }
             else if (context.Response.StatusCode == StatusCodes.Status403Forbidden)
             {
                 context.Response.ContentType = "application/json";
-                var response = new
+                var response = new ErrorResponse
                 {
-                    statusCode = 403,
-                    error = "Forbidden",
-                    message = "You are not authorized to access this resource.",
+                    StatusCode = 403,
+                    Error = "Forbidden",
+                    Message = "You are not authorized to access this resource.",
                 };
                 await context.Response.WriteAsync(JsonSerializer.Serialize(response));
             }
