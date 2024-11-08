@@ -33,13 +33,15 @@ namespace CourseManagementService.Database.InitDb
                 {
                     new ()
                     {
-                        Name= "IT",
-                        IsCreatedByAdmin = true
+                        Name = "IT",
+                        IsCreatedByAdmin = true,
+                        Icon = "https://res.cloudinary.com/da1aqhx1g/image/upload/f_auto,q_auto/v1/default-assets/category_icons/nikvvsbulgam6hklsupk"
                     },
                     new ()
                     {
-                        Name= "Toeic",
-                        IsCreatedByAdmin = true
+                        Name = "Toeic",
+                        IsCreatedByAdmin = true,
+                        Icon = "https://res.cloudinary.com/da1aqhx1g/image/upload/f_auto,q_auto/v1/default-assets/category_icons/ffy8epy2ktgocohilfuh"
                     },
                 });
             }
