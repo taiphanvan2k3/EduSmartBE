@@ -72,7 +72,7 @@ namespace CourseManagementService.Controllers
                 }
 
                 var responseInfo = await _chapterDetailService.CreateChapter(chapterDetail);
-                return HandleResponseInfo(responseInfo, resourceName: "chapter");
+                return HandleResponseInfo(responseInfo, resourceName: "Chapter");
             }
             catch (Exception e)
             {
@@ -107,7 +107,7 @@ namespace CourseManagementService.Controllers
 
                 chapterDetail.Id = id;
                 var responseInfo = await _chapterDetailService.UpdateChapter(chapterDetail);
-                return HandleResponseInfo(responseInfo, resourceName: "chapter");
+                return HandleResponseInfo(responseInfo, resourceName: "Chapter");
             }
             catch (Exception e)
             {
@@ -162,7 +162,7 @@ namespace CourseManagementService.Controllers
             try
             {
                 var responseInfo = await _chapterDetailService.UpdateChapterPublishedStatus(id, isPublished);
-                return HandleResponseInfo(responseInfo, resourceName: "chapter");
+                return HandleResponseInfo(responseInfo, resourceName: "Chapter");
             }
             catch (Exception e)
             {

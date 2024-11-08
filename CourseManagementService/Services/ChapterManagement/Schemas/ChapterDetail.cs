@@ -12,6 +12,8 @@ namespace CourseManagementService.Services.ChapterManagement.Schemas
 
         public Guid CourseId { get; set; }
 
+        public string Duration { get; set; }
+
         public List<LessonDetail> Lessons { get; set; }
     }
 }

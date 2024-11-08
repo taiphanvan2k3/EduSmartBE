@@ -47,10 +47,18 @@ builder.Services.AddHttpClient();
 builder.Services.AddCustomCorsConfig();
 
 builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Sử dụng PascalCase cho JSON serialization
+        options.JsonSerializerOptions.PropertyNamingPolicy = null;
+    })
     .AddNewtonsoftJson(options =>
     {
         // Use settings from Newtonsoft.Json for JSON serialization
-        options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.DefaultContractResolver();
+        options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.DefaultContractResolver
+        {
+            NamingStrategy = new Newtonsoft.Json.Serialization.DefaultNamingStrategy()
+        };
     });
 
 builder.Services.AddAuthorization();
