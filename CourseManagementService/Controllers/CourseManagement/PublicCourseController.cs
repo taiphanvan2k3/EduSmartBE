@@ -38,23 +38,16 @@ namespace CourseManagementService.Controllers.CourseManagement
         [ProducesResponseType(typeof(ListOfSearchItems), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetCoursesByKeyword([FromQuery] SearchCondition condition)
         {
-            try
+            if (ModelState.IsValid)
             {
-                if (ModelState.IsValid)
-                {
-                    var courses = await _listOfPublicCourseService.GetCoursesByKeyword(condition);
-                    return Ok(courses);
-                }
-                else
-                {
-                    return BadRequest(ErrorResponseHelper.GetContentOfBadRequestResponse(
-                        ModelState.Values.SelectMany(x => x.Errors)
-                            .Select(x => x.ErrorMessage).ToList()));
-                }
+                var courses = await _listOfPublicCourseService.GetCoursesByKeyword(condition);
+                return Ok(courses);
             }
-            catch (Exception e)
+            else
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+                return BadRequest(ErrorResponseHelper.GetContentOfBadRequestResponse(
+                    ModelState.Values.SelectMany(x => x.Errors)
+                        .Select(x => x.ErrorMessage).ToList()));
             }
         }
 
@@ -114,6 +107,10 @@ namespace CourseManagementService.Controllers.CourseManagement
         public async Task<IActionResult> Get(Guid id)
         {
             var courses = await _publicCourseDetailService.GetCourseDetail(id);
+            if (courses == null)
+            {
+                return StatusCode(StatusCodes.Status404NotFound, ErrorResponseHelper.GetContentOfNotFoundResponse("Course not found"));
+            }
             return Ok(courses);
         }
 
@@ -133,15 +130,8 @@ namespace CourseManagementService.Controllers.CourseManagement
         [ProducesResponseType(typeof(List<ChapterDetail>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetChaptersByCourseId(Guid id)
         {
-            try
-            {
-                var chapters = await _listOfChaptersService.GetListOfChaptersByCourseId(id);
-                return Ok(chapters);
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
-            }
+            var chapters = await _listOfChaptersService.GetListOfChaptersByCourseId(id);
+            return Ok(chapters);
         }
     }
 }
