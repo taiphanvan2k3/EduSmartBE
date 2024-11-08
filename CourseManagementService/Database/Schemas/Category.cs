@@ -18,6 +18,9 @@ namespace CourseManagementService.Database.Schemas
 
         public bool IsCreatedByAdmin { get; set; }
 
+        [MaxLength(200)]
+        public string Icon { get; set; }
+
         public virtual ICollection<Course> Courses { get; set; }
     }
 }
