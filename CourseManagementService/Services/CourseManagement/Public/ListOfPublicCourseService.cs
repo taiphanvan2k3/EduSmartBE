@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using CourseManagementService.Common;
 using CourseManagementService.Common.Helpers;
 using CourseManagementService.Common.Schemas;
@@ -82,6 +83,9 @@ namespace CourseManagementService.Services.CourseManagement.Public
                         Id = c.Id,
                         Name = c.Name,
                         ThumbnailURL = c.ThumbnailURL,
+                        TotalStudents = c.Enrollments.Count,
+                        TotalLessons = c.Chapters.Sum(x => x.Lessons.Count),
+                        TotalSecondsPerChapter = c.Chapters.Select(x => x.Lessons.Sum(y => y.DurationInSeconds)).ToList(),
                         Teacher = new TeacherDetail()
                         {
                             Id = c.TeacherId
@@ -167,6 +171,8 @@ namespace CourseManagementService.Services.CourseManagement.Public
                         .ToList(),
                         ThumbnailURL = c.ThumbnailURL,
                         TotalStudents = c.Enrollments.Count,
+                        TotalLessons = c.Chapters.Sum(x => x.Lessons.Count),
+                        TotalSecondsByChapter = c.Chapters.Select(x => x.Lessons.Sum(y => y.DurationInSeconds)).ToList(),
                         Teacher = new TeacherDetail()
                         {
                             Id = c.TeacherId
@@ -235,6 +241,8 @@ namespace CourseManagementService.Services.CourseManagement.Public
                         .ToList(),
                         ThumbnailURL = c.ThumbnailURL,
                         TotalStudents = c.Enrollments.Count,
+                        TotalLessons = c.Chapters.Sum(x => x.Lessons.Count),
+                        TotalSecondsByChapter = c.Chapters.Select(x => x.Lessons.Sum(y => y.DurationInSeconds)).ToList(),
                         Teacher = new TeacherDetail()
                         {
                             Id = c.TeacherId
@@ -255,6 +263,7 @@ namespace CourseManagementService.Services.CourseManagement.Public
             }
         }
 
+
         public async Task<PaginatedList<CourseDetailWithTeacherDto>> GetCoursesByCategory(int categoryId, PublicCourseSearchCondition condition)
         {
             var method = GetActualAsyncMethodName();
@@ -272,45 +281,47 @@ namespace CourseManagementService.Services.CourseManagement.Public
                 }
 
                 PaginatedList<CourseDetailWithTeacherDto> courses = await _context.Courses
-                    .Where(c => c.CategoryId == categoryId
-                        && (string.IsNullOrEmpty(condition.Keyword)
-                            || EF.Functions.ILike(c.Name, $"%{condition.Keyword}%")
-                            || EF.Functions.ILike(c.BriefDescription, $"%{condition.Keyword}%")
-                            || EF.Functions.ILike(c.DetailedDescription, $"%{condition.Keyword}%")))
-                    .SingleSort(condition)
-                    .Select(c => new CourseDetailWithTeacherDto()
+                .Where(c => c.CategoryId == categoryId
+                    && (string.IsNullOrEmpty(condition.Keyword)
+                        || EF.Functions.ILike(c.Name, $"%{condition.Keyword}%")
+                        || EF.Functions.ILike(c.BriefDescription, $"%{condition.Keyword}%")
+                        || EF.Functions.ILike(c.DetailedDescription, $"%{condition.Keyword}%")))
+                .SingleSort(condition)
+                .Select(c => new CourseDetailWithTeacherDto()
+                {
+                    Id = c.Id,
+                    Name = c.Name,
+                    BriefDescription = c.BriefDescription,
+                    DetailedDescription = c.DetailedDescription,
+                    Price = c.Price,
+                    CurrencyCode = c.Currency.Code,
+                    Type = new LookupDto()
                     {
-                        Id = c.Id,
-                        Name = c.Name,
-                        BriefDescription = c.BriefDescription,
-                        DetailedDescription = c.DetailedDescription,
-                        Price = c.Price,
-                        CurrencyCode = c.Currency.Code,
-                        Type = new LookupDto()
-                        {
-                            Id = EnumHelper.ConvertEnumToInt(c.Type).ToString(),
-                            Name = c.Type.ToString()
-                        },
-                        Category = new LookupDto()
-                        {
-                            Id = c.Category.Id.ToString(),
-                            Name = c.Category.Name
-                        },
-                        Tags = c.Tags.Select(x => new LookupDto()
-                        {
-                            Id = x.Tag.Id.ToString(),
-                            Name = x.Tag.Name
-                        })
-                        .ToList(),
-                        ThumbnailURL = c.ThumbnailURL,
-                        TotalStudents = c.Enrollments.Count,
-                        Teacher = new TeacherDetail()
-                        {
-                            Id = c.TeacherId
-                        },
-                        IsRegistered = currentUser != null && c.Enrollments.Any(x => x.StudentId == currentUser.UserId)
+                        Id = EnumHelper.ConvertEnumToInt(c.Type).ToString(),
+                        Name = c.Type.ToString()
+                    },
+                    Category = new LookupDto()
+                    {
+                        Id = c.Category.Id.ToString(),
+                        Name = c.Category.Name
+                    },
+                    Tags = c.Tags.Select(x => new LookupDto()
+                    {
+                        Id = x.Tag.Id.ToString(),
+                        Name = x.Tag.Name
                     })
-                    .ToPaginatedListAsync(condition.CurrentPage, condition.PageSize);
+                    .ToList(),
+                    ThumbnailURL = c.ThumbnailURL,
+                    TotalStudents = c.Enrollments.Count,
+                    TotalLessons = c.Chapters.Sum(x => x.Lessons.Count),
+                    TotalSecondsByChapter = c.Chapters.Select(x => x.Lessons.Sum(y => y.DurationInSeconds)).ToList(),
+                    Teacher = new TeacherDetail()
+                    {
+                        Id = c.TeacherId
+                    },
+                    IsRegistered = currentUser != null && c.Enrollments.Any(x => x.StudentId == currentUser.UserId)
+                })
+                .ToPaginatedListAsync(condition.CurrentPage, condition.PageSize);
 
                 await FillTeacherInfo(courses.Items);
 
