@@ -3,7 +3,6 @@ using CourseManagementService.Database.InitDb;
 using CourseManagementService.Extensions;
 using CourseManagementService.Middlewares;
 using CourseManagementService.Settings;
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
@@ -98,9 +97,13 @@ app.UseRouting();
 app.UseCors("AllowSpecificOrigin");
 
 app.UseStaticFiles();
+
+// Đặt trước middleware Authentication và Authorization để mới có thể handle response khi không được phép truy cập
+app.UseMiddleware<CustomUnauthorizedMiddleware>();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseMiddleware<CustomUnauthorizedMiddleware>();
+app.UseMiddleware<ExceptionHandlerMiddleware>();
 app.MapControllers();
 await app.RunAsync();
