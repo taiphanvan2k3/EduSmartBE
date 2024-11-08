@@ -317,12 +317,24 @@ namespace AuthService.Services.Auth
                     if (loginInfo == null)
                     {
                         // Người dùng đã đăng ký bằng email, không phải provider mà người dùng đang đăng nhập
+                        responseInfo.Error = "EmailInUse";
                         responseInfo.StatusCode = StatusCodes.Status400BadRequest;
                         responseInfo.Message = "Email has been used by another method";
+
+                        _logger.LogInformation("[AuthService][{MethodName}] End", methodName);
+                        return responseInfo;
                     }
                 }
 
                 user ??= await _userManager.FindByEmailAsync(externalLoginRequest.UserInfo.Email);
+                if (!user.IsActive)
+                {
+                    responseInfo.Error = "InvalidAccount";
+                    responseInfo.StatusCode = StatusCodes.Status403Forbidden;
+                    responseInfo.Message = "Account is locked out";
+                    return responseInfo;
+                }
+
                 var userInfo = await ConvertAppUserToUserInfo(user);
 
                 await GenerateTokens(userInfo, responseInfo);
@@ -358,6 +370,7 @@ namespace AuthService.Services.Auth
                     FirstName = signUpRequest.FirstName,
                     LastName = signUpRequest.LastName,
                     AvatarURL = Utils.GetDefaultAvatarUrl(signUpRequest.AvatarURL, $"{signUpRequest.LastName} {signUpRequest.FirstName}", signUpRequest.Username),
+                    IsActive = signUpRequest.Provider != ProviderType.Email
                 };
 
                 var password = signUpRequest.Password;
