@@ -157,7 +157,7 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                 .ToList();
                 courseDto.CurrencyCode = currencyTask.Result.Code;
 
-                response.Data.Add("course", courseDto);
+                response.Data.Add("Course", courseDto);
                 return response;
             }
             catch (Exception e)
@@ -309,7 +309,7 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                 .ToList();
 
                 courseDto.CurrencyCode = currencyTask.Result.Code;
-                response.Data.Add("course", courseDto);
+                response.Data.Add("Course", courseDto);
                 return response;
             }
             catch (Exception e)

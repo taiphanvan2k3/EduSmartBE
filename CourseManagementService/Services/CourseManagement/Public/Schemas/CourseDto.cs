@@ -1,4 +1,5 @@
 using CourseManagementService.Common;
+using CourseManagementService.Common.Helpers;
 using Newtonsoft.Json;
 
 namespace CourseManagementService.Services.CourseManagement.Public.Schemas
@@ -24,11 +25,12 @@ namespace CourseManagementService.Services.CourseManagement.Public.Schemas
         [JsonIgnore]
         public List<long> TotalSecondsByChapter { get; set; }
 
-        public long TotalSeconds
+        public string Duration
         {
             get
             {
-                return TotalSecondsByChapter.Sum();
+                var totalSeconds = TotalSecondsByChapter.Sum();
+                return Utils.ConvertSecondsToDuration(totalSeconds);
             }
         }
 

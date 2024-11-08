@@ -36,7 +36,13 @@ builder.Services.AddScoped(x =>
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddCustomCorsConfig();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Sử dụng PascalCase cho JSON serialization
+        options.JsonSerializerOptions.PropertyNamingPolicy = null;
+    });
+
 builder.Services.AddAuthorization();
 
 builder.Services.AddGrpc();

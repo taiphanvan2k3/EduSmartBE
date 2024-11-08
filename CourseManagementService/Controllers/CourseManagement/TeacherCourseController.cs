@@ -72,10 +72,10 @@ namespace CourseManagementService.Controllers.CourseManagement
                 var response = await _teacherCourseDetailService.CreateCourse(courseCreateDto);
                 if (response.StatusCode == StatusCodes.Status200OK)
                 {
-                    var data = response.Data.TryGetValue("course", out var course) ? course : null;
+                    var data = response.Data.TryGetValue("Course", out var course) ? course : null;
                     return Ok(new
                     {
-                        course = data
+                        Course = data
                     });
                 }
 
@@ -122,10 +122,10 @@ namespace CourseManagementService.Controllers.CourseManagement
                 var response = await _teacherCourseDetailService.UpdateCourse(id, courseUpdateDto);
                 if (response.StatusCode == StatusCodes.Status200OK)
                 {
-                    var data = response.Data.TryGetValue("course", out var course) ? course : null;
+                    var data = response.Data.TryGetValue("Course", out var course) ? course : null;
                     return Ok(new
                     {
-                        course = data
+                        Course = data
                     });
                 }
 

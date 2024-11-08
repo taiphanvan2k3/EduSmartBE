@@ -1,4 +1,5 @@
 using CourseManagementService.Common;
+using CourseManagementService.Common.Helpers;
 using Newtonsoft.Json;
 
 namespace CourseManagementService.Services.LessonManagement.TextLesson.Schemas
@@ -20,8 +21,17 @@ namespace CourseManagementService.Services.LessonManagement.TextLesson.Schemas
         [JsonProperty(Order = 4)]
         public LookupDto LessonType { get; set; }
 
-        [JsonProperty(Order = 7)]
+        [JsonIgnore]
         public long DurationInSeconds { get; set; }
+
+        [JsonProperty(Order = 7)]
+        public string Duration
+        {
+            get
+            {
+                return Utils.ConvertSecondsToDuration(DurationInSeconds);
+            }
+        }
 
         [JsonProperty(Order = 10)]
         public bool IsPublished { get; set; }

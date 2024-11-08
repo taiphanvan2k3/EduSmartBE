@@ -128,7 +128,7 @@ namespace CourseManagementService.Services.ChapterManagement
                 var chapterDetail = _mapper.Map<ChapterDetail>(chapter);
 
                 response.StatusCode = StatusCodes.Status201Created;
-                response.Data.Add("chapter", chapterDetail);
+                response.Data.Add("Chapter", chapterDetail);
 
                 _logger.LogInformation("[{ServiceName}] {MethodName} End", _serviceName, method);
                 return response;
@@ -168,7 +168,7 @@ namespace CourseManagementService.Services.ChapterManagement
                 response.StatusCode = StatusCodes.Status200OK;
 
                 var chapterDetail = _mapper.Map<ChapterDetail>(chapter);
-                response.Data.Add("chapter", chapterDetail);
+                response.Data.Add("Chapter", chapterDetail);
 
                 try
                 {
@@ -258,7 +258,7 @@ namespace CourseManagementService.Services.ChapterManagement
                 await _context.SaveChangesAsync();
 
                 response.StatusCode = StatusCodes.Status200OK;
-                response.Data.Add("chapter", new
+                response.Data.Add("Chapter", new
                 {
                     chapter.Id,
                     chapter.IsPublished
