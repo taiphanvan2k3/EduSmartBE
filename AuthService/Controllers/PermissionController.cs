@@ -18,14 +18,35 @@ namespace AuthService.Controllers
     {
         private readonly IScreenService _screenService = screenService
             ?? throw new ArgumentNullException(nameof(screenService));
-
         private readonly IFunctionService _functionService = functionService
             ?? throw new ArgumentNullException(nameof(functionService));
-
         private readonly IPermissionService _permissionService = permissionService
             ?? throw new ArgumentNullException(nameof(permissionService));
 
         #region Screen actions
+
+        /// <summary>
+        /// Get next screen information
+        /// <para>Created at: 2024/11/10</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("screens/next")]
+        public async Task<IActionResult> GetNextScreenInfo()
+        {
+            try
+            {
+                var response = await _screenService.GetNextScreenInfo();
+                return Ok(response.Data.TryGetValue("nextScreen", out var result) ? result : new { });
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    message = e.Message
+                });
+            }
+        }
 
         /// <summary>
         /// Get list of screens
@@ -67,6 +88,46 @@ namespace AuthService.Controllers
             {
                 var screens = await _screenService.GetListScreen();
                 return Ok(screens);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    message = e.Message
+                });
+            }
+        }
+
+        /// <summary>
+        /// Get a screen by ID
+        /// <para>Created at: 2024/09/10</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <remarks>
+        /// NOTE: 
+        /// 
+        ///     This API is only used for the admin role (in Admin page)
+        /// Code
+        /// 
+        ///     200 - Successful retrieval of screens
+        ///     500 - Internal server error
+        /// </remarks>
+        [ProducesResponseType(typeof(ScreenDto), StatusCodes.Status200OK)]
+        [HttpGet("screens/{id}")]
+        public async Task<IActionResult> GetScreenById(string id)
+        {
+            try
+            {
+                var screen = await _screenService.GetScreenById(id);
+                if (screen == null)
+                {
+                    return StatusCode(StatusCodes.Status404NotFound, ErrorResponseHelper.GetContentOfNotFoundResponse("Screen not found"));
+                }
+
+                return Ok(new
+                {
+                    screen
+                });
             }
             catch (Exception e)
             {
@@ -265,15 +326,16 @@ namespace AuthService.Controllers
             try
             {
                 var response = await _screenService.DeleteScreen(id);
-                if (response.StatusCode == StatusCodes.Status404NotFound)
+                if (response.StatusCode == StatusCodes.Status200OK)
                 {
-                    return NotFound(new
+                    return Ok(new
                     {
-                        message = response.Message
+                        id
                     });
                 }
 
-                return Ok(response);
+                return StatusCode(response.StatusCode, ErrorResponseHelper.GetContentOfAnyError(
+                    response.StatusCode, response.Error, response.Message));
             }
             catch (Exception e)
             {
@@ -350,6 +412,54 @@ namespace AuthService.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new
                 {
                     message = e.InnerException?.Message ?? e.Message
+                });
+            }
+        }
+
+        [HttpGet("functions/{id}")]
+        public async Task<IActionResult> GetFunctionById(string id)
+        {
+            try
+            {
+                var function = await _functionService.GetFunctionById(id);
+                if (function == null)
+                {
+                    return StatusCode(StatusCodes.Status404NotFound, ErrorResponseHelper.GetContentOfNotFoundResponse("Function not found"));
+                }
+
+                return Ok(new
+                {
+                    function
+                });
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    message = e.InnerException?.Message ?? e.Message
+                });
+            }
+        }
+
+        /// <summary>
+        /// Get next screen information
+        /// <para>Created at: 2024/11/10</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("functions/next")]
+        public async Task<IActionResult> GetNextFunctionInfo()
+        {
+            try
+            {
+                var response = await _functionService.GetNextFunctionInfo();
+                return Ok(response.Data.TryGetValue("nextFunction", out var result) ? result : new { });
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    message = e.Message
                 });
             }
         }

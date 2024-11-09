@@ -18,6 +18,22 @@ namespace AuthService.Services.Permission
         public Task<ResponseInfo> GetListOfFunctions(PagingInfo pagingInfo);
 
         /// <summary>
+        /// Get function by id
+        /// <para>Author: TaiPV</para>
+        /// <para>Created at: 10/11/2024</para>
+        /// </summary>
+        /// <param name="id">Id of function</param>
+        /// <returns></returns>
+        public Task<FunctionDto> GetFunctionById(string id);
+
+        /// <summary>
+        /// Get next function to create
+        /// <para>Author: TaiPV</para>
+        /// <para>Created at: 10/11/2024</para>
+        /// </summary>
+        public Task<ResponseInfo> GetNextFunctionInfo();
+
+        /// <summary>
         /// Create a new function
         /// <para>Author: TaiPV</para>
         /// <para>Created at: 07/09/2024</para>
@@ -88,6 +104,71 @@ namespace AuthService.Services.Permission
             catch (Exception e)
             {
                 _logger.LogError(e, "[FunctionService][GetListOfFunctions][{Error}]", e.Message);
+                throw;
+            }
+        }
+
+        public async Task<ResponseInfo> GetNextFunctionInfo()
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var responseInfo = new ResponseInfo();
+
+                var lastFunction = await _context.Functions
+                    .OrderByDescending(x => x.CreatedAt)
+                    .FirstOrDefaultAsync();
+
+                var nextFunctionId = "FUNC_0001";
+                var nextOrder = 1;
+
+                if (lastFunction != null)
+                {
+                    var lastId = lastFunction.Id.Split("_")[1];
+                    nextFunctionId = $"FUNC_{int.Parse(lastId) + 1:D4}";
+                    nextOrder = lastFunction.Order + 1;
+                }
+
+                responseInfo.Data.Add("nextFunction", new
+                {
+                    Id = nextFunctionId,
+                    Order = nextOrder
+                });
+
+                LogInfo("End", methodName);
+                return responseInfo;
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+        }
+
+        public async Task<FunctionDto> GetFunctionById(string id)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var function = await _context.Functions
+                    .Where(x => x.Id == id)
+                    .Select(x => new FunctionDto()
+                    {
+                        Id = x.Id,
+                        Name = x.Name,
+                        Code = x.Code,
+                        ScreenId = x.ScreenId
+                    })
+                    .FirstOrDefaultAsync();
+
+                LogInfo("End", methodName);
+                return function;
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
                 throw;
             }
         }

@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace AuthService.Databases.Schemas
 {
-    public class Permission
+    public class Permission : BaseEntity
     {
         public int RoleId { get; set; }
 
