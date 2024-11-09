@@ -2,9 +2,9 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Cài đặt FFmpeg một lần duy nhất và giữ lại cache
-RUN apt-get update && \
-    apt-get install -y ffmpeg && \
-    rm -rf /var/lib/apt/lists/*
+# RUN apt-get update && \
+#     apt-get install -y ffmpeg && \
+#     rm -rf /var/lib/apt/lists/*
 
 # Sao chép file csproj và restore các package
 COPY CourseManagementService.csproj ./
