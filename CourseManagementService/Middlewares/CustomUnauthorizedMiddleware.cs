@@ -1,5 +1,4 @@
 using System.Text.Json;
-using CourseManagementService.Common;
 using CourseManagementService.Common.Helpers;
 
 namespace CourseManagementService.Middlewares
@@ -18,6 +17,11 @@ namespace CourseManagementService.Middlewares
                 return;
             }
 
+            var options = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            };
+
             // Sau khi xử lý request, kiểm tra response status code
             if (context.Response.StatusCode == StatusCodes.Status401Unauthorized)
             {
@@ -28,7 +32,7 @@ namespace CourseManagementService.Middlewares
                     Error = "Unauthorized",
                     Message = "You need to be authenticated to access this resource.",
                 };
-                await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+                await context.Response.WriteAsync(JsonSerializer.Serialize(response, options));
             }
             else if (context.Response.StatusCode == StatusCodes.Status403Forbidden)
             {
@@ -39,7 +43,7 @@ namespace CourseManagementService.Middlewares
                     Error = "Forbidden",
                     Message = "You are not authorized to access this resource.",
                 };
-                await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+                await context.Response.WriteAsync(JsonSerializer.Serialize(response, options));
             }
         }
     }
