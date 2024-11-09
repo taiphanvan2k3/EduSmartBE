@@ -18,6 +18,7 @@ namespace AuthService.Databases
         {
             base.OnModelCreating(builder);
             ModelCreate.OnModelCreating(builder);
+            ModelCreate.ConfigureForBaseEntity(builder);
 
             // Đổi tên bảng mặc định của Identity, thay vì có tiền tố AspNet
             builder.Entity<IdentityRole<int>>().ToTable("Roles");

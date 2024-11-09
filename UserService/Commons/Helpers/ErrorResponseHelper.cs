@@ -12,6 +12,16 @@ namespace UserService.Commons.Helpers
             };
         }
 
+        public static ErrorResponse GetContentOfNotFoundResponse<T>(T message)
+        {
+            return new ErrorResponse
+            {
+                StatusCode = StatusCodes.Status404NotFound,
+                Error = "Not Found",
+                Message = message
+            };
+        }
+
         public static ErrorResponse GetContentOfInternalServerResponse(string message)
         {
             return new ErrorResponse
