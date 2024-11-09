@@ -50,9 +50,14 @@ namespace AuthService.Services.Cache
         public T GetData<T>(string key)
         {
             var value = _cacheDb.StringGet(key);
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+
             if (value.HasValue)
             {
-                return JsonSerializer.Deserialize<T>(value);
+                return JsonSerializer.Deserialize<T>(value, options);
             }
             return default;
         }
@@ -83,7 +88,11 @@ namespace AuthService.Services.Cache
             }
 
             // Trả về true nếu set thành công, ngược lại trả về false. Nếu key đã tồn tại thì sẽ bị ghi đè.
-            return _cacheDb.StringSet(key, JsonSerializer.Serialize(value), expireTime);
+            var options = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            };
+            return _cacheDb.StringSet(key, JsonSerializer.Serialize(value, options), expireTime);
         }
 
         private void ConnectToRedis(string connectionString)
