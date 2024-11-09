@@ -1,3 +1,4 @@
+using System.Text.Json;
 using CourseManagementService.Common;
 using CourseManagementService.Database.InitDb;
 using CourseManagementService.Extensions;
@@ -49,16 +50,14 @@ builder.Services.AddCustomCorsConfig();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        // Sử dụng PascalCase cho JSON serialization
-        options.JsonSerializerOptions.PropertyNamingPolicy = null;
+        // Sử dụng camelCase cho tên property của JSON response -> cho việc tạo camelCase cho example của ProduceResponse
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
     })
     .AddNewtonsoftJson(options =>
     {
-        // Use settings from Newtonsoft.Json for JSON serialization
-        options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.DefaultContractResolver
-        {
-            NamingStrategy = new Newtonsoft.Json.Serialization.DefaultNamingStrategy()
-        };
+        // NewtonsoftJSON mặc định dùng PascalCase cho tên property của JSON response
+        // nên cần set lại để sử dụng camelCase
+        options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
     });
 
 builder.Services.AddAuthorization();

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using AuthService.AsyncDataServices;
 using AuthService.Commons;
 using AuthService.Databases.InitDb;
@@ -54,8 +55,8 @@ builder.Services.AddCustomCorsConfig();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        // Sử dụng PascalCase cho JSON serialization
-        options.JsonSerializerOptions.PropertyNamingPolicy = null;
+        // Sử dụng camelCase cho tên property của JSON response
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
     });
 
 builder.Services.AddAuthorization();

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Routing;
 using UserService.EventProcessing;
 using UserService.AsyncDataServices;
 using UserService.GrpcServices;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.UseCustomLog(Constants.SERVICE_NAME);
@@ -39,8 +40,8 @@ builder.Services.AddCustomCorsConfig();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        // Sử dụng PascalCase cho JSON serialization
-        options.JsonSerializerOptions.PropertyNamingPolicy = null;
+        // Sử dụng camelCase cho tên property của JSON response
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
     });
 
 builder.Services.AddAuthorization();
