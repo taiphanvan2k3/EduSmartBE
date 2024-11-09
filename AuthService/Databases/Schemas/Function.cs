@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace AuthService.Databases.Schemas
 {
-    public class Function
+    public class Function : BaseEntity
     {
         [MaxLength(20)]
         public string Id { get; set; }

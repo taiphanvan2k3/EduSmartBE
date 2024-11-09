@@ -53,7 +53,7 @@ namespace AuthService.Databases
             {
                 entity.ToTable("RefreshTokens");
                 entity.HasKey(rt => rt.Id);
-                entity.HasIndex(rt => new { rt.Token, rt.IsRevoked });
+                entity.HasIndex(rt => new { rt.Token, rt.IsRevoked, rt.Expires });
                 entity.HasOne(rt => rt.User)
                     .WithMany(u => u.RefreshTokens)
                     .HasForeignKey(rt => rt.UserId)
@@ -62,6 +62,33 @@ namespace AuthService.Databases
             });
 
             return modelBuilder;
+        }
+
+        public static void ConfigureForBaseEntity(ModelBuilder modelBuilder)
+        {
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                var createdAtProperty = entityType.ClrType.GetProperty("CreatedAt");
+                var updatedAtProperty = entityType.ClrType.GetProperty("UpdatedAt");
+
+                if (createdAtProperty != null)
+                {
+                    modelBuilder.Entity(entityType.ClrType)
+                        .Property(createdAtProperty.Name)
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                        .ValueGeneratedOnAdd()
+                        .IsRequired();
+                }
+
+                if (updatedAtProperty != null)
+                {
+                    modelBuilder.Entity(entityType.ClrType)
+                        .Property(updatedAtProperty.Name)
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .IsRequired();
+                }
+            }
         }
     }
 }
