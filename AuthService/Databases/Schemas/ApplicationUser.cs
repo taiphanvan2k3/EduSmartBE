@@ -18,6 +18,8 @@ namespace AuthService.Databases.Schemas
 
         public bool IsActive { get; set; }
 
+        public DateTimeOffset CreatedAt { get; set; }
+
         public List<RefreshToken> RefreshTokens { get; set; }
     }
 }
