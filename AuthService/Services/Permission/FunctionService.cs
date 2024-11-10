@@ -159,6 +159,7 @@ namespace AuthService.Services.Permission
                         Id = x.Id,
                         Name = x.Name,
                         Code = x.Code,
+                        Order = x.Order,
                         ScreenId = x.ScreenId
                     })
                     .FirstOrDefaultAsync();
@@ -228,6 +229,7 @@ namespace AuthService.Services.Permission
                 existedFunction.Name = functionUpdateDto.Name;
                 existedFunction.Code = functionUpdateDto.Code;
                 existedFunction.ScreenId = functionUpdateDto.ScreenId;
+                existedFunction.Order = functionUpdateDto.Order;
 
                 await _context.SaveChangesAsync();
                 _logger.LogInformation("[FunctionService][UpdateFunction] End");
