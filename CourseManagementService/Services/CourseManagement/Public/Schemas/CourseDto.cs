@@ -1,5 +1,6 @@
 using CourseManagementService.Common;
 using CourseManagementService.Common.Helpers;
+using CourseManagementService.Services.CategoryManagement.Schemas;
 using Newtonsoft.Json;
 
 namespace CourseManagementService.Services.CourseManagement.Public.Schemas
@@ -23,7 +24,7 @@ namespace CourseManagementService.Services.CourseManagement.Public.Schemas
         public int TotalStudents { get; set; }
 
         [JsonIgnore]
-        public List<long> TotalSecondsByChapter { get; set; }
+        public List<long> TotalSecondsByChapter { get; set; } = [];
 
         public string Duration
         {
@@ -40,7 +41,7 @@ namespace CourseManagementService.Services.CourseManagement.Public.Schemas
 
         public LookupDto Type { get; set; }
 
-        public LookupDto Category { get; set; }
+        public CategoryDto Category { get; set; }
 
         public List<LookupDto> Tags { get; set; }
     }

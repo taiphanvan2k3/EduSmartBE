@@ -106,6 +106,14 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson
                     .Select(l => l.Chapter.CourseId)
                     .FirstOrDefaultAsync();
 
+                if (courseId == Guid.Empty)
+                {
+                    responseInfo.Error = "NotFound";
+                    responseInfo.StatusCode = StatusCodes.Status404NotFound;
+                    responseInfo.Message = "Lesson not found";
+                    return responseInfo;
+                }
+
                 var currentUser = GetCurrentUser();
                 if (!await _lessonBaseDetailService.CanAccessCourseMaterial(courseId: courseId, currentUser.UserId))
                 {

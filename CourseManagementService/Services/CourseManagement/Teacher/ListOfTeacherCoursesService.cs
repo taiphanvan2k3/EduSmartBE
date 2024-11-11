@@ -3,6 +3,7 @@ using CourseManagementService.Common.Helpers;
 using CourseManagementService.Common.Schemas;
 using CourseManagementService.Extensions;
 using CourseManagementService.Services.Cache;
+using CourseManagementService.Services.CategoryManagement.Schemas;
 using CourseManagementService.Services.CourseManagement.Public.Schemas;
 using CourseManagementService.Services.CourseManagement.Teacher.Schemas;
 using Microsoft.EntityFrameworkCore;
@@ -64,10 +65,20 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                             Id = EnumHelper.ConvertEnumToInt(x.Type).ToString(),
                             Name = x.Type.ToString(),
                         },
-                        Category = new LookupDto()
+                        Category = new CategoryDto()
                         {
-                            Id = x.CategoryId.ToString(),
+                            Id = x.Category.Id,
                             Name = x.Category.Name,
+                            WebIconInfo = new IconInfoDto()
+                            {
+                                Icon = x.Category.WebIconInfo.Icon,
+                                Color = x.Category.WebIconInfo.Color
+                            },
+                            MobileIconInfo = new IconInfoDto()
+                            {
+                                Icon = x.Category.MobileIconInfo.Icon,
+                                Color = x.Category.MobileIconInfo.Color
+                            }
                         },
                         Tags = x.Tags.Select(t => new LookupDto()
                         {
@@ -75,7 +86,8 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                             Name = t.Tag.Name,
                         })
                         .ToList(),
-                        TotalStudents = x.Enrollments.Count
+                        TotalStudents = x.Enrollments.Count,
+                        TotalSecondsByChapter = x.Chapters.Select(c => c.Lessons.Sum(l => l.DurationInSeconds)).ToList(),
                     })
                     .ToPaginatedListAsync(currentPage: searchCondition.CurrentPage, pageSize: searchCondition.PageSize);
 
