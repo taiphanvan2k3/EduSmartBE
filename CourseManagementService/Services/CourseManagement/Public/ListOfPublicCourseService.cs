@@ -5,6 +5,7 @@ using CourseManagementService.Common.Schemas;
 using CourseManagementService.Extensions;
 using CourseManagementService.Services.AppState.Schemas;
 using CourseManagementService.Services.Cache;
+using CourseManagementService.Services.CategoryManagement.Schemas;
 using CourseManagementService.Services.CourseManagement.Public.Schemas;
 using CourseManagementService.Services.CourseManagement.Teacher.Schemas;
 using CourseManagementService.Services.Grpc;
@@ -158,10 +159,20 @@ namespace CourseManagementService.Services.CourseManagement.Public
                             Id = EnumHelper.ConvertEnumToInt(c.Type).ToString(),
                             Name = c.Type.ToString()
                         },
-                        Category = new LookupDto()
+                        Category = new CategoryDto()
                         {
-                            Id = c.Category.Id.ToString(),
-                            Name = c.Category.Name
+                            Id = c.Category.Id,
+                            Name = c.Category.Name,
+                            WebIconInfo = new IconInfoDto()
+                            {
+                                Icon = c.Category.WebIconInfo.Icon,
+                                Color = c.Category.WebIconInfo.Color
+                            },
+                            MobileIconInfo = new IconInfoDto()
+                            {
+                                Icon = c.Category.MobileIconInfo.Icon,
+                                Color = c.Category.MobileIconInfo.Color
+                            }
                         },
                         Tags = c.Tags.Select(x => new LookupDto()
                         {
@@ -228,10 +239,20 @@ namespace CourseManagementService.Services.CourseManagement.Public
                             Id = EnumHelper.ConvertEnumToInt(c.Type).ToString(),
                             Name = c.Type.ToString()
                         },
-                        Category = new LookupDto()
+                        Category = new CategoryDto()
                         {
-                            Id = c.Category.Id.ToString(),
-                            Name = c.Category.Name
+                            Id = c.Category.Id,
+                            Name = c.Category.Name,
+                            WebIconInfo = new IconInfoDto()
+                            {
+                                Icon = c.Category.WebIconInfo.Icon,
+                                Color = c.Category.WebIconInfo.Color
+                            },
+                            MobileIconInfo = new IconInfoDto()
+                            {
+                                Icon = c.Category.MobileIconInfo.Icon,
+                                Color = c.Category.MobileIconInfo.Color
+                            }
                         },
                         Tags = c.Tags.Select(x => new LookupDto()
                         {
@@ -300,10 +321,20 @@ namespace CourseManagementService.Services.CourseManagement.Public
                         Id = EnumHelper.ConvertEnumToInt(c.Type).ToString(),
                         Name = c.Type.ToString()
                     },
-                    Category = new LookupDto()
+                    Category = new CategoryDto()
                     {
-                        Id = c.Category.Id.ToString(),
-                        Name = c.Category.Name
+                        Id = c.Category.Id,
+                        Name = c.Category.Name,
+                        WebIconInfo = new IconInfoDto()
+                        {
+                            Icon = c.Category.WebIconInfo.Icon,
+                            Color = c.Category.WebIconInfo.Color
+                        },
+                        MobileIconInfo = new IconInfoDto()
+                        {
+                            Icon = c.Category.MobileIconInfo.Icon,
+                            Color = c.Category.MobileIconInfo.Color
+                        }
                     },
                     Tags = c.Tags.Select(x => new LookupDto()
                     {
