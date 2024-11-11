@@ -23,7 +23,16 @@ namespace CourseManagementService.Services.CategoryManagement
                     {
                         Id = c.Id,
                         Name = c.Name,
-                        Icon = c.Icon
+                        WebIconInfo = new IconInfoDto()
+                        {
+                            Icon = c.WebIconInfo.Icon,
+                            Color = c.WebIconInfo.Color
+                        },
+                        MobileIconInfo = new IconInfoDto()
+                        {
+                            Icon = c.MobileIconInfo.Icon,
+                            Color = c.MobileIconInfo.Color
+                        }
                     })
                     .ToListAsync();
 

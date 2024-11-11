@@ -6,6 +6,8 @@ namespace CourseManagementService.Services.CategoryManagement.Schemas
 
         public string Name { get; set; }
 
-        public string Icon { get; set; }
+        public IconInfoDto WebIconInfo { get; set; }
+
+        public IconInfoDto MobileIconInfo { get; set; }
     }
 }
