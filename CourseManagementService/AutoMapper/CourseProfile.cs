@@ -1,5 +1,6 @@
 using AutoMapper;
 using CourseManagementService.Common;
+using CourseManagementService.Services.CategoryManagement.Schemas;
 using CourseManagementService.Services.CourseManagement.Public.Schemas;
 using CourseManagementService.Services.CourseManagement.Teacher.Schemas;
 using TblCourse = CourseManagementService.Database.Schemas.Course;
@@ -17,9 +18,9 @@ namespace CourseManagementService.AutoMapper
                     Id = ((int)src.Type).ToString(),
                     Name = src.Type.ToString()
                 }))
-                .ForMember(dest => dest.Category, opt => opt.MapFrom(src => new LookupDto
+                .ForMember(dest => dest.Category, opt => opt.MapFrom(src => new CategoryDto
                 {
-                    Id = src.CategoryId.ToString(),
+                    Id = src.CategoryId,
                 }))
                 .ForMember(dest => dest.Tags, opt => opt.Ignore());
         }

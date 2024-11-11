@@ -1,5 +1,6 @@
 using CourseManagementService.Database.Schemas;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace CourseManagementService.Database
 {
@@ -51,6 +52,20 @@ namespace CourseManagementService.Database
                     .WithOne(c => c.Category)
                     .HasForeignKey(c => c.CategoryId)
                     .OnDelete(DeleteBehavior.Restrict);
+
+                entity.Property(c => c.WebIconInfo)
+                    .HasColumnType("json")
+                    .HasConversion(
+                        v => JsonConvert.SerializeObject(v),
+                        v => JsonConvert.DeserializeObject<IconInfo>(v)
+                    );
+
+                entity.Property(c => c.MobileIconInfo)
+                    .HasColumnType("json")
+                    .HasConversion(
+                        v => JsonConvert.SerializeObject(v),
+                        v => JsonConvert.DeserializeObject<IconInfo>(v)
+                    );
             });
 
             modelBuilder.Entity<Chapter>(entity =>

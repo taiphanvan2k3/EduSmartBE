@@ -2,6 +2,7 @@ using CourseManagementService.Common;
 using CourseManagementService.Common.Helpers;
 using CourseManagementService.Common.Schemas;
 using CourseManagementService.Services.CategoryManagement;
+using CourseManagementService.Services.CategoryManagement.Schemas;
 using CourseManagementService.Services.CourseManagement.Public;
 using CourseManagementService.Services.CourseManagement.Public.Schemas;
 using Microsoft.AspNetCore.Authorization;
@@ -26,7 +27,7 @@ namespace CourseManagementService.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        [ProducesResponseType(typeof(List<LookupDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<CategoryDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetCategories()
         {
             try

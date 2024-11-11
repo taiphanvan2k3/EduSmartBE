@@ -2,6 +2,7 @@ using CourseManagementService.Common;
 using CourseManagementService.Common.Helpers;
 using CourseManagementService.Services.AppState.Schemas;
 using CourseManagementService.Services.Cache;
+using CourseManagementService.Services.CategoryManagement.Schemas;
 using CourseManagementService.Services.ChapterManagement;
 using CourseManagementService.Services.CourseManagement.Public.Schemas;
 using CourseManagementService.Services.CourseManagement.Teacher.Schemas;
@@ -75,10 +76,20 @@ namespace CourseManagementService.Services.CourseManagement.Public
                                 Id = EnumHelper.ConvertEnumToInt(x.Type).ToString(),
                                 Name = x.Type.ToString()
                             },
-                            Category = new LookupDto()
+                            Category = new CategoryDto()
                             {
-                                Id = x.Category.Id.ToString(),
-                                Name = x.Category.Name
+                                Id = x.Category.Id,
+                                Name = x.Category.Name,
+                                WebIconInfo = new IconInfoDto()
+                                {
+                                    Icon = x.Category.WebIconInfo.Icon,
+                                    Color = x.Category.WebIconInfo.Color
+                                },
+                                MobileIconInfo = new IconInfoDto()
+                                {
+                                    Icon = x.Category.MobileIconInfo.Icon,
+                                    Color = x.Category.MobileIconInfo.Color
+                                }
                             },
                             Tags = x.Tags.Select(x => new LookupDto()
                             {

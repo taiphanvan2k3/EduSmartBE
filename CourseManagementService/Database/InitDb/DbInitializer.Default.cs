@@ -29,21 +29,35 @@ namespace CourseManagementService.Database.InitDb
         {
             if (!await _context.Categories.AnyAsync())
             {
-                await _context.Categories.AddRangeAsync(new List<Category>
+                List<IconInfo> webIcons =
+                [
+                    new() { Icon = "FaCode", Color = "#E83E8C" },
+                    new() { Icon = "FaMusic", Color = "#FF6347" },
+                    new() { Icon = "FaLanguage", Color = "#1E90FF" },
+                    new() { Icon = "FaRuler", Color = "#FFD700" },
+                    new() { Icon = "FaChartLine", Color = "#32CD32" },
+                ];
+
+                List<IconInfo> mobileIcons =
+                [
+                    new() { Icon = "0xf653", Color = "" },
+                    new() { Icon = "0xf1fb", Color = "" },
+                    new() { Icon = "0xf45e", Color = "" },
+                    new() { Icon = "0xefaf", Color = "" },
+                    new() { Icon = "0xef0a", Color = "" },
+                ];
+
+                var categories = new List<string> { "Programming", "Music", "Language", "Design", "Marketing" };
+                var categoryList = categories.Select((category, index) => new Category()
                 {
-                    new ()
-                    {
-                        Name = "IT",
-                        IsCreatedByAdmin = true,
-                        Icon = "https://res.cloudinary.com/da1aqhx1g/image/upload/f_auto,q_auto/v1/default-assets/category_icons/nikvvsbulgam6hklsupk"
-                    },
-                    new ()
-                    {
-                        Name = "Toeic",
-                        IsCreatedByAdmin = true,
-                        Icon = "https://res.cloudinary.com/da1aqhx1g/image/upload/f_auto,q_auto/v1/default-assets/category_icons/ffy8epy2ktgocohilfuh"
-                    },
+                    Name = category,
+                    CreatedBy = 1,
+                    IsCreatedByAdmin = true,
+                    WebIconInfo = webIcons[index],
+                    MobileIconInfo = mobileIcons[index]
                 });
+
+                await _context.Categories.AddRangeAsync(categoryList);
             }
         }
 
