@@ -41,5 +41,11 @@ namespace CourseManagementService.Services.LessonManagement.TextLesson.Schemas
 
         [JsonProperty(Order = 12)]
         public bool IsRatingAllowed { get; set; }
+
+        [JsonProperty(Order = 13)]
+        public DateTimeOffset UpdatedAt { get; set; }
+
+        [JsonProperty(Order = 14)]
+        public DateTimeOffset PublishedAt { get; set; }
     }
 }

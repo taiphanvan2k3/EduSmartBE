@@ -43,7 +43,15 @@ namespace CourseManagementService.Services.CourseManagement.Public
             try
             {
                 UserInfoState currentUser = GetCurrentUser();
-                var cacheKey = CacheManager.CourseDetail.Key(courseId, currentUser?.UserId ?? 0);
+                string cacheKey;
+                if (currentUser == null || !await _lessonBaseDetailService.CanAccessCourseMaterial(courseId, currentUser.UserId))
+                {
+                    cacheKey = CacheManager.CourseDetail.Key(courseId, 0);
+                }
+                else
+                {
+                    cacheKey = CacheManager.CourseDetail.Key(courseId, currentUser.UserId);
+                }
 
                 var courseDetail = _cacheService.GetData<CourseDetail>(cacheKey);
                 if (courseDetail != null)

@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CourseManagementService.Controllers.CourseManagement
 {
-    [Route("course-service/api/public-courses")]
+    [Route("course-service/api/public-courses", Order = 3)]
     [ApiController]
     public class PublicCourseController(IListOfPublicCourseService listOfPublicCourseService,
         IListOfChaptersService listOfChaptersService,
