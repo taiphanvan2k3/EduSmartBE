@@ -17,6 +17,8 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson.Schemas
 
         public bool IsRatingAllowed { get; set; } = true;
 
+        public int DurationInSeconds { get; set; }
+
         public int? Order { get; set; }
     }
 }

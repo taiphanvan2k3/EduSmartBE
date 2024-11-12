@@ -44,10 +44,24 @@ namespace CourseManagementService.Common.Helpers
 
         public static ErrorResponse GetContentOfAnyError<T>(int statusCode, string error, T message)
         {
+            var actualError = error;
+            if (string.IsNullOrEmpty(actualError))
+            {
+                actualError = statusCode switch
+                {
+                    StatusCodes.Status400BadRequest => "Bad Request",
+                    StatusCodes.Status401Unauthorized => "Unauthorized",
+                    StatusCodes.Status403Forbidden => "Forbidden",
+                    StatusCodes.Status404NotFound => "Not Found",
+                    StatusCodes.Status500InternalServerError => "Internal Server Error",
+                    _ => "Error"
+                };
+            }
+
             return new ErrorResponse
             {
                 StatusCode = statusCode,
-                Error = error,
+                Error = actualError,
                 Message = message
             };
         }

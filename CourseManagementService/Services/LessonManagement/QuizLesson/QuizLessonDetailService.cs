@@ -1,0 +1,321 @@
+using CourseManagementService.Common;
+using CourseManagementService.Services.ChapterManagement;
+using CourseManagementService.Services.LessonManagement.QuizLesson.Schemas;
+using CourseManagementService.Services.LessonManagement.LessonBase;
+using TblLesson = CourseManagementService.Database.Schemas.Lesson;
+using TblQuizAnswer = CourseManagementService.Database.Schemas.QuizAnswer;
+using TblQuizLesson = CourseManagementService.Database.Schemas.QuizLesson;
+using CourseManagementService.Enumerations;
+using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using AutoMapper.QueryableExtensions;
+using Microsoft.Extensions.Azure;
+
+namespace CourseManagementService.Services.LessonManagement.QuizLesson
+{
+    public interface IQuizLessonDetailService
+    {
+        /// <summary>
+        /// Get quiz lesson detail
+        /// <para>Author: TaiPV</para>
+        /// <para>Created at: 2024/11/12</para> 
+        /// </summary>
+        /// <param name="lessonId">Id of lesson</param>
+        /// <returns></returns>
+        public Task<ResponseInfo> GetQuizLessonDetail(Guid lessonId);
+
+        /// <summary>
+        /// Create quiz lesson
+        /// <para>Author: TaiPV</para>
+        /// <para>Created at: 2024/11/12</para>
+        /// </summary>
+        /// <returns></returns>
+        public Task<ResponseInfo> CreateQuizLesson(QuizLessonCreateDto quizLessonCreateDto);
+
+        /// <summary>
+        /// Update quiz lesson
+        /// <para>Author: TaiPV</para>
+        /// <para>Created at: 2024/11/12</para>
+        /// </summary>
+        /// <param name="lessonId">Id of lesson</param>
+        /// <param name="quizLessonUpdateDto">Data to update</param>
+        /// <returns></returns>
+        public Task<ResponseInfo> UpdateQuizLesson(Guid lessonId, QuizLessonUpdateDto quizLessonUpdateDto);
+
+        /// <summary>
+        /// Delete quiz lesson
+        /// <para>Author: TaiPV</para>
+        /// <para>Created at: 2024/11/12</para>
+        /// </summary>
+        /// <returns></returns>
+        public Task<ResponseInfo> DeleteQuizLesson(Guid lessonId);
+    }
+
+    public class QuizLessonDetailService(IServiceProvider serviceProvider, ILogger<QuizLessonDetailService> logger)
+        : BaseService(serviceProvider, logger), IQuizLessonDetailService
+    {
+        private readonly IChapterDetailService _chapterDetailService = serviceProvider.GetService<IChapterDetailService>()
+            ?? throw new InvalidDataException(ServiceInjectionError(nameof(IChapterDetailService)));
+        private readonly ILessonBaseDetailService _lessonBaseDetailService = serviceProvider.GetService<ILessonBaseDetailService>()
+            ?? throw new InvalidDataException(ServiceInjectionError(nameof(ILessonBaseDetailService)));
+        private readonly IMapper _mapper = serviceProvider.GetService<IMapper>()
+            ?? throw new InvalidDataException(ServiceInjectionError(nameof(IMapper)));
+
+        public async Task<ResponseInfo> GetQuizLessonDetail(Guid lessonId)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var responseInfo = new ResponseInfo();
+
+                var currentUser = GetCurrentUser();
+                var courseId = await _lessonBaseDetailService.GetCourseIdBelongToLesson(lessonId);
+                if (!await _lessonBaseDetailService.CanAccessCourseMaterial(courseId, currentUser.UserId))
+                {
+                    responseInfo.Error = "Forbidden";
+                    responseInfo.StatusCode = StatusCodes.Status403Forbidden;
+                    responseInfo.Message = "You do not have permission to access this course";
+                    return responseInfo;
+                }
+
+                var lessonEntity = await _context.Lessons
+                    .AsNoTracking()
+                    .Include(l => l.QuizLesson)
+                    .Where(l => l.Id == lessonId)
+                    .ProjectTo<QuizLessonDetail>(_mapper.ConfigurationProvider)
+                    .FirstOrDefaultAsync();
+
+                if (lessonEntity == null)
+                {
+                    responseInfo.StatusCode = StatusCodes.Status404NotFound;
+                    responseInfo.Message = "Lesson not found";
+                    return responseInfo;
+                }
+
+                responseInfo.Data.Add("lesson", lessonEntity);
+                return responseInfo;
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+        }
+
+        public async Task<ResponseInfo> CreateQuizLesson(QuizLessonCreateDto quizLessonCreateDto)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var responseInfo = new ResponseInfo();
+
+                if (!await _chapterDetailService.IsExistingChapter(quizLessonCreateDto.ChapterId))
+                {
+                    responseInfo.StatusCode = StatusCodes.Status404NotFound;
+                    responseInfo.Message = "Chapter not found";
+                    return responseInfo;
+                }
+
+                var currentUser = GetCurrentUser();
+                Guid courseId = await _chapterDetailService.GetCourseIdBelongToChapter(quizLessonCreateDto.ChapterId);
+                if (!await _lessonBaseDetailService.CanModifyCourseMaterial(courseId, currentUser.UserId))
+                {
+                    responseInfo.StatusCode = StatusCodes.Status403Forbidden;
+                    responseInfo.Message = "You do not have permission to create lesson in this course";
+                    return responseInfo;
+                }
+
+                var lessonEntity = new TblLesson()
+                {
+                    Title = quizLessonCreateDto.Title,
+                    Description = null,
+                    ChapterId = quizLessonCreateDto.ChapterId,
+                    DurationInSeconds = quizLessonCreateDto.DurationInSeconds,
+                    IsPublished = quizLessonCreateDto.IsPublished,
+                    IsCommentAllowed = quizLessonCreateDto.IsCommentAllowed,
+                    IsRatingAllowed = quizLessonCreateDto.IsRatingAllowed,
+                    Order = quizLessonCreateDto.Order ?? 1,
+                    LessonType = LessonType.Quiz,
+                    CreatedBy = currentUser.UserId,
+                    PublishedAt = quizLessonCreateDto.IsPublished ? DateTimeOffset.UtcNow : null,
+                    QuizLesson = new TblQuizLesson()
+                    {
+                        Question = quizLessonCreateDto.Question,
+                        IsMultipleChoice = quizLessonCreateDto.IsMultipleChoice,
+                        Answers = quizLessonCreateDto.Answers.Select(a => new TblQuizAnswer()
+                        {
+                            Answer = a.Answer,
+                            IsCorrect = a.IsCorrect,
+                            Explanation = a.Explanation
+                        }).ToList()
+                    }
+                };
+
+                await _context.Lessons.AddAsync(lessonEntity);
+                await _context.SaveChangesAsync();
+
+                var lessonDto = _mapper.Map<QuizLessonDetail>(lessonEntity);
+                responseInfo.Data.Add("lesson", lessonDto);
+
+                LogInfo("End", methodName);
+                return responseInfo;
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+        }
+
+        public async Task<ResponseInfo> UpdateQuizLesson(Guid lessonId, QuizLessonUpdateDto quizLessonUpdateDto)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var responseInfo = new ResponseInfo();
+
+                if (!await _lessonBaseDetailService.IsExistLesson(lessonId))
+                {
+                    responseInfo.StatusCode = StatusCodes.Status404NotFound;
+                    responseInfo.Message = "Lesson not found";
+                    return responseInfo;
+                }
+
+                if (!await _chapterDetailService.IsExistingChapter(quizLessonUpdateDto.ChapterId))
+                {
+                    responseInfo.StatusCode = StatusCodes.Status404NotFound;
+                    responseInfo.Message = "Chapter not found";
+                    return responseInfo;
+                }
+
+                var currentUser = GetCurrentUser();
+                if (!await _lessonBaseDetailService.CanModifyLessonMaterial(lessonId, currentUser.UserId))
+                {
+                    responseInfo.StatusCode = StatusCodes.Status403Forbidden;
+                    responseInfo.Message = "You do not have permission to update this lesson";
+                    return responseInfo;
+                }
+
+                var lessonEntity = await _context.Lessons
+                    .Include(l => l.QuizLesson)
+                        .ThenInclude(ql => ql.Answers)
+                    .FirstOrDefaultAsync(l => l.Id == lessonId);
+
+                lessonEntity.Title = quizLessonUpdateDto.Title;
+                lessonEntity.ChapterId = quizLessonUpdateDto.ChapterId;
+                lessonEntity.DurationInSeconds = quizLessonUpdateDto.DurationInSeconds;
+
+                lessonEntity.QuizLesson.Question = quizLessonUpdateDto.Question;
+                lessonEntity.QuizLesson.IsMultipleChoice = quizLessonUpdateDto.IsMultipleChoice;
+
+                // Check xem answer có hợp lệ không
+                var oldAnswerIdsFromInput = quizLessonUpdateDto.Answers
+                    .Where(a => a.Id != 0)
+                    .Select(a => a.Id).ToList();
+                var oldAnswerIdsFromDB = lessonEntity.QuizLesson.Answers.Select(a => a.Id).ToList();
+
+                if (oldAnswerIdsFromInput.Except(oldAnswerIdsFromDB).Any())
+                {
+                    responseInfo.StatusCode = StatusCodes.Status400BadRequest;
+                    responseInfo.Message = "Some answer ids are invalid";
+                    return responseInfo;
+                }
+
+                var answerEntitiesFromInput = quizLessonUpdateDto.Answers.Select(a => new TblQuizAnswer()
+                {
+                    Id = a.Id,
+                    Answer = a.Answer,
+                    IsCorrect = a.IsCorrect,
+                    Explanation = a.Explanation,
+                    QuizLessonId = lessonEntity.QuizLesson.Id
+                }).ToList();
+
+                var answerEntitiesFromDB = lessonEntity.QuizLesson.Answers;
+                var deletedAnswers = answerEntitiesFromDB
+                    .Except(answerEntitiesFromInput, new CommonComparer<TblQuizAnswer, long>(answer => answer.Id))
+                    .ToList();
+
+                var insertedAnswers = answerEntitiesFromInput
+                    .Except(answerEntitiesFromDB, new CommonComparer<TblQuizAnswer, long>(answer => answer.Id))
+                    .ToList();
+
+                var updatedAnswers = answerEntitiesFromInput
+                    .Intersect(answerEntitiesFromDB, new CommonComparer<TblQuizAnswer, long>(answer => answer.Id))
+                    .ToList();
+
+                var answerDict = answerEntitiesFromDB.ToDictionary(a => a.Id);
+                await _context.QuizAnswers.AddRangeAsync(insertedAnswers);
+                _context.QuizAnswers.RemoveRange(deletedAnswers);
+
+                foreach (var updatedAnswer in updatedAnswers)
+                {
+                    if (answerDict.TryGetValue(updatedAnswer.Id, out var answerEntity))
+                    {
+                        answerEntity.Answer = updatedAnswer.Answer;
+                        answerEntity.IsCorrect = updatedAnswer.IsCorrect;
+                        answerEntity.Explanation = updatedAnswer.Explanation;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                LogInfo("End", methodName);
+
+                responseInfo.Data.Add("lesson", _mapper.Map<QuizLessonDetail>(lessonEntity));
+                return responseInfo;
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+        }
+
+        public async Task<ResponseInfo> DeleteQuizLesson(Guid lessonId)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var responseInfo = new ResponseInfo();
+
+                if (!await _lessonBaseDetailService.IsExistLesson(lessonId))
+                {
+                    responseInfo.StatusCode = StatusCodes.Status404NotFound;
+                    responseInfo.Message = "Lesson not found";
+                    return responseInfo;
+                }
+
+                var currentUser = GetCurrentUser();
+                if (!await _lessonBaseDetailService.CanModifyLessonMaterial(lessonId, currentUser.UserId))
+                {
+                    responseInfo.StatusCode = StatusCodes.Status403Forbidden;
+                    responseInfo.Message = "You do not have permission to delete this lesson";
+                    return responseInfo;
+                }
+
+                int deletedRecordCount = await _context.Lessons
+                    .Where(l => l.Id == lessonId)
+                    .ExecuteDeleteAsync();
+
+                if (deletedRecordCount == 0)
+                {
+                    responseInfo.StatusCode = StatusCodes.Status404NotFound;
+                    responseInfo.Message = "Lesson not found";
+                    return responseInfo;
+                }
+
+                LogInfo("End", methodName);
+                responseInfo.Data.Add("id", lessonId);
+                return responseInfo;
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+        }
+    }
+}
