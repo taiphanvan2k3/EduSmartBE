@@ -35,6 +35,14 @@ namespace CourseManagementService.Services.CourseManagement.Public.Schemas
             }
         }
 
+        public long DurationInSeconds
+        {
+            get
+            {
+                return TotalSecondsByChapter.Sum();
+            }
+        }
+
         public int TotalLessons { get; set; }
 
         public bool IsRegistered { get; set; }
