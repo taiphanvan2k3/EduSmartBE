@@ -21,10 +21,10 @@ namespace CourseManagementService.Services.LessonManagement.TextLesson.Schemas
         [JsonProperty(Order = 4)]
         public LookupDto LessonType { get; set; }
 
-        [JsonIgnore]
+        [JsonProperty(Order = 5)]
         public long DurationInSeconds { get; set; }
 
-        [JsonProperty(Order = 7)]
+        [JsonProperty(Order = 5)]
         public string Duration
         {
             get
@@ -41,5 +41,11 @@ namespace CourseManagementService.Services.LessonManagement.TextLesson.Schemas
 
         [JsonProperty(Order = 12)]
         public bool IsRatingAllowed { get; set; }
+
+        [JsonProperty(Order = 13)]
+        public DateTimeOffset UpdatedAt { get; set; }
+
+        [JsonProperty(Order = 14)]
+        public DateTimeOffset PublishedAt { get; set; }
     }
 }
