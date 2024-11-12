@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CourseManagementService.Controllers.CourseManagement
 {
-    [Route("course-service/api/student-course-management")]
+    [Route("course-service/api/student-course-management", Order = 5)]
     [ApiController]
     [Filters.Auth(Roles = "Student")]
     public class StudentCourseController(IListOfStudentCoursesService listOfStudentCoursesService,

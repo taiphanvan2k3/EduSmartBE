@@ -20,6 +20,14 @@ namespace CourseManagementService.Services.ChapterManagement
         public Task<bool> IsExistingChapter(Guid chapterId);
 
         /// <summary>
+        /// Get course id that the chapter belongs to
+        /// <para>Created at: 2024/11/12</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="chapterId">Id of chapter</param>
+        public Task<Guid> GetCourseIdBelongToChapter(Guid chapterId);
+
+        /// <summary>
         /// Create chapter
         /// <para>Created at: 2024/10/24 - ManhTD</para>
         /// <para>Modified at: 2024/11/07 - TaiPV</para>
@@ -79,6 +87,27 @@ namespace CourseManagementService.Services.ChapterManagement
 
                 LogInfo("End", method);
                 return isExist;
+            }
+            catch (Exception e)
+            {
+                LogError(e, method);
+                throw;
+            }
+        }
+
+        public async Task<Guid> GetCourseIdBelongToChapter(Guid chapterId)
+        {
+            var method = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", method);
+                var courseId = await _context.Chapters
+                    .Where(c => c.Id == chapterId)
+                    .Select(c => c.CourseId)
+                    .FirstOrDefaultAsync();
+
+                LogInfo("End", method);
+                return courseId;
             }
             catch (Exception e)
             {

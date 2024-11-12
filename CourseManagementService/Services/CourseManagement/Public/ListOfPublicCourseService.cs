@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using CourseManagementService.Common;
 using CourseManagementService.Common.Helpers;
 using CourseManagementService.Common.Schemas;
@@ -130,8 +129,18 @@ namespace CourseManagementService.Services.CourseManagement.Public
             {
                 LogInfo("Start", method);
 
+                string cacheKey = "";
                 UserInfoState currentUser = GetCurrentUser();
-                var cacheKey = CacheManager.PopularCourses.Key(currentUser?.UserId ?? 0);
+                (List<Guid> enrolledCourseIds, List<int> enrolledCourseCategories) = await GetEnrolledCoursesAndCategories();
+
+                if (currentUser == null || enrolledCourseIds.Count == 0)
+                {
+                    cacheKey = CacheManager.PopularCourses.Key(0);
+                }
+                else
+                {
+                    cacheKey = CacheManager.PopularCourses.Key(currentUser.UserId);
+                }
                 var cacheValue = _cacheService.GetData<PaginatedList<CourseDetailWithTeacherDto>>(cacheKey);
 
                 if (cacheValue != null)
@@ -140,7 +149,6 @@ namespace CourseManagementService.Services.CourseManagement.Public
                     return cacheValue;
                 }
 
-                (List<Guid> enrolledCourseIds, List<int> enrolledCourseCategories) = await GetEnrolledCoursesAndCategories();
                 var courses = await _context.Courses
                     .Where(x => !enrolledCourseIds.Contains(x.Id))
                     .OrderByDescending(x => x.Enrollments.Count)
@@ -211,9 +219,19 @@ namespace CourseManagementService.Services.CourseManagement.Public
             try
             {
                 LogInfo("Start", method);
-                UserInfoState currentUser = GetCurrentUser();
 
-                var cacheKey = CacheManager.RecommendedCourses.Key(currentUser?.UserId ?? 0);
+                string cacheKey = "";
+                UserInfoState currentUser = GetCurrentUser();
+                (List<Guid> enrolledCourseIds, List<int> enrolledCourseCategories) = await GetEnrolledCoursesAndCategories();
+                if (currentUser == null || enrolledCourseIds.Count == 0)
+                {
+                    cacheKey = CacheManager.RecommendedCourses.Key(0);
+                }
+                else
+                {
+                    cacheKey = CacheManager.RecommendedCourses.Key(currentUser.UserId);
+                }
+
                 var cacheValue = _cacheService.GetData<PaginatedList<CourseDetailWithTeacherDto>>(cacheKey);
                 if (cacheValue != null)
                 {
@@ -221,7 +239,7 @@ namespace CourseManagementService.Services.CourseManagement.Public
                     return cacheValue;
                 }
 
-                (List<Guid> enrolledCourseIds, List<int> enrolledCourseCategories) = await GetEnrolledCoursesAndCategories();
+                // (List<Guid> enrolledCourseIds, List<int> enrolledCourseCategories) = await GetEnrolledCoursesAndCategories();
                 var courses = await _context.Courses
                     .Where(x => !enrolledCourseIds.Contains(x.Id))
                     .OrderByDescending(x => enrolledCourseCategories.Contains(x.CategoryId)) // Sắp xếp theo category đã tham gia
