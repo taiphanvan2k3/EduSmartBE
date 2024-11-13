@@ -1,5 +1,6 @@
 using CourseManagementService.Database.Schemas;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Newtonsoft.Json;
 
 namespace CourseManagementService.Database
@@ -26,6 +27,36 @@ namespace CourseManagementService.Database
                 entity.Property(c => c.Type)
                     .HasConversion<string>()
                     .HasMaxLength(50);
+
+                entity.Property(c => c.CoreValues)
+                    .HasColumnType("json")
+                    .HasConversion(
+                        v => JsonConvert.SerializeObject(v),
+                        v => JsonConvert.DeserializeObject<List<string>>(v) ?? new List<string>()
+                    )
+                    // Dùng thêm ValueComparer vì EF Core không hỗ trợ so sánh List<string> mặc định
+                    // mỗi lần thay đổi dữ liệu, EF Core sẽ coi như dữ liệu đã thay đổi
+                    .Metadata.SetValueComparer(
+                        new ValueComparer<List<string>>(
+                            (c1, c2) => JsonConvert.SerializeObject(c1) == JsonConvert.SerializeObject(c2),
+                            c => c == null ? 0 : JsonConvert.SerializeObject(c).GetHashCode(),
+                            c => JsonConvert.DeserializeObject<List<string>>(JsonConvert.SerializeObject(c))!
+                        )
+                    );
+
+                entity.Property(c => c.Prerequisites)
+                    .HasColumnType("json")
+                    .HasConversion(
+                        v => JsonConvert.SerializeObject(v),
+                        v => JsonConvert.DeserializeObject<List<string>>(v) ?? new List<string>()
+                    )
+                    .Metadata.SetValueComparer(
+                        new ValueComparer<List<string>>(
+                            (c1, c2) => JsonConvert.SerializeObject(c1) == JsonConvert.SerializeObject(c2),
+                            c => c == null ? 0 : JsonConvert.SerializeObject(c).GetHashCode(),
+                            c => JsonConvert.DeserializeObject<List<string>>(JsonConvert.SerializeObject(c))!
+                        )
+                    );
 
                 entity.Property(c => c.IsPublished)
                     .HasDefaultValue(true);

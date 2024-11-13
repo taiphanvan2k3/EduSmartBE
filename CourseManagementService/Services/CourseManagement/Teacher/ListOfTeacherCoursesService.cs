@@ -47,16 +47,15 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                         && (!searchCondition.CategoryId.HasValue || x.CategoryId == searchCondition.CategoryId)
                         && (string.IsNullOrEmpty(searchCondition.Keyword)
                             || EF.Functions.ILike(x.Name, $"%{searchCondition.Keyword}%")
-                            || EF.Functions.ILike(x.BriefDescription, $"%{searchCondition.Keyword}%")
-                            || EF.Functions.ILike(x.DetailedDescription, $"%{searchCondition.Keyword}%"))
+                            || EF.Functions.ILike(x.Description, $"%{searchCondition.Keyword}%"))
                     )
                     .OrderByDescending(x => x.UpdatedAt)
                     .Select(x => new CourseDto
                     {
                         Id = x.Id,
                         Name = x.Name,
-                        BriefDescription = x.BriefDescription,
-                        DetailedDescription = x.DetailedDescription,
+                        Description = x.Description,
+                        CoreValues = x.CoreValues,
                         ThumbnailURL = x.ThumbnailURL,
                         Price = x.Price,
                         CurrencyCode = x.Currency.Code,
@@ -87,6 +86,7 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                         })
                         .ToList(),
                         TotalStudents = x.Enrollments.Count,
+                        TotalLessons = x.Chapters.Sum(c => c.Lessons.Count),
                         TotalSecondsByChapter = x.Chapters.Select(c => c.Lessons.Sum(l => l.DurationInSeconds)).ToList(),
                     })
                     .ToPaginatedListAsync(currentPage: searchCondition.CurrentPage, pageSize: searchCondition.PageSize);

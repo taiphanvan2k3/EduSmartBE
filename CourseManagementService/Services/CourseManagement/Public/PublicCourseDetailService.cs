@@ -75,8 +75,9 @@ namespace CourseManagementService.Services.CourseManagement.Public
                         {
                             Id = x.Id,
                             Name = x.Name,
-                            BriefDescription = x.BriefDescription,
-                            DetailedDescription = x.DetailedDescription,
+                            Description = x.Description,
+                            CoreValues = x.CoreValues,
+                            Prerequisites = x.Prerequisites,
                             Price = x.Price,
                             CurrencyCode = x.Currency.Code,
                             Type = new LookupDto()
