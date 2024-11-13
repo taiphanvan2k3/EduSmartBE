@@ -31,8 +31,9 @@ namespace CourseManagementService.Services.CourseManagement.Student
                     {
                         Id = c.Course.Id,
                         Name = c.Course.Name,
-                        BriefDescription = c.Course.BriefDescription,
-                        DetailedDescription = c.Course.DetailedDescription,
+                        Description = c.Course.Description,
+                        CoreValues = c.Course.CoreValues,
+                        Prerequisites = c.Course.Prerequisites,
                         ThumbnailURL = c.Course.ThumbnailURL,
                         TotalStudents = c.Course.Enrollments.Count,
                         Teacher = new TeacherDetail()
