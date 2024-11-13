@@ -33,7 +33,7 @@ namespace CourseManagementService.Controllers
         {
             try
             {
-                var chapter = await _listOfChaptersService.GetChapterById(id);
+                var chapter = await _chapterDetailService.GetChapterById(id);
                 if (chapter == null)
                 {
                     return StatusCode(StatusCodes.Status404NotFound, ErrorResponseHelper.GetContentOfNotFoundResponse("Chapter not found"));

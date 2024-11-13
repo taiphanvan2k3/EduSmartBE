@@ -123,8 +123,9 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                 var newCourse = new TblCourse
                 {
                     Name = courseCreateDto.Name,
-                    BriefDescription = courseCreateDto.BriefDescription,
-                    DetailedDescription = courseCreateDto.DetailedDescription,
+                    Description = courseCreateDto.Description,
+                    CoreValues = courseCreateDto.CoreValues,
+                    Prerequisites = courseCreateDto.Prerequisites,
                     ThumbnailURL = courseCreateDto.Thumbnail != null
                         ? Constants.IN_PROGRESS_THUMBNAIL
                         : Constants.DEFAULT_COURSE_THUMBNAIL,
@@ -268,14 +269,15 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                 }
 
                 course.Name = courseUpdateDto.Name;
-                course.BriefDescription = courseUpdateDto.BriefDescription;
-                course.DetailedDescription = courseUpdateDto.DetailedDescription;
+                course.Description = courseUpdateDto.Description;
+                course.CoreValues = courseUpdateDto.CoreValues;
+                course.Prerequisites = courseUpdateDto.Prerequisites;
                 course.Price = courseUpdateDto.Price;
                 course.Type = courseUpdateDto.Type;
                 course.CategoryId = courseUpdateDto.CategoryId;
                 course.CurrencyId = (int)courseUpdateDto.Currency;
 
-                if (course.ThumbnailURL.StartsWith(Constants.CLOUDINARY_URL_PREFIX) 
+                if (course.ThumbnailURL.StartsWith(Constants.CLOUDINARY_URL_PREFIX)
                     && course.ThumbnailURL != Constants.DEFAULT_COURSE_THUMBNAIL)
                 {
                     await StartDeleteImageFromCloudinaryJob(course.ThumbnailURL);

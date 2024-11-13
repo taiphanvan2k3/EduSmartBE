@@ -11,11 +11,15 @@ namespace CourseManagementService.Services.CourseManagement.Public.Schemas
 
         public string Name { get; set; }
 
-        public string BriefDescription { get; set; }
+        public string Description { get; set; }
 
-        public string DetailedDescription { get; set; }
+        public List<string> CoreValues { get; set; }
+
+        public List<string> Prerequisites { get; set; }
 
         public string ThumbnailURL { get; set; }
+
+        public string PreviewVideoURL { get; set; }
 
         public decimal Price { get; set; }
 
