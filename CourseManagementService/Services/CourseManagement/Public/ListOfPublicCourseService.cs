@@ -158,8 +158,7 @@ namespace CourseManagementService.Services.CourseManagement.Public
                     {
                         Id = c.Id,
                         Name = c.Name,
-                        BriefDescription = c.BriefDescription,
-                        DetailedDescription = c.DetailedDescription,
+                        Description = c.Description,
                         Price = c.Price,
                         CurrencyCode = c.Currency.Code,
                         Type = new LookupDto()
@@ -248,8 +247,7 @@ namespace CourseManagementService.Services.CourseManagement.Public
                     {
                         Id = c.Id,
                         Name = c.Name,
-                        BriefDescription = c.BriefDescription,
-                        DetailedDescription = c.DetailedDescription,
+                        Description = c.Description,
                         Price = c.Price,
                         CurrencyCode = c.Currency.Code,
                         Type = new LookupDto()
@@ -323,15 +321,15 @@ namespace CourseManagementService.Services.CourseManagement.Public
                 .Where(c => c.CategoryId == categoryId
                     && (string.IsNullOrEmpty(condition.Keyword)
                         || EF.Functions.ILike(c.Name, $"%{condition.Keyword}%")
-                        || EF.Functions.ILike(c.BriefDescription, $"%{condition.Keyword}%")
-                        || EF.Functions.ILike(c.DetailedDescription, $"%{condition.Keyword}%")))
+                        || EF.Functions.ILike(c.Description, $"%{condition.Keyword}%")))
                 .SingleSort(condition)
                 .Select(c => new CourseDetailWithTeacherDto()
                 {
                     Id = c.Id,
                     Name = c.Name,
-                    BriefDescription = c.BriefDescription,
-                    DetailedDescription = c.DetailedDescription,
+                    Description = c.Description,
+                    CoreValues = c.CoreValues,
+                    Prerequisites = c.Prerequisites,
                     Price = c.Price,
                     CurrencyCode = c.Currency.Code,
                     Type = new LookupDto()

@@ -11,11 +11,19 @@ namespace CourseManagementService.Database.Schemas
         [MaxLength(200)]
         public string Name { get; set; }
 
-        public string BriefDescription { get; set; }
+        public string Description { get; set; }
 
-        public string DetailedDescription { get; set; }
+        public List<string> CoreValues { get; set; }
+
+        /// <summary>
+        /// Điều kiện tiên quyết
+        /// </summary>
+        public List<string> Prerequisites { get; set; }
 
         public string ThumbnailURL { get; set; }
+
+        [MaxLength(300)]
+        public string PreviewVideoURL { get; set; }
 
         public decimal Price { get; set; }
 
