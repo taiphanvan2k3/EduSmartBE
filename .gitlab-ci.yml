@@ -13,11 +13,12 @@ restore_and_build_service:
       - AuthService/obj/
       - UserService/obj/
       - CourseManagementService/obj/
+      - PaymentService/obj/
   script:
     - dotnet restore edusmartbe.sln --packages .nuget/packages
     - ls -la .nuget/packages/  # List directory contents to verify packages have been restored
     - |
-      services=("AuthService" "UserService" "CourseManagementService")
+      services=("AuthService" "UserService" "CourseManagementService" "PaymentService")
       for service in "${services[@]}"; do
         if git diff --name-only HEAD HEAD~1 | grep -q "${service}/"; then
           echo "Building ${service}..."
@@ -33,6 +34,7 @@ restore_and_build_service:
         - 'AuthService/**/*'
         - 'UserService/**/*'
         - 'CourseManagementService/**/*'
+        - 'PaymentService/**/*'
 
 deploy_services:
   stage: deploy
@@ -48,7 +50,7 @@ deploy_services:
     - echo "Pulling latest code from the repository"
     - ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_SERVER_IP "cd $PATH_TO_PROJECT && eval \"\$(ssh-agent -s)\" && ssh-add /root/.ssh/id_rsa_gitlab && git fetch --prune origin && git reset --hard origin/main && git clean -fd && git gc --prune=now && git pull origin main"
     - |
-      services=("authservice" "userservice" "coursemanagementservice")
+      services=("authservice" "userservice" "coursemanagementservice" "paymentservice")
       for service in "${services[@]}"; do
         # Kiểm tra xem có thay đổi nào trong service đó hoặc trong docker-compose.yml hoặc .gitlab-ci.yml không
         if git diff --name-only HEAD HEAD~1 | grep -qiE "^${service}/|^docker-compose.yml|.gitlab-ci.yml"; then
@@ -67,3 +69,4 @@ deploy_services:
         - 'AuthService/**/*'
         - 'UserService/**/*'
         - 'CourseManagementService/**/*'
+        - 'PaymentService/**/*'
