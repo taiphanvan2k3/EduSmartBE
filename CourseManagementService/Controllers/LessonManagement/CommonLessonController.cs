@@ -19,6 +19,14 @@ namespace CourseManagementService.Controllers.LessonManagement
         /// <para>Created by: TaiPV</para>  
         /// </summary>
         /// <param name="courseId">Id of course</param>
+        /// <remarks>
+        /// NOTE: 
+        /// 
+        ///     Text = 1,
+        ///     Video = 2,
+        ///     Quiz = 3,
+        ///     ProgrammingExercise = 4 
+        /// </remarks> 
         [Filters.Auth]
         [HttpGet("next-lesson")]
         [ProducesResponseType(typeof(ContinueLessonInfo), StatusCodes.Status200OK)]
