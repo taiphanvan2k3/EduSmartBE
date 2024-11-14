@@ -4,6 +4,8 @@ using CourseManagementService.Services.ChapterManagement;
 using CourseManagementService.Services.ChapterManagement.Schemas;
 using CourseManagementService.Services.CourseManagement.Public;
 using CourseManagementService.Services.CourseManagement.Public.Schemas;
+using CourseManagementService.Services.TagManagement;
+using CourseManagementService.Services.TagManagement.Schemas;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,7 +15,8 @@ namespace CourseManagementService.Controllers.CourseManagement
     [ApiController]
     public class PublicCourseController(IListOfPublicCourseService listOfPublicCourseService,
         IListOfChaptersService listOfChaptersService,
-        IPublicCourseDetailService publicCourseDetailService) : ControllerBase
+        IPublicCourseDetailService publicCourseDetailService,
+        IListOfTagService listOfTagService) : ControllerBase
     {
         private readonly IListOfPublicCourseService _listOfPublicCourseService = listOfPublicCourseService
             ?? throw new ArgumentNullException(nameof(listOfPublicCourseService));
@@ -21,6 +24,9 @@ namespace CourseManagementService.Controllers.CourseManagement
             ?? throw new ArgumentNullException(nameof(listOfChaptersService));
         private readonly IPublicCourseDetailService _publicCourseDetailService = publicCourseDetailService
             ?? throw new ArgumentNullException(nameof(publicCourseDetailService));
+
+        private readonly IListOfTagService _listOfTagService = listOfTagService
+            ?? throw new ArgumentNullException(nameof(listOfTagService));
 
         /// <summary>
         /// [Public API] Get list of courses by keyword
@@ -132,6 +138,22 @@ namespace CourseManagementService.Controllers.CourseManagement
         {
             var chapters = await _listOfChaptersService.GetListOfChaptersByCourseId(id);
             return Ok(chapters);
+        }
+        
+        /// <summary>
+        /// Get list of tags
+        /// <para>Created at: 2024/11/14</para>
+        /// <para>Created by: ManhTD</para>
+        /// </summary>
+        /// <returns></returns>
+        /// <response code="200">Return list of tags</response>
+        /// <response code="500">Internal server error</response>
+        [HttpGet("tags")]
+        [ProducesResponseType(typeof(List<TagDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetTags()
+        {
+            var tags = await _listOfTagService.GetTags();
+            return Ok(tags);
         }
     }
 }
