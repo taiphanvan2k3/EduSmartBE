@@ -13,6 +13,11 @@ namespace CourseManagementService.Database.Schemas
 
         public Lesson Lesson { get; set; }
 
+        /// <summary>
+        /// Save the course id to query faster
+        /// </summary>
+        public Guid CourseId { get; set; }
+
         public long StudentId { get; set; }
 
         [Comment("The time spent on the lesson in minutes")]
