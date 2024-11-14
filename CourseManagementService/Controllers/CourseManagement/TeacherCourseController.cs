@@ -26,7 +26,7 @@ namespace CourseManagementService.Controllers.CourseManagement
         /// </summary>
         /// <response code="200">Return list of courses</response>
         [HttpGet("courses")]
-        [ProducesResponseType(typeof(List<PaginatedList<CourseCreateDto>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<PaginatedList<CourseDto>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetCreatedCourses([FromQuery] CourseSearchCondition searchCondition)
         {
             try
@@ -47,12 +47,12 @@ namespace CourseManagementService.Controllers.CourseManagement
         /// </summary>
         /// <param name="courseCreateDto">Course information is need for create</param>
         /// <remarks>
-        /// CourseType
+        /// CourseType (Enum)
         ///     
         ///     1: Tutorial
         ///     2: Direct - A course that is live and interactive
         ///
-        /// CurrencyType
+        /// CurrencyType (Passing as integer)
         /// 
         ///     1: VNĐ
         ///     2: USD
