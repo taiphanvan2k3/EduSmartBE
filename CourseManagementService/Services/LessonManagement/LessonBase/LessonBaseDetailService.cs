@@ -296,7 +296,7 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
                     .OrderBy(l => l.Chapter.Order * 1000 + l.Order)
                     .FirstOrDefaultAsync();
 
-                return (previousLesson.Id, nextLesson.Id);
+                return (previousLesson?.Id, nextLesson?.Id);
             }
             catch (Exception e)
             {
@@ -313,10 +313,8 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
                 var currentUser = GetCurrentUser()
                     ?? throw new UnauthorizedAccessException("You are not allowed to access this resource");
 
-                var isEnrolled = await _context.CourseEnrollments
-                    .AnyAsync(ce => ce.CourseId == courseId && ce.StudentId == currentUser.UserId);
-
-                if (!isEnrolled)
+                var isCanAccess = await CanAccessCourseMaterial(courseId, currentUser.UserId);
+                if (!isCanAccess)
                 {
                     throw new UnauthorizedAccessException("You are not allowed to access this resource");
                 }
