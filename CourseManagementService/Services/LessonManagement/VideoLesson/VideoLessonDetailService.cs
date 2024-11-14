@@ -124,9 +124,9 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson
 
                 var videoLesson = await _context.VideoLessons
                     .Where(v => v.LessonId == lessonId)
-                    .Include(v => v.Lesson)
                     .ProjectTo<VideoLessonDetail>(_mapper.ConfigurationProvider)
                     .FirstOrDefaultAsync();
+
                 if (videoLesson == null)
                 {
                     responseInfo.Error = "NotFound";
@@ -136,6 +136,11 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson
                 }
 
                 videoLesson.VideoURLWithSAS = _videoService.GetVideoURLWithSAS(videoLesson.BaseBlobURL);
+                (Guid? previousLessonId, Guid? nextLessonId) = await _lessonBaseDetailService.GetPreviousAndNextLessonId(
+                     videoLesson.ChapterOrder, videoLesson.LessonOrder);
+
+                videoLesson.PreviousLessonId = previousLessonId;
+                videoLesson.NextLessonId = nextLessonId;
 
                 responseInfo.Data.Add("lesson", videoLesson);
                 LogInfo("End", methodName);
@@ -182,6 +187,7 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson
                     IsCommentAllowed = videoLessonInfo.IsCommentAllowed,
                     IsRatingAllowed = videoLessonInfo.IsRatingAllowed,
                     CreatedBy = currentUser.UserId,
+                    DurationInSeconds = videoLessonInfo.VideoDurationInSeconds ?? 0,
                     Order = videoOrder + 1
                 };
 
@@ -270,6 +276,7 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson
 
                 if (videoLessonInfo.Video != null)
                 {
+                    videoLessonEntity.Lesson.DurationInSeconds = videoLessonInfo.VideoDurationInSeconds ?? 0;
                     await StartUploadVideoJob(videoLessonInfo.Video, videoLessonEntity.Id);
                 }
                 else
@@ -297,22 +304,33 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson
         // Background job
         public async Task<ResponseInfo> UpdateLessonVideoUrl(Guid videoLessonId, string localVideoPath)
         {
+            var methodName = GetActualAsyncMethodName();
             TblVideoLesson videoLessonEntity = null;
             try
             {
+                LogInfo("Start", methodName);
                 var responseInfo = new ResponseInfo();
+
                 videoLessonEntity = await _context.VideoLessons
                     .Include(v => v.Lesson)
                     .FirstOrDefaultAsync(v => v.Id == videoLessonId)
                     ?? throw new InvalidDataException("Lesson not found");
 
+                LogInfo("Begin upload video", methodName);
                 var uploadResponse = await _videoService.UploadVideoFromLocalAsync(new VideoUploadInfo(
                     videoLessonEntity.LessonId, localVideoPath));
 
                 videoLessonEntity.BaseBlobURL = uploadResponse.Data["baseUrlWithoutSAS"];
                 videoLessonEntity.UploadStatus = UploadStatus.Completed;
 
-                videoLessonEntity.Lesson.DurationInSeconds = await Utils.GetDurationOfVideo(localVideoPath);
+                try
+                {
+                    videoLessonEntity.Lesson.DurationInSeconds = await Utils.GetDurationOfVideo(localVideoPath);
+                }
+                catch (Exception e)
+                {
+                    LogError(e, "UpdateLessonVideoUrl->GetDurationOfVideo");
+                }
                 await _context.SaveChangesAsync();
 
                 responseInfo.Message = "Update video lesson successfully";

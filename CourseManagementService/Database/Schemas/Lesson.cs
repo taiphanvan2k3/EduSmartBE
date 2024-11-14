@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using CourseManagementService.Enumerations;
 using Microsoft.EntityFrameworkCore;
 
@@ -45,5 +46,8 @@ namespace CourseManagementService.Database.Schemas
         public virtual ICollection<LessonRating> Ratings { get; set; }
 
         public virtual ICollection<LessonTracking> LessonTrackings { get; set; }
+
+        [NotMapped]
+        public int CompositeOrder => Chapter.Order * 1000 + Order;
     }
 }

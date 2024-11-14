@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CourseManagementService.Controllers.LessonManagement
 {
-    [Route("course-service/api/video-lessons", Order = 6)]
+    [Route("course-service/api/video-lessons", Order = 7)]
     [ApiController]
     public class VideoLessonController(IVideoLessonDetailService videoLessonDetailService) : BaseController
     {

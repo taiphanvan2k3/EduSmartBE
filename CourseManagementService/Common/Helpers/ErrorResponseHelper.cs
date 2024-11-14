@@ -22,6 +22,16 @@ namespace CourseManagementService.Common.Helpers
             };
         }
 
+        public static ErrorResponse GetContentOfUnauthorizedResponse<T>(T message)
+        {
+            return new ErrorResponse
+            {
+                StatusCode = StatusCodes.Status401Unauthorized,
+                Error = "Unauthorized",
+                Message = message
+            };
+        }
+
         public static ErrorResponse GetContentOfInternalServerResponse(string message)
         {
             return new ErrorResponse

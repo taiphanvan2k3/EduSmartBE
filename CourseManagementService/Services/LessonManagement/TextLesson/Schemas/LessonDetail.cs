@@ -15,6 +15,12 @@ namespace CourseManagementService.Services.LessonManagement.TextLesson.Schemas
         [JsonProperty(Order = 2)]
         public Guid ChapterId { get; set; }
 
+        [JsonProperty(Order = 2)]
+        public int ChapterOrder { get; set; }
+
+        [JsonProperty(Order = 2)]
+        public int LessonOrder { get; set; }
+
         [JsonProperty(Order = 3)]
         public string Description { get; set; }
 
@@ -32,6 +38,12 @@ namespace CourseManagementService.Services.LessonManagement.TextLesson.Schemas
                 return Utils.ConvertSecondsToDuration(DurationInSeconds);
             }
         }
+
+        [JsonProperty(Order = 6)]
+        public Guid? PreviousLessonId { get; set; }
+
+        [JsonProperty(Order = 7)]
+        public Guid? NextLessonId { get; set; }
 
         [JsonProperty(Order = 10)]
         public bool IsPublished { get; set; }
