@@ -1,6 +1,8 @@
+using System.Text;
 using Azure.Storage;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using Azure.Storage.Blobs.Specialized;
 using Azure.Storage.Sas;
 using CourseManagementService.Common;
 using CourseManagementService.Services.Medias.Schemas;
@@ -28,6 +30,14 @@ namespace CourseManagementService.Services.Medias
         /// <param name="videoUploadInfo"></param>
         /// <returns></returns>
         public Task<ResponseInfo> UploadVideoFromLocalAsync(VideoUploadInfo videoUploadInfo);
+
+        /// <summary>
+        /// Upload video to Azure Blob Storage by small chunks
+        /// <para>Author: TaiPV</para>
+        /// <para>Created at: 2024/11/14</para>
+        /// </summary>
+        /// <returns></returns>
+        public Task<ResponseInfo> UploadVideoChunkByChunkAsync(VideoUploadInfo videoUploadInfo);
 
         /// <summary>
         /// Get video URL with the shared access signature (SAS)<br/>
@@ -98,11 +108,11 @@ namespace CourseManagementService.Services.Medias
                 var responseInfo = new ResponseInfo();
 
                 var connectionTimeout = TimeSpan.FromMinutes(10); // Timeout dài hơn cho các tệp lớn
-                var blobServiceClient = CreateBlobServiceClient(azureBlobStorageSetting.Value.ConnectionString, 
+                var blobServiceClient = CreateBlobServiceClient(azureBlobStorageSetting.Value.ConnectionString,
                     connectionTimeout);
 
                 var containerClient = blobServiceClient.GetBlobContainerClient(_containerName);
-                var blobClient = containerClient.GetBlobClient(videoUploadInfo.LessonId.ToString());
+                var blobClient = containerClient.GetBlobClient(videoUploadInfo.ResourceId.ToString());
 
                 var options = GetBlobUploadOptions("video/mp4", maximumConcurrency: 8, maximumTransferSize: 8 * 1024 * 1024);
 
@@ -111,6 +121,76 @@ namespace CourseManagementService.Services.Medias
 
                 responseInfo.Message = "Upload video successfully";
                 responseInfo.Data.Add("baseUrlWithoutSAS", blobClient.Uri.ToString());
+
+                LogInfo("End", method);
+                return responseInfo;
+            }
+            catch (Exception e)
+            {
+                LogError(e, GetActualAsyncMethodName());
+                throw;
+            }
+        }
+
+        public async Task<ResponseInfo> UploadVideoChunkByChunkAsync(VideoUploadInfo videoUploadInfo)
+        {
+            var method = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", method);
+                var responseInfo = new ResponseInfo();
+
+                var connectionTimeout = TimeSpan.FromMinutes(5);
+                var blobServiceClient = CreateBlobServiceClient(azureBlobStorageSetting.Value.ConnectionString,
+                    connectionTimeout);
+
+                var containerClient = blobServiceClient.GetBlobContainerClient(_containerName);
+                var blockBlobClient = containerClient.GetBlockBlobClient(videoUploadInfo.ResourceId.ToString());
+
+                var blockSize = 4 * 1024 * 1024; // 4MB
+                long totalFileSize = new FileInfo(videoUploadInfo.LocalPath).Length;
+                int totalBlocks = (int)Math.Ceiling((double)totalFileSize / blockSize);
+                int uploadedBlockCount = 0;
+
+                IProgress<double> progressPercentage = new Progress<double>(percentage =>
+                {
+                    LogInfo($"Upload file of Course {videoUploadInfo.ResourceId} with {percentage:F2}%", method);
+                });
+
+                using var fileStream = new FileStream(videoUploadInfo.LocalPath, FileMode.Open);
+                var tasks = new List<Task>();
+                var blockIds = new List<string>();
+                int blockIndex = 0;
+
+                while (fileStream.Position < fileStream.Length)
+                {
+                    var remainingBytes = fileStream.Length - fileStream.Position;
+                    var bytesToRead = Math.Min(blockSize, remainingBytes);
+                    var buffer = new byte[bytesToRead];
+                    await fileStream.ReadAsync(buffer, 0, buffer.Length);
+
+                    var blockId = Convert.ToBase64String(Encoding.UTF8.GetBytes(blockIndex.ToString("d6")));
+                    blockIds.Add(blockId);
+
+                    tasks.Add(UploadBlockAsync(blockBlobClient, blockId, buffer, () =>
+                    {
+                        Interlocked.Increment(ref uploadedBlockCount);
+                        progressPercentage.Report((double)uploadedBlockCount / totalBlocks * 100);
+                    }));
+
+                    blockIndex++;
+                }
+
+                await Task.WhenAll(tasks);
+
+                var blockList = await blockBlobClient.GetBlockListAsync(BlockListTypes.All);
+                var uncommittedBlocks = blockList.Value.UncommittedBlocks.ToList();
+                var blockNames = uncommittedBlocks.Select(b => b.Name).ToList();
+
+                await blockBlobClient.CommitBlockListAsync(blockNames);
+
+                responseInfo.Message = "Upload video successfully";
+                responseInfo.Data.Add("baseUrlWithoutSAS", blockBlobClient.Uri.ToString());
 
                 LogInfo("End", method);
                 return responseInfo;
@@ -198,6 +278,14 @@ namespace CourseManagementService.Services.Medias
                 }
             };
             return new BlobServiceClient(connectionString, options);
+        }
+
+        // Phương thức để upload từng block
+        private async static Task UploadBlockAsync(BlockBlobClient blobClient, string blockId, byte[] blockData, Action onBlockUploaded)
+        {
+            using var blockStream = new MemoryStream(blockData);
+            await blobClient.StageBlockAsync(Convert.ToBase64String(Encoding.UTF8.GetBytes(blockId)), blockStream);
+            onBlockUploaded?.Invoke(); // Cập nhật tiến trình sau khi upload xong block
         }
     }
 }

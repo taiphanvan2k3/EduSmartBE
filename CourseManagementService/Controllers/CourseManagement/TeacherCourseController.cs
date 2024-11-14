@@ -58,6 +58,7 @@ namespace CourseManagementService.Controllers.CourseManagement
         ///     2: USD
         /// </remarks>
         [HttpPost("courses")]
+        [RequestSizeLimit(200 * 1024 * 1024)]
         [ProducesResponseType(typeof(CourseDto), StatusCodes.Status200OK)]
         public async Task<IActionResult> CreateCourse([FromForm] CourseCreateDto courseCreateDto)
         {

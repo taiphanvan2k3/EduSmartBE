@@ -1,8 +1,8 @@
 namespace CourseManagementService.Services.Medias.Schemas
 {
-    public class VideoUploadInfo(Guid lessonId, string localPath)
+    public class VideoUploadInfo(Guid resourceId, string localPath)
     {
-        public Guid LessonId { get; set; } = lessonId;
+        public Guid ResourceId { get; set; } = resourceId;
 
         public string LocalPath { get; set; } = localPath;
     }
