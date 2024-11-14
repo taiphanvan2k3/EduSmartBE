@@ -8,6 +8,7 @@ using CourseManagementService.Services.CourseManagement.Public.Schemas;
 using CourseManagementService.Services.CourseManagement.Teacher.Schemas;
 using CourseManagementService.Services.Grpc;
 using CourseManagementService.Services.LessonManagement.LessonBase;
+using CourseManagementService.Services.Medias;
 using Microsoft.EntityFrameworkCore;
 
 namespace CourseManagementService.Services.CourseManagement.Public
@@ -36,6 +37,8 @@ namespace CourseManagementService.Services.CourseManagement.Public
             ?? throw new ArgumentNullException(ServiceInjectionError("ILessonBaseDetailService"));
         private readonly IListOfChaptersService _chapterService = serviceProvider.GetService<IListOfChaptersService>()
             ?? throw new ArgumentNullException(ServiceInjectionError("IListOfChaptersService"));
+        private readonly IVideoService _videoService = serviceProvider.GetService<IVideoService>()
+            ?? throw new ArgumentNullException(ServiceInjectionError("IVideoService"));
 
         public async Task<CourseDetail> GetCourseDetail(Guid courseId)
         {
@@ -107,6 +110,7 @@ namespace CourseManagementService.Services.CourseManagement.Public
                             })
                             .ToList(),
                             ThumbnailURL = x.ThumbnailURL,
+                            PreviewVideoURL = x.PreviewVideoURL,
                             TotalStudents = x.Enrollments.Count,
                             TotalLessons = x.Chapters.SelectMany(x => x.Lessons).Count(),
                             TotalSecondsByChapter = x.Chapters.Select(c => c.Lessons.Sum(l => l.DurationInSeconds)).ToList(),
@@ -120,12 +124,15 @@ namespace CourseManagementService.Services.CourseManagement.Public
                     return null;
                 }
 
+                courseDetail.Course.PreviewVideoURL = _videoService.GetVideoURLWithSAS(courseDetail.Course.PreviewVideoURL);
+
                 await FillTeacherInfo(courseDetail);
                 courseDetail.Chapters = await _chapterService.GetListOfChaptersByCourseId(courseId);
 
                 if (courseDetail.Course.IsRegistered)
                 {
                     courseDetail.LearnedLessons = await _lessonBaseDetailService.GetLearnedLessons(courseId, currentUser.UserId);
+                    courseDetail.Course.FirstLessonId = await _lessonBaseDetailService.GetFirstLessonId(courseId);
                 }
 
                 _cacheService.SetData(cacheKey, courseDetail, DateTimeOffset.Now.AddMinutes(CacheManager.CourseDetail.ExpireTimeInMinutes));

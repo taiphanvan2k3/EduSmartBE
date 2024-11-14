@@ -34,6 +34,8 @@ namespace CourseManagementService.AutoMapper
                 .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Lesson.Title))
                 .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Lesson.Description))
                 .ForMember(dest => dest.ChapterId, opt => opt.MapFrom(src => src.Lesson.ChapterId))
+                .ForMember(dest => dest.LessonOrder, opt => opt.MapFrom(src => src.Lesson.Order))
+                .ForMember(dest => dest.ChapterOrder, opt => opt.MapFrom(src => src.Lesson.Chapter.Order))
                 .ForMember(dest => dest.LessonType, opt => opt.MapFrom(src => new LookupDto()
                 {
                     Id = ((int)Enum.Parse(lessonTypesType, src.Lesson.LessonType.ToString())).ToString(),

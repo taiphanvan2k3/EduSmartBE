@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CourseManagementService.Controllers.LessonManagement
 {
-    [Route("course-service/api/quiz-lessons", Order = 7)]
+    [Route("course-service/api/quiz-lessons", Order = 8)]
     [ApiController]
     public class QuizLessonController(IQuizLessonDetailService quizLessonDetailService) : BaseController
     {

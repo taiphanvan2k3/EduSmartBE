@@ -27,6 +27,8 @@ namespace CourseManagementService.Services.CourseManagement.Public.Schemas
 
         public int TotalStudents { get; set; }
 
+        public Guid? FirstLessonId { get; set; }
+
         [JsonIgnore]
         public List<long> TotalSecondsByChapter { get; set; } = [];
 

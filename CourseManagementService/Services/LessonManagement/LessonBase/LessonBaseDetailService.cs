@@ -66,6 +66,30 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
         /// </summary>
         /// <param name="lessonId">Lesson id</param>
         public Task<Guid> GetCourseIdBelongToLesson(Guid lessonId);
+
+        /// <summary>
+        /// Get the first lesson id of the course
+        /// <para>Created at: 2024/11/14</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="courseId"></param>
+        /// <returns></returns>
+        public Task<Guid> GetFirstLessonId(Guid courseId);
+
+        /// <summary>
+        /// Get the previous and next lesson id of the lesson having the lessonId
+        /// <para>Created at: 2024/11/14</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <returns></returns>
+        public Task<(Guid?, Guid?)> GetPreviousAndNextLessonId(int currentChapterOrder, int currentLessonOrder);
+
+        /// <summary>
+        /// Get the lesson id that the user should continue learning
+        /// <para>Created at: 2024/11/12</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        public Task<ContinueLessonInfo> GetContinueLessonInfo(Guid courseId);
     }
 
     public class LessonBaseDetailService(IServiceProvider serviceProvider, ILogger<LessonBaseDetailService> logger)
@@ -227,6 +251,127 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
             catch (Exception e)
             {
                 LogError(e, method);
+                throw;
+            }
+        }
+
+        public async Task<Guid> GetFirstLessonId(Guid courseId)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var lessonId = await _context.Lessons
+                    .Where(l => l.Chapter.CourseId == courseId && l.Chapter.Order <= 1)
+                    .OrderBy(l => l.Order)
+                    .Select(l => l.Id)
+                    .FirstOrDefaultAsync();
+
+                LogInfo("End", methodName);
+                return lessonId;
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+        }
+
+        public async Task<(Guid?, Guid?)> GetPreviousAndNextLessonId(int currentChapterOrder, int currentLessonOrder)
+        {
+            var methodName = GetActualAsyncMethodName();
+
+            try
+            {
+                LogInfo("Start", methodName);
+
+                int currentCompositeOrder = currentChapterOrder * 1000 + currentLessonOrder;
+                var previousLesson = await _context.Lessons
+                    .Where(l => l.Chapter.Order * 1000 + l.Order < currentCompositeOrder)
+                    .OrderByDescending(l => l.Chapter.Order * 1000 + l.Order)
+                    .FirstOrDefaultAsync();
+
+                var nextLesson = await _context.Lessons
+                    .Where(l => l.Chapter.Order * 1000 + l.Order > currentCompositeOrder)
+                    .OrderBy(l => l.Chapter.Order * 1000 + l.Order)
+                    .FirstOrDefaultAsync();
+
+                return (previousLesson.Id, nextLesson.Id);
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+        }
+
+        public async Task<ContinueLessonInfo> GetContinueLessonInfo(Guid courseId)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                var currentUser = GetCurrentUser()
+                    ?? throw new UnauthorizedAccessException("You are not allowed to access this resource");
+
+                var isEnrolled = await _context.CourseEnrollments
+                    .AnyAsync(ce => ce.CourseId == courseId && ce.StudentId == currentUser.UserId);
+
+                if (!isEnrolled)
+                {
+                    throw new UnauthorizedAccessException("You are not allowed to access this resource");
+                }
+
+                var lastLearnedLesson = await _context.LessonTrackings
+                    .Where(lt => lt.CourseId == courseId && lt.StudentId == currentUser.UserId)
+                    .OrderByDescending(lt => lt.CreatedAt)
+                    .Select(lt => new
+                    {
+                        lt.LessonId,
+                        lt.Lesson.LessonType,
+                        lt.TimeSpent,
+                        LessonOrder = lt.Lesson.Order,
+                        ChapterOrder = lt.Lesson.Chapter.Order
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (lastLearnedLesson == null)
+                {
+                    // Điều này có thể xảy ra khi người dùng chưa học bài nào trong khoá học
+                    return null;
+                }
+
+                // Lấy bài học tiếp theo có thể học
+                var currentCompositeOrder = lastLearnedLesson.ChapterOrder * 1000 + lastLearnedLesson.LessonOrder;
+                var nextLesson = await _context.Lessons
+                    .Where(l => l.Chapter.CourseId == courseId && l.Chapter.Order * 1000 + l.Order > currentCompositeOrder)
+                    .OrderBy(l => l.Chapter.Order * 1000 + l.Order)
+                    .Select(l => new
+                    {
+                        l.Id,
+                        l.LessonType
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (nextLesson == null)
+                {
+                    return new ContinueLessonInfo()
+                    {
+                        LessonId = lastLearnedLesson.LessonId,
+                        LessonType = lastLearnedLesson.LessonType,
+                        TimeSpent = lastLearnedLesson.TimeSpent
+                    };
+                }
+
+                return new ContinueLessonInfo()
+                {
+                    LessonId = nextLesson.Id,
+                    LessonType = nextLesson.LessonType,
+                    TimeSpent = 0
+                };
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
                 throw;
             }
         }
