@@ -34,6 +34,10 @@ namespace CourseManagementService.BackgroundServices
                         await UpdateCourseThumbnailAsync(scope.ServiceProvider.GetRequiredService<IPhotoService>(),
                             teacherCourseDetailService, data.Data);
                         break;
+                    case BackgroundJobType.UpdateCoursePreviewVideo:
+                        await UpdatePreviewVideoAsync(scope.ServiceProvider.GetRequiredService<IVideoService>(),
+                            scope.ServiceProvider.GetRequiredService<ITeacherCourseDetailService>(), data.Data);
+                        break;
                     case BackgroundJobType.DeleteCourseThumbnail:
                         await DeleteCourseThumbnailAsync(scope.ServiceProvider.GetRequiredService<IPhotoService>(), data.Data);
                         break;
@@ -63,6 +67,34 @@ namespace CourseManagementService.BackgroundServices
 
                 var uploadResult = await photoService.UploadImageFromLocalAsync(imageUploadInfo);
                 await teacherCourseDetailService.UpdateCourseThumbnail(courseId, uploadResult.SecureUrl.ToString());
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Upload image to cloudinary failed: " + e.InnerException?.Message ?? e.Message);
+            }
+            finally
+            {
+                var filePath = data["FilePath"] as string;
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+            }
+        }
+
+        private static async Task UpdatePreviewVideoAsync(IVideoService videoService,
+            ITeacherCourseDetailService teacherCourseDetailService,
+            Dictionary<string, dynamic> data)
+        {
+            try
+            {
+                var courseId = data["CourseId"] as Guid? ?? Guid.Empty;
+                var localImagePath = data["FilePath"] as string;
+                var videoUploadInfo = new VideoUploadInfo(courseId, localImagePath);
+
+                var uploadResult = await videoService.UploadVideoChunkByChunkAsync(videoUploadInfo);
+                var videoUrl = uploadResult.Data["baseUrlWithoutSAS"] as string;
+                await teacherCourseDetailService.UpdatePreviewVideo(courseId, videoUrl);
             }
             catch (Exception e)
             {

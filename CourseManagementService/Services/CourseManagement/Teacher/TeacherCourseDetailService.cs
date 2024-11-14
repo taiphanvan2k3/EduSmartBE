@@ -47,6 +47,16 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
         public Task<ResponseInfo> UpdateCourseThumbnail(Guid id, string thumbnailURL);
 
         /// <summary>
+        /// Update preview video of the course
+        /// <para>Author: TaiPV</para>
+        /// <para>Created at: 2024/11/15</para>
+        /// </summary>
+        /// <param name="courseId"> Id of the course</param>
+        /// <param name="videoUrl">URL of the preview video</param>
+        /// <returns></returns>
+        public Task<ResponseInfo> UpdatePreviewVideo(Guid courseId, string videoUrl);
+
+        /// <summary>
         /// Delete a course
         /// <para>Author: TaiPV</para>
         /// <para>Created at: 2024/10/06</para>
@@ -148,6 +158,11 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                 if (courseCreateDto.Thumbnail != null)
                 {
                     await StartUploadImageToCloudinaryJob(courseCreateDto.Thumbnail, newCourse.Id);
+                }
+
+                if (courseCreateDto.PreviewVideo != null)
+                {
+                    await StartUploadPreviewVideoJob(courseCreateDto.PreviewVideo, newCourse.Id);
                 }
 
                 var courseDto = _mapper.Map<CourseDto>(newCourse);
@@ -351,6 +366,36 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
             }
         }
 
+        public async Task<ResponseInfo> UpdatePreviewVideo(Guid courseId, string videoURL)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var response = new ResponseInfo();
+
+                var course = await _context.Courses.FindAsync(courseId);
+                if (course == null)
+                {
+                    response.Error = "NotFound";
+                    response.Message = "Course does not exist";
+                    response.StatusCode = StatusCodes.Status404NotFound;
+                    return response;
+                }
+
+                course.PreviewVideoURL = videoURL;
+                await _context.SaveChangesAsync();
+
+                LogInfo("End", methodName);
+                return response;
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+        }
+
         private async Task<bool> CheckIfTeacherExists(int teacherId)
         {
             var userServiceGrpcURL = _configuration.GetValue<string>("ExternalServices:UserService:GrpcUrl");
@@ -394,6 +439,26 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                 }
             };
 
+            await _mediaProducer.EnqueueDataAsync(backgroundJobData);
+        }
+
+        private async Task StartUploadPreviewVideoJob(IFormFile file, Guid courseId)
+        {
+            var uploadFolderPath = Path.Combine(Directory.GetCurrentDirectory(), Constants.UPLOAD_FOLDER_NAME);
+            Utils.CreateUploadFolderIfNotExist(uploadFolderPath);
+            var fileExtension = Path.GetExtension(file.FileName);
+            var fileName = $"{courseId}{fileExtension}";
+            var filePath = await Utils.SaveFileLocally(uploadFolderPath, fileName, file);
+
+            var backgroundJobData = new BackgroundJobData
+            {
+                JobType = BackgroundJobType.UpdateCoursePreviewVideo,
+                Data = new Dictionary<string, dynamic>
+                {
+                    { "CourseId", courseId },
+                    { "FilePath", filePath }
+                }
+            };
             await _mediaProducer.EnqueueDataAsync(backgroundJobData);
         }
 
