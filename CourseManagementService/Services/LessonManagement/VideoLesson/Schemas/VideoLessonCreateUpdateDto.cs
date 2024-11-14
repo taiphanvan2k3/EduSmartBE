@@ -8,6 +8,8 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson.Schemas
 
         public IFormFile Thumbnail { get; set; }
 
+        public int? VideoDurationInSeconds { get; set; }
+
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             if (Video != null)

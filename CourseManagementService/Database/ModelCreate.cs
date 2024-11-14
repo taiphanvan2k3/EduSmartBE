@@ -214,6 +214,9 @@ namespace CourseManagementService.Database
                     .WithMany(l => l.LessonTrackings)
                     .HasForeignKey(lt => lt.LessonId)
                     .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(lt => new { lt.CourseId, lt.StudentId });
+                entity.HasIndex(lt => new { lt.LessonId, lt.StudentId });
             });
 
             return modelBuilder;
