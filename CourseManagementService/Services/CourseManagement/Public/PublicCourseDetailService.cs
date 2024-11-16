@@ -23,6 +23,13 @@ namespace CourseManagementService.Services.CourseManagement.Public
         /// <param name="courseId"></param>
         /// <returns></returns>
         public Task<CourseDetail> GetCourseDetail(Guid courseId);
+
+        /// <summary>
+        /// Check if user can access course material
+        /// </summary>
+        /// <param name="courseId">Id of course</param>
+        /// <returns></returns>
+        public Task<bool> CanAccessCourseMaterial(Guid courseId);
     }
 
     public class PublicCourseDetailService(IServiceProvider serviceProvider,
@@ -39,6 +46,20 @@ namespace CourseManagementService.Services.CourseManagement.Public
             ?? throw new ArgumentNullException(ServiceInjectionError("IListOfChaptersService"));
         private readonly IVideoService _videoService = serviceProvider.GetService<IVideoService>()
             ?? throw new ArgumentNullException(ServiceInjectionError("IVideoService"));
+
+        public Task<bool> CanAccessCourseMaterial(Guid courseId)
+        {
+            try
+            {
+                var currentUser = GetCurrentUser();
+                return _lessonBaseDetailService.CanAccessCourseMaterial(courseId, currentUser.UserId);
+            }
+            catch (Exception e)
+            {
+                LogError(e, GetActualAsyncMethodName());
+                throw;
+            }
+        }
 
         public async Task<CourseDetail> GetCourseDetail(Guid courseId)
         {

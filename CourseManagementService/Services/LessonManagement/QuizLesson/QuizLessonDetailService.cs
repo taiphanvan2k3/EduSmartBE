@@ -127,6 +127,10 @@ namespace CourseManagementService.Services.LessonManagement.QuizLesson
                     return responseInfo;
                 }
 
+                var currentLessonOrder = await _context.Lessons
+                    .Where(l => l.ChapterId == quizLessonCreateDto.ChapterId)
+                    .MaxAsync(l => (int?)l.Order) ?? 0;
+
                 var lessonEntity = new TblLesson()
                 {
                     Title = quizLessonCreateDto.Title,
@@ -136,7 +140,7 @@ namespace CourseManagementService.Services.LessonManagement.QuizLesson
                     IsPublished = quizLessonCreateDto.IsPublished,
                     IsCommentAllowed = quizLessonCreateDto.IsCommentAllowed,
                     IsRatingAllowed = quizLessonCreateDto.IsRatingAllowed,
-                    Order = quizLessonCreateDto.Order ?? 1,
+                    Order = currentLessonOrder + 1,
                     LessonType = LessonType.Quiz,
                     CreatedBy = currentUser.UserId,
                     PublishedAt = quizLessonCreateDto.IsPublished ? DateTimeOffset.UtcNow : null,
