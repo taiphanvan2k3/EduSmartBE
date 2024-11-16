@@ -53,6 +53,8 @@ namespace CourseManagementService.Services.CourseManagement.Public.Schemas
 
         public bool IsRegistered { get; set; }
 
+        public bool IsPublished { get; set; }
+
         public LookupDto Type { get; set; }
 
         public CategoryDto Category { get; set; }
