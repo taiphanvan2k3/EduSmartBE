@@ -169,11 +169,9 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson
                     return responseInfo;
                 }
 
-                int videoOrder = videoLessonInfo.Order
-                    ?? await _context.Lessons
-                        .Where(l => l.ChapterId == videoLessonInfo.ChapterId
-                            && (!videoLessonInfo.IsPublished || l.IsPublished))
-                        .CountAsync();
+                int videoLessonOrder = await _context.Lessons
+                    .Where(l => l.ChapterId == videoLessonInfo.ChapterId)
+                    .MaxAsync(l => (int?)l.Order) ?? 0;
 
                 var currentUser = GetCurrentUser();
                 var lessonEntity = new TblLesson
@@ -188,7 +186,7 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson
                     IsRatingAllowed = videoLessonInfo.IsRatingAllowed,
                     CreatedBy = currentUser.UserId,
                     DurationInSeconds = videoLessonInfo.VideoDurationInSeconds ?? 0,
-                    Order = videoOrder + 1
+                    Order = videoLessonOrder + 1
                 };
 
                 var videoLessonEntity = new TblVideoLesson()

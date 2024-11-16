@@ -132,14 +132,22 @@ namespace CourseManagementService.Controllers.CourseManagement
         /// <response code="200">Return list of chapters</response>
         /// <response code="404">Not found</response>
         /// <response code="500">Internal server error</response>
+        [Filters.Auth(Roles = "Teacher")]
         [HttpGet("{id}/chapters")]
         [ProducesResponseType(typeof(List<ChapterDetail>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetChaptersByCourseId(Guid id)
         {
-            var chapters = await _listOfChaptersService.GetListOfChaptersByCourseId(id);
+            var isCanAccessCourse = await _publicCourseDetailService.CanAccessCourseMaterial(id);
+            if (!isCanAccessCourse)
+            {
+                return StatusCode(StatusCodes.Status404NotFound,
+                    ErrorResponseHelper.GetContentOfNotFoundResponse("Cannot access course material"));
+            }
+
+            var chapters = await _listOfChaptersService.GetListOfChaptersByCourseId(id, isTeacher: true);
             return Ok(chapters);
         }
-        
+
         /// <summary>
         /// Get list of tags
         /// <para>Created at: 2024/11/14</para>
