@@ -14,6 +14,8 @@ namespace CourseManagementService.Database
                 entity.ToTable("Courses");
                 entity.HasKey(e => e.Id);
 
+                entity.HasIndex(c => c.TeacherId);
+
                 entity.HasMany(c => c.Chapters)
                     .WithOne(ch => ch.Course)
                     .HasForeignKey(ch => ch.CourseId)

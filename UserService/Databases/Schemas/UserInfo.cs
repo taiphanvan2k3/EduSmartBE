@@ -18,6 +18,9 @@ namespace UserService.Databases.Schemas
 
         public int Gender { get; set; }
 
+        [MaxLength(500)]
+        public string Bio { get; set; }
+
         public virtual User User { get; set; }
     }
 }

@@ -41,6 +41,24 @@ namespace CourseManagementService.Controllers.CourseManagement
         }
 
         /// <summary>
+        /// Get teaching analysis of current teacher
+        /// <para>Created by: TaiPV</para>
+        /// <para>Created at: 2024/11/17</para>
+        /// </summary>
+        /// <remarks>
+        /// averageScore (double): 
+        ///     
+        ///     Average score of all courses that teacher created
+        /// </remarks>
+        [HttpGet("teaching-analysis")]
+        [ProducesResponseType(typeof(TeachingAnalysis), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetTeachingAnalysis()
+        {
+            var teachingAnalysis = await _teacherCourseDetailService.GetTeachingAnalysis();
+            return Ok(teachingAnalysis);
+        }
+
+        /// <summary>
         /// Create a new course
         /// <para>Created by: TaiPV</para> 
         /// <para>Created at: 2024/10/02</para>

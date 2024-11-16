@@ -88,6 +88,7 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                         TotalStudents = x.Enrollments.Count,
                         TotalLessons = x.Chapters.Sum(c => c.Lessons.Count),
                         TotalSecondsByChapter = x.Chapters.Select(c => c.Lessons.Sum(l => l.DurationInSeconds)).ToList(),
+                        CreatedAt = x.CreatedAt
                     })
                     .ToPaginatedListAsync(currentPage: searchCondition.CurrentPage, pageSize: searchCondition.PageSize);
 
