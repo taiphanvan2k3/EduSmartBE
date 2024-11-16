@@ -19,7 +19,7 @@ namespace CourseManagementService.Services.LessonManagement.TextLesson.Schemas
         [JsonIgnore]
         public int ChapterOrder { get; set; }
 
-        [JsonProperty(Order = 2)]
+        [JsonProperty("Order", Order = 2)]
         public int LessonOrder { get; set; }
 
         [JsonProperty(Order = 3)]
