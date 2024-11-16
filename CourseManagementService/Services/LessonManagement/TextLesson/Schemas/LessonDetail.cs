@@ -16,6 +16,7 @@ namespace CourseManagementService.Services.LessonManagement.TextLesson.Schemas
         public Guid ChapterId { get; set; }
 
         [JsonProperty(Order = 2)]
+        [JsonIgnore]
         public int ChapterOrder { get; set; }
 
         [JsonProperty(Order = 2)]
