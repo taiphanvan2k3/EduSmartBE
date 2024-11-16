@@ -145,7 +145,10 @@ namespace CourseManagementService.Services.CourseManagement.Public
                     return null;
                 }
 
-                courseDetail.Course.PreviewVideoURL = _videoService.GetVideoURLWithSAS(courseDetail.Course.PreviewVideoURL);
+                if (courseDetail.Course.PreviewVideoURL != null)
+                {
+                    courseDetail.Course.PreviewVideoURL = _videoService.GetVideoURLWithSAS(courseDetail.Course.PreviewVideoURL);
+                }
 
                 await FillTeacherInfo(courseDetail);
 
