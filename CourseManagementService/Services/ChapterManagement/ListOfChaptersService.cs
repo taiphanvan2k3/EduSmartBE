@@ -64,7 +64,8 @@ namespace CourseManagementService.Services.ChapterManagement
                                 {
                                     Id = ((int)Enum.Parse(lessonTypesType, l.LessonType.ToString())).ToString(),
                                     Name = l.LessonType.ToString()
-                                }
+                                },
+                                LessonOrder = l.Order
                             })
                             .ToList(),
                         IsPublished = c.IsPublished
