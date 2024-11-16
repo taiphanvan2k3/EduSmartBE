@@ -12,7 +12,7 @@ namespace CourseManagementService.Controllers.CourseManagement
     [ApiController]
     [Filters.Auth(Roles = "Teacher")]
     public class TeacherCourseController(ITeacherCourseDetailService teacherCourseDetailService,
-        IListOfTeacherCoursesService listOfTeacherCoursesService) : ControllerBase
+        IListOfTeacherCoursesService listOfTeacherCoursesService) : BaseController
     {
         private readonly ITeacherCourseDetailService _teacherCourseDetailService = teacherCourseDetailService
             ?? throw new ArgumentNullException(nameof(teacherCourseDetailService));
@@ -137,6 +137,22 @@ namespace CourseManagementService.Controllers.CourseManagement
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, e.InnerException?.Message ?? e.Message);
             }
+        }
+
+        /// <summary>
+        /// Update course order settings
+        /// <para>Created by: TaiPV</para>
+        /// <para>Created at: 2024/11/16</para>
+        /// </summary>
+        /// <param name="id">Id of course is need for update</param>
+        /// <param name="courseOrderSetting">Course order setting is need for update</param>
+        /// <returns></returns>
+        [HttpPut("{id}/order-settings")]
+        [ProducesResponseType(typeof(CourseOrderSetting), StatusCodes.Status200OK)]
+        public async Task<IActionResult> UpdateOrderSettings([FromRoute] Guid id, [FromBody] CourseOrderSetting courseOrderSetting)
+        {
+            var response = await _teacherCourseDetailService.UpdateCourseOrderSettings(id, courseOrderSetting);
+            return HandleResponseInfo(response, resourceName: "courseOrderSetting");
         }
 
         /// <summary>

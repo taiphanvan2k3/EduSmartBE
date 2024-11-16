@@ -7,6 +7,7 @@ using CourseManagementService.Services.Cache;
 using CourseManagementService.Services.CourseManagement.Public.Schemas;
 using CourseManagementService.Services.CourseManagement.Teacher.Schemas;
 using CourseManagementService.Services.Grpc;
+using CourseManagementService.Services.LessonManagement.LessonBase.Schemas;
 using CourseManagementService.Services.Medias;
 using Grpc.Net.Client;
 using Microsoft.EntityFrameworkCore;
@@ -55,6 +56,14 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
         /// <param name="videoUrl">URL of the preview video</param>
         /// <returns></returns>
         public Task<ResponseInfo> UpdatePreviewVideo(Guid courseId, string videoUrl);
+
+        /// <summary>
+        /// Update order of chapters and lessons in a course
+        /// </summary>
+        /// <param name="courseId">Id of the course</param>
+        /// <param name="courseOrderSetting">Chapter orders and lesson orders</param>
+        /// <returns></returns>
+        public Task<ResponseInfo> UpdateCourseOrderSettings(Guid courseId, CourseOrderSetting courseOrderSetting);
 
         /// <summary>
         /// Delete a course
@@ -146,7 +155,8 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                     CurrencyId = (int)courseCreateDto.Currency,
                     Tags = courseCreateDto.TagIds
                         .Select(x => new TblCourseTag { TagId = x })
-                        .ToList()
+                        .ToList(),
+                    IsPublished = courseCreateDto.IsPublished
                 };
 
                 await _context.Courses.AddAsync(newCourse);
@@ -291,6 +301,7 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                 course.Type = courseUpdateDto.Type;
                 course.CategoryId = courseUpdateDto.CategoryId;
                 course.CurrencyId = (int)courseUpdateDto.Currency;
+                course.IsPublished = courseUpdateDto.IsPublished;
 
                 if (course.ThumbnailURL.StartsWith(Constants.CLOUDINARY_URL_PREFIX)
                     && course.ThumbnailURL != Constants.DEFAULT_COURSE_THUMBNAIL)
@@ -396,6 +407,97 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
             }
         }
 
+        public async Task<ResponseInfo> UpdateCourseOrderSettings(Guid courseId, CourseOrderSetting courseOrderSetting)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var currentUser = GetCurrentUser();
+                ResponseInfo response = await CanModifyCourse(courseId, currentUser.UserId);
+
+                if (response.StatusCode != StatusCodes.Status200OK)
+                {
+                    return response;
+                }
+
+                var chapterInputs = courseOrderSetting.ChapterOrders;
+                var lessonInputs = courseOrderSetting.ChapterOrders.SelectMany(x => x.LessonOrders).ToList();
+
+                // Kiểm tra có bị duplicate không
+                var chapterInputDistinct = chapterInputs.Distinct().Select(x => x.Id).ToList();
+                var lessonInputDistinct = lessonInputs.Distinct().Select(x => x.Id).ToList();
+
+                if (chapterInputs.Count != chapterInputDistinct.Count
+                    || lessonInputs.Count != lessonInputDistinct.Count)
+                {
+                    response.Error = "InvalidData";
+                    response.Message = "Duplicate order detected";
+                    response.StatusCode = StatusCodes.Status400BadRequest;
+                    return response;
+                }
+
+                var chapterEntities = await _context.Chapters
+                    .Where(chapter => chapter.CourseId == courseId && chapterInputDistinct.Contains(chapter.Id))
+                    .ToListAsync();
+
+                if (chapterEntities.Count != chapterInputDistinct.Count)
+                {
+                    response.Error = "InvalidData";
+                    response.Message = "Some chapters do not belong to the course";
+                    response.StatusCode = StatusCodes.Status400BadRequest;
+                    return response;
+                }
+
+                var lessonEntities = await _context.Lessons
+                    .Where(lesson => lesson.Chapter.CourseId == courseId && lessonInputDistinct.Contains(lesson.Id))
+                    .ToListAsync();
+
+                if (lessonEntities.Count != lessonInputDistinct.Count)
+                {
+                    response.Error = "InvalidData";
+                    response.Message = "Some lessons do not belong to the course";
+                    response.StatusCode = StatusCodes.Status400BadRequest;
+                    return response;
+                }
+
+                // Update order for chapters
+                Dictionary<Guid, int> chapterOrderDict = chapterInputs.ToDictionary(x => x.Id, x => x.Order);
+                foreach (var chapter in chapterEntities)
+                {
+                    if (chapter.Order != chapterOrderDict[chapter.Id])
+                    {
+                        chapter.Order = chapterOrderDict[chapter.Id];
+                    }
+                }
+
+                // Update order and chapterId for lessons
+                Dictionary<Guid, LessonOrder> lessonOrderDict = lessonInputs.ToDictionary(x => x.Id);
+                foreach (var lesson in lessonEntities)
+                {
+                    if (lesson.Order != lessonOrderDict[lesson.Id].Order
+                        || lesson.ChapterId != lessonOrderDict[lesson.Id].ChapterId)
+                    {
+                        lesson.Order = lessonOrderDict[lesson.Id].Order;
+                        lesson.ChapterId = lessonOrderDict[lesson.Id].ChapterId;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                ClearOwnedCoursesCache(currentUser.UserId);
+                response.Data.Add("courseOrderSetting", courseOrderSetting);
+
+                LogInfo("End", methodName);
+                return response;
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+        }
+
         private async Task<bool> CheckIfTeacherExists(int teacherId)
         {
             var userServiceGrpcURL = _configuration.GetValue<string>("ExternalServices:UserService:GrpcUrl");
@@ -486,6 +588,30 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
         {
             var cacheKey = CacheManager.OwnedCourses.Key(userId);
             _cacheService.RemoveData(cacheKey);
+        }
+
+        private async Task<ResponseInfo> CanModifyCourse(Guid courseId, int teacherId)
+        {
+            var responseInfo = new ResponseInfo();
+            var course = await _context.Courses.FindAsync(courseId);
+
+            if (course == null)
+            {
+                responseInfo.Error = "NotFound";
+                responseInfo.Message = "Course does not exist";
+                responseInfo.StatusCode = StatusCodes.Status404NotFound;
+                return responseInfo;
+            }
+
+            if (course.TeacherId != teacherId)
+            {
+                responseInfo.Error = "Unauthorized";
+                responseInfo.Message = "Unauthorized access";
+                responseInfo.StatusCode = StatusCodes.Status401Unauthorized;
+                return responseInfo;
+            }
+
+            return responseInfo;
         }
     }
 }

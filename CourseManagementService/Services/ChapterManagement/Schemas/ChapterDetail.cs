@@ -14,6 +14,8 @@ namespace CourseManagementService.Services.ChapterManagement.Schemas
 
         public string Duration { get; set; }
 
+        public bool IsPublished { get; set; }
+
         public List<LessonDetail> Lessons { get; set; }
     }
 }

@@ -15,12 +15,13 @@ namespace CourseManagementService.Services.ChapterManagement
         /// <para>Modified at: 2024/11/06 - TaiPV</para>
         /// </summary>
         /// <param name="courseId">Id of course</param>
-        public Task<List<ChapterDetail>> GetListOfChaptersByCourseId(Guid courseId);
+        /// <param name="isTeacher">Check if user is teacher</param>
+        public Task<List<ChapterDetail>> GetListOfChaptersByCourseId(Guid courseId, bool isTeacher = false);
     }
 
     public class ListOfChaptersService(IServiceProvider serviceProvider, ILogger<ListOfChaptersService> logger) : BaseService(serviceProvider, logger), IListOfChaptersService
     {
-        public async Task<List<ChapterDetail>> GetListOfChaptersByCourseId(Guid courseId)
+        public async Task<List<ChapterDetail>> GetListOfChaptersByCourseId(Guid courseId, bool isTeacher = false)
         {
             var method = GetActualAsyncMethodName();
             try
@@ -30,7 +31,7 @@ namespace CourseManagementService.Services.ChapterManagement
 
                 var chapters = await _context.Chapters
                     .OrderBy(c => c.Order)
-                    .Where(c => c.CourseId == courseId && c.IsPublished)
+                    .Where(c => c.CourseId == courseId && (isTeacher || c.IsPublished))
                     .Select(c => new ChapterDetail()
                     {
                         Id = c.Id,
@@ -38,7 +39,7 @@ namespace CourseManagementService.Services.ChapterManagement
                         Order = c.Order,
                         CourseId = c.CourseId,
                         Lessons = c.Lessons
-                            .Where(l => l.IsPublished)
+                            .Where(l => isTeacher || l.IsPublished)
                             .OrderBy(l => l.Order)
                             .ThenBy(l => l.IsPublished)
                             .Select(l => new LessonDetail()
@@ -51,9 +52,10 @@ namespace CourseManagementService.Services.ChapterManagement
                                 {
                                     Id = ((int)Enum.Parse(lessonTypesType, l.LessonType.ToString())).ToString(),
                                     Name = l.LessonType.ToString()
-                                },
+                                }
                             })
-                            .ToList()
+                            .ToList(),
+                        IsPublished = c.IsPublished
                     })
                     .ToListAsync();
 
