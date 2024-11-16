@@ -8,10 +8,8 @@ namespace CourseManagementService.Controllers
 {
     [Route("course-service/api/chapters", Order = 2)]
     [ApiController]
-    public class ChapterManagementController(IListOfChaptersService listOfChaptersService, IChapterDetailService chapterDetailService) : BaseController
+    public class ChapterManagementController(IChapterDetailService chapterDetailService) : BaseController
     {
-        private readonly IListOfChaptersService _listOfChaptersService = listOfChaptersService
-            ?? throw new ArgumentNullException(nameof(listOfChaptersService));
         private readonly IChapterDetailService _chapterDetailService = chapterDetailService
             ?? throw new ArgumentNullException(nameof(chapterDetailService));
 

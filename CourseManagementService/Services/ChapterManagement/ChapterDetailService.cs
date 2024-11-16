@@ -198,11 +198,17 @@ namespace CourseManagementService.Services.ChapterManagement
                     return response;
                 }
 
+                var currentChapterOrder = await _context.Chapters
+                    .Where(c => c.CourseId == chapterDetailCreate.CourseId)
+                    .Select(c => c.Order)
+                    .OrderByDescending(o => o)
+                    .FirstOrDefaultAsync();
+
                 var chapter = new TblChapter
                 {
                     Id = Guid.NewGuid(),
                     Name = chapterDetailCreate.Name,
-                    Order = chapterDetailCreate.Order,
+                    Order = currentChapterOrder + 1,
                     CourseId = chapterDetailCreate.CourseId,
                     IsPublished = chapterDetailCreate.IsPublished,
                 };
@@ -254,7 +260,6 @@ namespace CourseManagementService.Services.ChapterManagement
                 }
 
                 chapter.Name = chapterDetailUpdate.Name;
-                chapter.Order = chapterDetailUpdate.Order;
                 chapter.IsPublished = chapterDetailUpdate.IsPublished;
 
                 await _context.SaveChangesAsync();

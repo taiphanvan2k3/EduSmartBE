@@ -29,6 +29,18 @@ namespace CourseManagementService.Services.ChapterManagement
                 LogInfo("Start", method);
                 var lessonTypesType = typeof(LessonType);
 
+                if (!isTeacher)
+                {
+                    var currentUser = GetCurrentUser();
+                    var isCanAccessCourse = await _context.Courses.AnyAsync(course => course.Id == courseId
+                        && course.TeacherId == currentUser.UserId);
+                    if (!isCanAccessCourse)
+                    {
+                        LogError("Cannot access course", method);
+                        throw new UnauthorizedAccessException("User is not teacher");
+                    }
+                }
+
                 var chapters = await _context.Chapters
                     .OrderBy(c => c.Order)
                     .Where(c => c.CourseId == courseId && (isTeacher || c.IsPublished))
