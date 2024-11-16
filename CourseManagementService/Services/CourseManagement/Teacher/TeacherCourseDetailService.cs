@@ -18,6 +18,8 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
 {
     public interface ITeacherCourseDetailService
     {
+        public Task<TeachingAnalysis> GetTeachingAnalysis();
+
         /// <summary>
         /// Create a new course
         /// <para>Author: TaiPV</para>
@@ -92,6 +94,50 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
         private readonly ICacheService _cacheService = serviceProvider.GetRequiredService<ICacheService>()
             ?? throw new InvalidOperationException(ServiceInjectionError("ICacheService"));
 
+        public async Task<TeachingAnalysis> GetTeachingAnalysis()
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var teachingAnalysis = new TeachingAnalysis();
+
+                var currentUser = GetCurrentUser();
+                var cacheKey = CacheManager.TeachingAnalysis.Key(currentUser.UserId);
+                var cachedData = _cacheService.GetData<TeachingAnalysis>(cacheKey);
+
+                if (cachedData != null)
+                {
+                    LogInfo("End", methodName);
+                    return cachedData;
+                }
+
+                var ownedCourseQuantity = await _context.Courses
+                    .Where(x => x.TeacherId == currentUser.UserId)
+                    .CountAsync();
+
+                var studentQuantity = await _context.CourseEnrollments
+                    .Where(x => x.Course.TeacherId == currentUser.UserId)
+                    .Select(x => x.StudentId)
+                    .Distinct()
+                    .CountAsync();
+
+                teachingAnalysis.CourseQuantity = ownedCourseQuantity;
+                teachingAnalysis.StudentQuantity = studentQuantity;
+
+                _cacheService.SetData(cacheKey, teachingAnalysis,
+                    DateTimeOffset.Now.AddMinutes(CacheManager.TeachingAnalysis.ExpireTimeInMinutes));
+
+                LogInfo("End", methodName);
+                return teachingAnalysis;
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+        }
+
         public async Task<ResponseInfo> CreateCourse(CourseCreateDto courseCreateDto)
         {
             var methodName = GetActualAsyncMethodName();
@@ -162,9 +208,6 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                 await _context.Courses.AddAsync(newCourse);
                 await _context.SaveChangesAsync();
 
-                // Clear the cache of owned courses
-                ClearOwnedCoursesCache(_appStateService.UserInfo.UserId);
-
                 if (courseCreateDto.Thumbnail != null)
                 {
                     await StartUploadImageToCloudinaryJob(courseCreateDto.Thumbnail, newCourse.Id);
@@ -182,6 +225,10 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                 })
                 .ToList();
                 courseDto.CurrencyCode = currencyTask.Result.Code;
+
+                // Clear the cache of owned courses
+                ClearOwnedCoursesCache(_appStateService.UserInfo.UserId);
+                _cacheService.RemoveData(CacheManager.TeachingAnalysis.Key(_appStateService.UserInfo.UserId));
 
                 response.Data.Add("Course", courseDto);
                 return response;
@@ -231,6 +278,7 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
 
                 // Clear the cache of owned courses
                 ClearOwnedCoursesCache(_appStateService.UserInfo.UserId);
+                _cacheService.RemoveData(CacheManager.TeachingAnalysis.Key(_appStateService.UserInfo.UserId));
 
                 response.Message = "Course deleted successfully";
                 return response;
