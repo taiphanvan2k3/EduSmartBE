@@ -127,7 +127,9 @@ namespace CourseManagementService.Services.CourseManagement.Public
                 courseDetail.Course.PreviewVideoURL = _videoService.GetVideoURLWithSAS(courseDetail.Course.PreviewVideoURL);
 
                 await FillTeacherInfo(courseDetail);
-                courseDetail.Chapters = await _chapterService.GetListOfChaptersByCourseId(courseId);
+
+                var isTeacher = currentUser != null && courseDetail.Teacher.Id == currentUser.UserId;
+                courseDetail.Chapters = await _chapterService.GetListOfChaptersByCourseId(courseId, isTeacher);
 
                 if (courseDetail.Course.IsRegistered)
                 {

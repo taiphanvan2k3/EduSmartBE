@@ -35,6 +35,8 @@ namespace CourseManagementService.Services.CourseManagement.Teacher.Schemas
 
         public List<int> TagIds { get; set; }
 
+        public bool IsPublished { get; set; }
+
         public CourseUpdateDto()
         {
             TagIds = [];
