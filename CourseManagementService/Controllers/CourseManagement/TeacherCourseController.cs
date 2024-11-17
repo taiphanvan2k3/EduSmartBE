@@ -59,6 +59,35 @@ namespace CourseManagementService.Controllers.CourseManagement
         }
 
         /// <summary>
+        /// Get all students that enrolled in courses that teacher created
+        /// <para>Created by: TaiPV</para>
+        /// <para>Created at: 2024/11/17</para>
+        /// </summary>
+        [HttpGet("courses/students")]
+        [ProducesResponseType(typeof(PaginatedList<StudentEnrollmentDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetStudentsEnrollment([FromQuery] ParamsSearch paramsSearch)
+        {
+            var students = await _teacherCourseDetailService.GetStudentEnrollments(paramsSearch);
+            return Ok(students);
+        }
+
+        /// <summary>
+        /// Get all students that enrolled in a course
+        /// <para>Created by: TaiPV</para>
+        /// <para>Created at: 2024/11/17</para>
+        /// </summary>
+        /// <param name="courseId">Id of course is need for get students</param>
+        /// <param name="paramsSearch">Pagination information</param>
+        /// <returns></returns>
+        [HttpGet("courses/{courseId}/students")]
+        [ProducesResponseType(typeof(PaginatedList<StudentEnrollmentDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetStudentsEnrollment([FromRoute] Guid courseId, [FromQuery] ParamsSearch paramsSearch)
+        {
+            var students = await _teacherCourseDetailService.GetStudentEnrollmentsByCourse(courseId, paramsSearch);
+            return Ok(students);
+        }
+
+        /// <summary>
         /// Create a new course
         /// <para>Created by: TaiPV</para> 
         /// <para>Created at: 2024/10/02</para>
@@ -70,9 +99,9 @@ namespace CourseManagementService.Controllers.CourseManagement
         ///     1: Tutorial
         ///     2: Direct - A course that is live and interactive
         ///
-        /// CurrencyType (Passing as integer)
+        /// CurrencyType (Enum)
         /// 
-        ///     1: VNĐ
+        ///     1: VND
         ///     2: USD
         /// </remarks>
         [HttpPost("courses")]
