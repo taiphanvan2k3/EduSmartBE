@@ -29,6 +29,21 @@ namespace CourseManagementService.Services.Cache
             public static int ExpireTimeInMinutes => 10;
         }
 
+        public static class StudentEnrollments
+        {
+            public static class Overall
+            {
+                public static string Key(int userId, int currentPage, int pageSize) => $"StudentEnrollments_Overall_{userId}_{currentPage}_{pageSize}";
+                public static int ExpireTimeInMinutes => 10;
+            }
+
+            public static class InCourse
+            {
+                public static string Key(Guid courseId, int currentPage, int pageSize) => $"StudentEnrollments_InCourse_{courseId}_{currentPage}_{pageSize}";
+                public static int ExpireTimeInMinutes => 10;
+            }
+        }
+
         public static class CourseSearch
         {
             public static string Key(string keyword, int currentPage, int pageSize) => $"CourseSearch_{keyword}_{currentPage}_{pageSize}";
