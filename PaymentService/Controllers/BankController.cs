@@ -8,7 +8,7 @@ namespace PaymentService.Controllers
 {
     [Route("payment-service/api/banks")]
     [ApiController]
-    public class BankController(IBankService bankService) : ControllerBase
+    public class BankController(IBankService bankService) : BaseController
     {
         private readonly IBankService _bankService = bankService ?? throw new ArgumentNullException(nameof(bankService));
 
@@ -24,15 +24,8 @@ namespace PaymentService.Controllers
         [ProducesResponseType(typeof(List<BankDto>), StatusCodes.Status200OK)]
         public async Task<ActionResult> GetBanks()
         {
-            try
-            {
-                var banks = await _bankService.GetBanksAsync();
-                return Ok(banks);
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ErrorResponseHelper.GetContentOfInternalServerResponse(e));
-            }
+            ResponseInfo banks = await _bankService.GetBanksAsync();
+            return HandleResponseInfo(banks, resourceName: "banks");
         }
 
         /// <summary>
