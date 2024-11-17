@@ -112,6 +112,8 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
             ?? throw new InvalidOperationException(ServiceInjectionError("IConfiguration"));
         private readonly IPhotoService _photoService = serviceProvider.GetRequiredService<IPhotoService>()
             ?? throw new InvalidOperationException(ServiceInjectionError("IPhotoService"));
+        private readonly IVideoService _videoService = serviceProvider.GetRequiredService<IVideoService>()
+            ?? throw new InvalidOperationException(ServiceInjectionError("IVideoService"));
         private readonly IMapper _mapper = serviceProvider.GetRequiredService<IMapper>()
             ?? throw new InvalidOperationException(ServiceInjectionError("IMapper"));
         private readonly IGrpcUserService _grpcUserService = serviceProvider.GetRequiredService<IGrpcUserService>()
@@ -352,56 +354,6 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
             }
         }
 
-        public async Task<ResponseInfo> DeleteCourse(Guid id)
-        {
-            var methodName = GetActualAsyncMethodName();
-            try
-            {
-                _logger.LogInformation("[{ServiceName}] {MethodName} Start", _serviceName, methodName);
-                var response = new ResponseInfo();
-
-                var course = await _context.Courses.FindAsync(id);
-                if (course == null)
-                {
-                    response.Error = "NotFound";
-                    response.Message = "Course does not exist";
-                    response.StatusCode = StatusCodes.Status404NotFound;
-                    return response;
-                }
-
-                if (course.TeacherId != _appStateService.UserInfo.UserId)
-                {
-                    response.Error = "Unauthorized";
-                    response.Message = "Unauthorized access";
-                    response.StatusCode = StatusCodes.Status401Unauthorized;
-                    return response;
-                }
-
-                var isExistEnrollment = await _context.CourseEnrollments.AnyAsync(x => x.CourseId == id);
-                if (isExistEnrollment)
-                {
-                    response.Error = "DeleteNotAllowed";
-                    response.Message = "Course has enrollments";
-                    response.StatusCode = StatusCodes.Status400BadRequest;
-                    return response;
-                }
-
-                await _context.Courses.Where(x => x.Id == id).ExecuteDeleteAsync();
-
-                // Clear the cache of owned courses
-                ClearOwnedCoursesCache(_appStateService.UserInfo.UserId);
-                _cacheService.RemoveData(CacheManager.TeachingAnalysis.Key(_appStateService.UserInfo.UserId));
-
-                response.Message = "Course deleted successfully";
-                return response;
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "[{ServiceName}] {MethodName} Error", _serviceName, methodName);
-                throw;
-            }
-        }
-
         public async Task<ResponseInfo> UpdateCourse(Guid id, CourseUpdateDto courseUpdateDto)
         {
             var methodName = GetActualAsyncMethodName();
@@ -463,20 +415,25 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                 course.CurrencyId = (int)courseUpdateDto.Currency;
                 course.IsPublished = courseUpdateDto.IsPublished;
 
-                if (course.ThumbnailURL.StartsWith(Constants.CLOUDINARY_URL_PREFIX)
-                    && course.ThumbnailURL != Constants.DEFAULT_COURSE_THUMBNAIL)
-                {
-                    await StartDeleteImageFromCloudinaryJob(course.ThumbnailURL);
-                }
-
                 if (courseUpdateDto.Thumbnail != null)
                 {
+                    if (course.ThumbnailURL.StartsWith(Constants.CLOUDINARY_URL_PREFIX)
+                        && course.ThumbnailURL != Constants.DEFAULT_COURSE_THUMBNAIL)
+                    {
+                        await StartDeleteImageFromCloudinaryJob(course.ThumbnailURL);
+                    }
+
                     course.ThumbnailURL = Constants.IN_PROGRESS_THUMBNAIL;
                     await StartUploadImageToCloudinaryJob(courseUpdateDto.Thumbnail, course.Id);
                 }
-                else
+
+                if (courseUpdateDto.PreviewVideo != null)
                 {
-                    course.ThumbnailURL = Constants.DEFAULT_COURSE_THUMBNAIL;
+                    if (course.PreviewVideoURL != null && course.PreviewVideoURL.StartsWith(Constants.AZURE_STORAGE_URL_PREFIX))
+                    {
+                        await _videoService.DeleteVideoAsync(course.PreviewVideoURL);
+                    }
+                    await StartUploadPreviewVideoJob(courseUpdateDto.PreviewVideo, course.Id);
                 }
 
                 await _context.CourseTags.Where(x => x.CourseId == id).ExecuteDeleteAsync();
@@ -487,7 +444,11 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                 await _context.SaveChangesAsync();
 
                 // Clear the cache of owned courses
+                // TODO: Clear cache for public course detail API in a background job
                 ClearOwnedCoursesCache(_appStateService.UserInfo.UserId);
+
+                // Clear cache for public course detail API
+                await _cacheService.RemoveDataByPattern(CacheManager.CourseDetail.PrefixKey);
 
                 var courseDto = _mapper.Map<CourseDto>(course);
                 courseDto.Tags = course.Tags.Select(x => new LookupDto
@@ -654,6 +615,56 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
             catch (Exception e)
             {
                 LogError(e, methodName);
+                throw;
+            }
+        }
+
+        public async Task<ResponseInfo> DeleteCourse(Guid id)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                _logger.LogInformation("[{ServiceName}] {MethodName} Start", _serviceName, methodName);
+                var response = new ResponseInfo();
+
+                var course = await _context.Courses.FindAsync(id);
+                if (course == null)
+                {
+                    response.Error = "NotFound";
+                    response.Message = "Course does not exist";
+                    response.StatusCode = StatusCodes.Status404NotFound;
+                    return response;
+                }
+
+                if (course.TeacherId != _appStateService.UserInfo.UserId)
+                {
+                    response.Error = "Unauthorized";
+                    response.Message = "Unauthorized access";
+                    response.StatusCode = StatusCodes.Status401Unauthorized;
+                    return response;
+                }
+
+                var isExistEnrollment = await _context.CourseEnrollments.AnyAsync(x => x.CourseId == id);
+                if (isExistEnrollment)
+                {
+                    response.Error = "DeleteNotAllowed";
+                    response.Message = "Course has enrollments";
+                    response.StatusCode = StatusCodes.Status400BadRequest;
+                    return response;
+                }
+
+                await _context.Courses.Where(x => x.Id == id).ExecuteDeleteAsync();
+
+                // Clear the cache of owned courses
+                ClearOwnedCoursesCache(_appStateService.UserInfo.UserId);
+                _cacheService.RemoveData(CacheManager.TeachingAnalysis.Key(_appStateService.UserInfo.UserId));
+
+                response.Message = "Course deleted successfully";
+                return response;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[{ServiceName}] {MethodName} Error", _serviceName, methodName);
                 throw;
             }
         }
