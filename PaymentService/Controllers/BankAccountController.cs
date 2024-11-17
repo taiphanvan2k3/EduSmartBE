@@ -5,14 +5,16 @@ using PaymentService.Services.BankAccounts.Schemas;
 
 namespace PaymentService.Controllers
 {
+    [Route("payment-service/api/bank-accounts")]
+    [ApiController]
     public class BankAccountController(IBankAccountService bankAccountService) : ControllerBase
     {
         private readonly IBankAccountService _bankAccountService = bankAccountService ?? throw new ArgumentNullException(nameof(bankAccountService));
-        
+
         /// <summary>
         /// Get bank accounts
-        /// <para>Author: ManhTD</para>
         /// <para>Created at: 9/11/2024</para>
+        /// <para>Created by ManhTD</para>
         /// </summary>
         /// <param name="bankAccount"></param>
         /// <returns></returns>
@@ -34,8 +36,8 @@ namespace PaymentService.Controllers
 
         /// <summary>
         /// Get bank accounts
-        /// <para>Author: ManhTD</para>
         /// <para>Created at: 9/11/2024</para>
+        /// <para>Created by ManhTD</para>
         /// </summary>
         /// <param name="bankAccount"></param>
         /// <returns></returns>
@@ -57,8 +59,8 @@ namespace PaymentService.Controllers
 
         /// <summary>
         /// Delete bank account
-        /// <para>Author: ManhTD</para>
         /// <para>Created at: 9/11/2024</para>
+        /// <para>Created by ManhTD</para>
         /// </summary>
         /// <param name="bankAccountId"></param>
         /// <returns></returns>
@@ -80,8 +82,8 @@ namespace PaymentService.Controllers
 
         /// <summary>
         /// Get bank account
-        /// <para>Author: ManhTD</para>
         /// <para>Created at: 9/11/2024</para>
+        /// <para>Created by ManhTD</para>
         /// </summary>
         /// <param name="bankAccountId"></param>
         /// <returns></returns>

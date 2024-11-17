@@ -17,11 +17,11 @@ namespace PaymentService.Controllers
 
         private readonly IWithdrawalRequestService _withdrawalRequestService = withdrawalRequestService
             ?? throw new ArgumentNullException(nameof(withdrawalRequestService));
-        
+
         /// <summary>
         /// Get withdrawal requests
-        /// <para>Author: ManhTD</para>
         /// <para>Created at: 9/11/2024</para>
+        /// <para>Created by ManhTD</para>
         /// </summary>
         /// <param name="searchCondition"></param>
         /// <returns></returns>
@@ -45,8 +45,8 @@ namespace PaymentService.Controllers
 
         /// <summary>
         /// Get withdrawal requests by user id
-        /// <para>Author: ManhTD</para>
         /// <para>Created at: 9/11/2024</para>
+        /// <para>Created by ManhTD</para>
         /// </summary>
         /// <param name="searchCondition"></param>
         /// <returns></returns>
@@ -64,7 +64,7 @@ namespace PaymentService.Controllers
             try
             {
                 var userId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "userId")?.Value;
-                
+
                 var withdrawalRequests = await _listOfWithdrawalRequestService.GetWithdrawalRequestsByUserIdAsync(int.Parse(userId), searchCondition);
                 return Ok(withdrawalRequests);
             }
@@ -76,8 +76,8 @@ namespace PaymentService.Controllers
 
         /// <summary>
         /// Add withdrawal request
-        /// <para>Author: ManhTD</para>
         /// <para>Created at: 9/11/2024</para>
+        /// <para>Created by by ManhTD</para>
         /// </summary>
         /// <param name="withdrawalRequest"></param>
         /// <returns></returns>
@@ -101,8 +101,8 @@ namespace PaymentService.Controllers
 
         /// <summary>
         /// Get withdrawal request by id
-        /// <para>Author: ManhTD</para>
         /// <para>Created at: 9/11/2024</para>
+        /// <para>Created by ManhTD</para>
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -126,8 +126,8 @@ namespace PaymentService.Controllers
 
         /// <summary>
         /// Update withdrawal request status
-        /// <para>Author: ManhTD</para>
         /// <para>Created at: 9/11/2024</para>
+        /// <para>Created by by by ManhTD</para>
         /// </summary>
         /// <param name="withdrawalRequest"></param>
         /// <returns></returns>
@@ -151,8 +151,8 @@ namespace PaymentService.Controllers
 
         /// <summary>
         /// Delete withdrawal request
-        /// <para>Author: ManhTD</para>
         /// <para>Created at: 9/11/2024</para>
+        /// <para>Created by ManhTD</para>
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>

@@ -15,32 +15,41 @@ namespace PaymentService.Databases
 
                 entity.HasMany(e => e.BankAccounts)
                     .WithOne(ba => ba.Bank)
-                    .HasForeignKey(ba => ba.BankId);
+                    .HasForeignKey(ba => ba.BankId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<BankAccount>(entity =>
             {
                 entity.ToTable("BankAccounts");
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id).ValueGeneratedNever();
 
                 entity.HasMany(e => e.WithdrawalRequests)
                     .WithOne(wr => wr.BankAccount)
-                    .HasForeignKey(wr => wr.BankAccountId);
+                    .HasForeignKey(wr => wr.BankAccountId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
-            
+
             modelBuilder.Entity<StudentTransaction>(entity =>
             {
                 entity.ToTable("StudentTransactions");
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id).ValueGeneratedNever();
+
+                entity.Property(e => e.OrderStatus)
+                    .HasConversion<string>();
             });
 
             modelBuilder.Entity<TeacherEarning>(entity =>
             {
                 entity.ToTable("TeacherEarnings");
                 entity.HasKey(e => e.UserId);
+
                 entity.Property(e => e.UserId).ValueGeneratedNever();
+
+                entity.HasMany(e => e.WithdrawalRequests)
+                    .WithOne(wr => wr.TeacherEarning)
+                    .HasForeignKey(wr => wr.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<WithdrawalRequest>(entity =>
@@ -51,6 +60,33 @@ namespace PaymentService.Databases
             });
 
             return modelBuilder;
+        }
+
+        public static void ConfigureForBaseEntity(ModelBuilder modelBuilder)
+        {
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                var createdAtProperty = entityType.ClrType.GetProperty("CreatedAt");
+                var updatedAtProperty = entityType.ClrType.GetProperty("UpdatedAt");
+
+                if (createdAtProperty != null)
+                {
+                    modelBuilder.Entity(entityType.ClrType)
+                        .Property(createdAtProperty.Name)
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                        .ValueGeneratedOnAdd()
+                        .IsRequired();
+                }
+
+                if (updatedAtProperty != null)
+                {
+                    modelBuilder.Entity(entityType.ClrType)
+                        .Property(updatedAtProperty.Name)
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .IsRequired();
+                }
+            }
         }
     }
 }

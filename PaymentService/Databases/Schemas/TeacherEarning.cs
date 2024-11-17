@@ -6,6 +6,8 @@ namespace PaymentService.Databases.Schemas
 
         public decimal CurrentBalance { get; set; }
 
-        public decimal TotalEarnings { get; set; }
+        public decimal TotalWithdrawn { get; set; }
+
+        public virtual ICollection<WithdrawalRequest> WithdrawalRequests { get; set; } = [];
     }
 }

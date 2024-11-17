@@ -33,7 +33,7 @@ namespace PaymentService.Services.Banks
         /// </summary>
         /// <param name="bankId"></param>
         /// <returns></returns>
-        public Task<ResponseInfo> DeleteBankAsync(Guid bankId);
+        public Task<ResponseInfo> DeleteBankAsync(int bankId);
 
         /// <summary>
         /// Get bank by id
@@ -42,7 +42,7 @@ namespace PaymentService.Services.Banks
         /// </summary>
         /// <param name="bankId"></param>
         /// <returns></returns>
-        public Task<ResponseInfo> GetBankAsync(Guid bankId);
+        public Task<ResponseInfo> GetBankAsync(int bankId);
 
         /// <summary>
         /// Get list of banks
@@ -127,7 +127,7 @@ namespace PaymentService.Services.Banks
             }
         }
 
-        public Task<ResponseInfo> DeleteBankAsync(Guid bankId)
+        public Task<ResponseInfo> DeleteBankAsync(int bankId)
         {
             var methodName = GetActualAsyncMethodName();
             try
@@ -159,7 +159,7 @@ namespace PaymentService.Services.Banks
             }
         }
 
-        public Task<ResponseInfo> GetBankAsync(Guid bankId)
+        public Task<ResponseInfo> GetBankAsync(int bankId)
         {
             var methodName = GetActualAsyncMethodName();
             try
