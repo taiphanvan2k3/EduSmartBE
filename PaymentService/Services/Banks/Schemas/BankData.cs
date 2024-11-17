@@ -1,8 +1,8 @@
 namespace PaymentService.Services.Banks.Schemas
 {
-    public class BankDto
+    public class BankData
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         public string Name { get; set; }
 

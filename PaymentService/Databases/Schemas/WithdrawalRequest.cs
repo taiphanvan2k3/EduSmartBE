@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using PaymentService.Enumerations;
 
 namespace PaymentService.Databases.Schemas
@@ -12,12 +13,19 @@ namespace PaymentService.Databases.Schemas
 
         public Guid BankAccountId { get; set; }
 
+        [MaxLength(1000)]
+        public string Note { get; set; }
+
         public RequestStatus Status { get; set; }
 
-        public DateTime RequestedAt { get; set; }
+        public DateTimeOffset RequestedAt { get; set; }
 
-        public DateTime? ApprovedAt { get; set; }
+        public DateTimeOffset? ApprovedAt { get; set; }
+
+        public int ApprovedBy { get; set; }
 
         public virtual BankAccount BankAccount { get; set; }
+
+        public virtual TeacherEarning TeacherEarning { get; set; }
     }
 }

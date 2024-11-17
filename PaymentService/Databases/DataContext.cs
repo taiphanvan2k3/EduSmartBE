@@ -24,6 +24,7 @@ namespace PaymentService.Databases
         {
             base.OnModelCreating(builder);
             ModelCreate.OnModelCreating(builder);
+            ModelCreate.ConfigureForBaseEntity(builder);
         }
 
         public DbConnection GetConnection()
