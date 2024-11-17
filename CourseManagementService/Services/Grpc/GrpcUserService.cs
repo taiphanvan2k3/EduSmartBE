@@ -7,6 +7,7 @@ namespace CourseManagementService.Services.Grpc
     {
         public Task<bool> CheckIfTeacherExists(int teacherId);
         public Task<ListOfUsersResponse> GetListOfTeachers(List<int> teacherIds);
+        public Task<ListOfUsersResponse> GetListOfStudents(List<int> studentIds);
         public Task<ListOfUsersResponse> GetTeachersByName(string name);
     }
 
@@ -46,6 +47,23 @@ namespace CourseManagementService.Services.Grpc
                 _logger.LogInformation("[{ServiceName}] {MethodName} Start", _serviceName, methodName);
                 var client = new User.UserClient(_channel);
                 var response = await client.GetListOfTeachersAsync(new UsersRequest { Ids = { teacherIds } });
+                return response;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[{ServiceName}] {MethodName} Error", _serviceName, methodName);
+                throw;
+            }
+        }
+
+        public async Task<ListOfUsersResponse> GetListOfStudents(List<int> studentIds)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                _logger.LogInformation("[{ServiceName}] {MethodName} Start", _serviceName, methodName);
+                var client = new User.UserClient(_channel);
+                var response = await client.GetListOfStudentsAsync(new UsersRequest { Ids = { studentIds } });
                 return response;
             }
             catch (Exception e)
