@@ -1,7 +1,5 @@
 {
-    "code": "00",
-    "desc": "Get Bank list successful! Total 63 banks",
-    "data": [
+    "banks": [
         {
             "id": 17,
             "name": "Ngân hàng TMCP Công thương Việt Nam",
