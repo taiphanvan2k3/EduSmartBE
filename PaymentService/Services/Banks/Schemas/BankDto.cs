@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace PaymentService.Services.Banks.Schemas
 {
     public class BankDto
@@ -10,6 +12,7 @@ namespace PaymentService.Services.Banks.Schemas
 
         public string Bin { get; set; }
 
-        public string LogoUrl { get; set; }
+        [JsonPropertyName("logo")]
+        public string LogoURL { get; set; }
     }
 }
