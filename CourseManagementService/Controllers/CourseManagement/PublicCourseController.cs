@@ -156,6 +156,7 @@ namespace CourseManagementService.Controllers.CourseManagement
         /// <returns></returns>
         /// <response code="200">Return list of tags</response>
         /// <response code="500">Internal server error</response>
+        [Filters.Auth(Roles = "Teacher")]
         [HttpGet("tags")]
         [ProducesResponseType(typeof(List<TagDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetTags()

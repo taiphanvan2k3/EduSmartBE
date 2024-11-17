@@ -2,6 +2,8 @@ using AutoMapper;
 using CourseManagementService.BackgroundServices;
 using CourseManagementService.Common;
 using CourseManagementService.Common.Helpers;
+using CourseManagementService.Common.Schemas;
+using CourseManagementService.Extensions;
 using CourseManagementService.GrpcServices;
 using CourseManagementService.Services.Cache;
 using CourseManagementService.Services.CourseManagement.Public.Schemas;
@@ -18,7 +20,32 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
 {
     public interface ITeacherCourseDetailService
     {
+        /// <summary>
+        /// Get teaching analysis of current teacher
+        /// <para>Author: TaiPV</para>
+        /// <para>Created at: 2024/11/17</para>
+        /// </summary>
+        /// <returns></returns>
         public Task<TeachingAnalysis> GetTeachingAnalysis();
+
+        /// <summary>
+        /// Get student enrollments of a course
+        /// <para>Author: TaiPV</para>
+        /// <para>Created at: 2024/11/17</para>
+        /// </summary>
+        /// <param name="paramsSearch">Search parameters</param>
+        /// <returns></returns>
+        public Task<PaginatedList<StudentEnrollmentOverall>> GetStudentEnrollments(ParamsSearch paramsSearch);
+
+        /// <summary>
+        /// Get student enrollments of a course
+        /// <para>Author: TaiPV</para>
+        /// <para>Created at: 2024/11/17</para>
+        /// </summary>
+        /// <param name="courseId">Id of the course</param>
+        /// <param name="paramsSearch">Search parameters</param>
+        /// <returns></returns>
+        public Task<PaginatedList<StudentEnrollmentInCourse>> GetStudentEnrollmentsByCourse(Guid courseId, ParamsSearch paramsSearch);
 
         /// <summary>
         /// Create a new course
@@ -130,6 +157,91 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
 
                 LogInfo("End", methodName);
                 return teachingAnalysis;
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+        }
+
+        public async Task<PaginatedList<StudentEnrollmentOverall>> GetStudentEnrollments(ParamsSearch paramsSearch)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var currentUser = GetCurrentUser();
+
+                var cacheKey = CacheManager.StudentEnrollments.Overall.Key(currentUser.UserId, paramsSearch.CurrentPage, paramsSearch.PageSize);
+                var cachedData = _cacheService.GetData<PaginatedList<StudentEnrollmentOverall>>(cacheKey);
+                if (cachedData != null)
+                {
+                    LogInfo("End", methodName);
+                    return cachedData;
+                }
+
+                var studentEnrollments = await _context.CourseEnrollments
+                    .Where(x => x.Course.TeacherId == currentUser.UserId)
+                    .GroupBy(x => x.StudentId)
+                    .Select(g => new StudentEnrollmentOverall
+                    {
+                        StudentId = g.Key,
+                        EnrollmentCount = g.Count()
+                    })
+                    .ToPaginatedListAsync(paramsSearch.CurrentPage, paramsSearch.PageSize);
+
+                await FillStudentInfo(studentEnrollments.Items);
+
+                _cacheService.SetData(cacheKey, studentEnrollments,
+                    DateTimeOffset.Now.AddMinutes(CacheManager.StudentEnrollments.Overall.ExpireTimeInMinutes));
+
+                LogInfo("End", methodName);
+                return studentEnrollments;
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+        }
+
+        public async Task<PaginatedList<StudentEnrollmentInCourse>> GetStudentEnrollmentsByCourse(Guid courseId, ParamsSearch paramsSearch)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var currentUser = GetCurrentUser();
+
+                var cacheKey = CacheManager.StudentEnrollments.InCourse.Key(courseId, paramsSearch.CurrentPage, paramsSearch.PageSize);
+                var cachedData = _cacheService.GetData<PaginatedList<StudentEnrollmentInCourse>>(cacheKey);
+                if (cachedData != null)
+                {
+                    LogInfo("End", methodName);
+                    return cachedData;
+                }
+
+                var studentEnrollments = await _context.CourseEnrollments
+                    .Where(x => x.CourseId == courseId && x.Course.TeacherId == currentUser.UserId)
+                    .Select(x => new StudentEnrollmentInCourse()
+                    {
+                        StudentId = x.StudentId,
+                        EnrollmentDate = x.EnrollmentDate,
+                        LeaveDate = x.LeaveDate,
+
+                        // TODO: Check whether the student is still can access the course
+                        IsActive = true
+                    })
+                    .ToPaginatedListAsync(paramsSearch.CurrentPage, paramsSearch.PageSize);
+
+                await FillStudentInfo(studentEnrollments.Items);
+
+                _cacheService.SetData(cacheKey, studentEnrollments,
+                    DateTimeOffset.Now.AddMinutes(CacheManager.StudentEnrollments.InCourse.ExpireTimeInMinutes));
+
+                LogInfo("End", methodName);
+                return studentEnrollments;
             }
             catch (Exception e)
             {
@@ -632,12 +744,6 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
             await _mediaProducer.EnqueueDataAsync(backgroundJobData);
         }
 
-        private void ClearOwnedCoursesCache(int userId)
-        {
-            var cacheKey = CacheManager.OwnedCourses.Key(userId);
-            _cacheService.RemoveData(cacheKey);
-        }
-
         private async Task<ResponseInfo> CanModifyCourse(Guid courseId, int teacherId)
         {
             var responseInfo = new ResponseInfo();
@@ -660,6 +766,28 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
             }
 
             return responseInfo;
+        }
+
+        private async Task FillStudentInfo<T>(List<T> studentEnrollments) where T : StudentEnrollmentDto
+        {
+            var studentIds = studentEnrollments.Select(x => x.StudentId).ToList();
+            var students = await _grpcUserService.GetListOfStudents(studentIds);
+            Dictionary<int, SimpleUserResponse> studentDict = students.Users.ToDictionary(x => x.Id);
+
+            foreach (var studentEnrollment in studentEnrollments.Where(x => studentDict.ContainsKey(x.StudentId)))
+            {
+                var student = studentDict[studentEnrollment.StudentId];
+                studentEnrollment.Username = student.UserName;
+                studentEnrollment.FullName = student.FullName;
+                studentEnrollment.Email = student.Email;
+                studentEnrollment.AvatarURL = student.AvatarURL;
+            }
+        }
+
+        private void ClearOwnedCoursesCache(int userId)
+        {
+            var cacheKey = CacheManager.OwnedCourses.Key(userId);
+            _cacheService.RemoveData(cacheKey);
         }
     }
 }
