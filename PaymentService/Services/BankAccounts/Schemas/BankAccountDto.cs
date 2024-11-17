@@ -4,7 +4,7 @@ namespace PaymentService.Services.BankAccounts.Schemas
     {
         public Guid Id { get; set; }
 
-        public Guid BankId  { get; set; }
+        public int BankId  { get; set; }
 
         public int UserId { get; set; }
 

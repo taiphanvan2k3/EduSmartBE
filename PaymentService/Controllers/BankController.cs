@@ -11,11 +11,11 @@ namespace PaymentService.Controllers
     public class BankController(IBankService bankService) : ControllerBase
     {
         private readonly IBankService _bankService = bankService ?? throw new ArgumentNullException(nameof(bankService));
-        
+
         /// <summary>
         /// Get banks
-        /// <para>Author: ManhTD</para>
         /// <para>Created at: 9/11/2024</para>
+        /// <para>Created by ManhTD</para>
         /// </summary>
         /// <returns></returns>
         /// <response code="200">Withdrawal request</response>
@@ -37,8 +37,8 @@ namespace PaymentService.Controllers
 
         /// <summary>
         /// Add bank
-        /// <para>Author: ManhTD</para>
         /// <para>Created at: 9/11/2024</para>
+        /// <para>Created by ManhTD</para>
         /// </summary>
         /// <param name="bank"></param>
         /// <returns></returns>
@@ -61,8 +61,8 @@ namespace PaymentService.Controllers
 
         /// <summary>
         /// Update bank
-        /// <para>Author: ManhTD</para>
         /// <para>Created at: 9/11/2024</para>
+        /// <para>Created by by ManhTD</para>
         /// </summary>
         /// <param name="bank"></param>
         /// <returns></returns>
@@ -85,8 +85,8 @@ namespace PaymentService.Controllers
 
         /// <summary>
         /// Delete bank
-        /// <para>Author: ManhTD</para>
         /// <para>Created at: 9/11/2024</para>
+        /// <para>Created by by ManhTD</para>
         /// </summary>
         /// <param name="bankId"></param>
         /// <returns></returns>
@@ -94,7 +94,7 @@ namespace PaymentService.Controllers
         /// <response code="500">Internal server error</response>
         [HttpDelete("{bankId}")]
         [ProducesResponseType(typeof(ResponseInfo), StatusCodes.Status200OK)]
-        public async Task<ActionResult> DeleteBank(Guid bankId)
+        public async Task<ActionResult> DeleteBank(int bankId)
         {
             try
             {
@@ -109,8 +109,8 @@ namespace PaymentService.Controllers
 
         /// <summary>
         /// Get bank
-        /// <para>Author: ManhTD</para>
         /// <para>Created at: 9/11/2024</para>
+        /// <para>Created by ManhTD</para>
         /// </summary>
         /// <param name="bankId"></param>
         /// <returns></returns>
@@ -118,7 +118,7 @@ namespace PaymentService.Controllers
         /// <response code="500">Internal server error</response>
         [HttpGet("{bankId}")]
         [ProducesResponseType(typeof(BankDto), StatusCodes.Status200OK)]
-        public async Task<ActionResult> GetBank(Guid bankId)
+        public async Task<ActionResult> GetBank(int bankId)
         {
             try
             {

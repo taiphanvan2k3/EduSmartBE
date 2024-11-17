@@ -44,7 +44,6 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
         options.RouteTemplate = "payment-service/swagger/{documentName}/swagger.json";
     });
 
-
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/payment-service/swagger/v1/swagger.json", "Payment API V1");

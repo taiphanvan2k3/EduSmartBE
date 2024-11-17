@@ -1,16 +1,28 @@
+using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
+
 namespace PaymentService.Databases.Schemas
 {
     public class Bank : BaseEntity
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
 
+        [Required]
+        [MaxLength(255)]
         public string Name { get; set; }
 
-        public string Code { get; set; }
+        [Required]
+        [MaxLength(100)]
+        public string ShortName { get; set; }
 
-        public string SwiftCode { get; set; }
+        // Example: 970415 -> VietinBank
+        [Required]
+        [MaxLength(10)]
+        [Comment("Bank Identification Number")]
+        public string Bin { get; set; }
 
-        public string LogoUrl { get; set; }
+        [MaxLength(255)]
+        public string LogoURL { get; set; }
 
         public virtual ICollection<BankAccount> BankAccounts { get; set; } = [];
     }
