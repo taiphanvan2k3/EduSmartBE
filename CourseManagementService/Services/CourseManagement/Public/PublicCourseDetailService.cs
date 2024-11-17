@@ -135,7 +135,8 @@ namespace CourseManagementService.Services.CourseManagement.Public
                             TotalStudents = x.Enrollments.Count,
                             TotalLessons = x.Chapters.SelectMany(x => x.Lessons).Count(),
                             TotalSecondsByChapter = x.Chapters.Select(c => c.Lessons.Sum(l => l.DurationInSeconds)).ToList(),
-                            IsRegistered = currentUser != null && x.Enrollments.Any(x => x.StudentId == currentUser.UserId)
+                            IsRegistered = currentUser != null && x.Enrollments.Any(x => x.StudentId == currentUser.UserId),
+                            IsPublished = x.IsPublished
                         }
                     })
                     .FirstOrDefaultAsync();
