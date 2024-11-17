@@ -9,6 +9,23 @@ namespace PaymentService.Services.Banks
     public interface IBankService
     {
         /// <summary>
+        /// Get bank by id
+        /// <para>Author: ManhTD</para>
+        /// <para>Created at: 9/11/2024</para>
+        /// </summary>
+        /// <param name="bankId"></param>
+        /// <returns></returns>
+        public Task<ResponseInfo> GetBankAsync(int bankId);
+
+        /// <summary>
+        /// Get list of banks
+        /// <para>Author: ManhTD</para>
+        /// <para>Created at: 9/11/2024</para>
+        /// </summary>
+        /// <returns></returns>
+        public Task<ResponseInfo> GetBanksAsync();
+
+        /// <summary>
         /// Add a new bank
         /// <para>Author: ManhTD</para>
         /// <para>Created at: 9/11/2024</para>
@@ -34,23 +51,6 @@ namespace PaymentService.Services.Banks
         /// <param name="bankId"></param>
         /// <returns></returns>
         public Task<ResponseInfo> DeleteBankAsync(int bankId);
-
-        /// <summary>
-        /// Get bank by id
-        /// <para>Author: ManhTD</para>
-        /// <para>Created at: 9/11/2024</para>
-        /// </summary>
-        /// <param name="bankId"></param>
-        /// <returns></returns>
-        public Task<ResponseInfo> GetBankAsync(int bankId);
-
-        /// <summary>
-        /// Get list of banks
-        /// <para>Author: ManhTD</para>
-        /// <para>Created at: 9/11/2024</para>
-        /// </summary>
-        /// <returns></returns>
-        public Task<ResponseInfo> GetBanksAsync();
     }
 
     public class BankService(IServiceProvider serviceProvider,
@@ -58,6 +58,57 @@ namespace PaymentService.Services.Banks
         IMapper mapper) : BaseService(serviceProvider, logger), IBankService
     {
         private readonly IMapper _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+
+        public async Task<ResponseInfo> GetBankAsync(int bankId)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                _logger.LogInformation("[PaymentService] [{Method}] Start", methodName);
+                var response = new ResponseInfo();
+
+                var bank = await _context.Banks.FirstOrDefaultAsync(b => b.Id == bankId);
+                if (bank == null)
+                {
+                    response.StatusCode = StatusCodes.Status400BadRequest;
+                    response.Message = "Bank is not exist";
+
+                    _logger.LogInformation("[PaymentService] [{Method}] End", methodName);
+                    return response;
+                }
+
+                _logger.LogInformation("[PaymentService] [{Method}] End", methodName);
+                response.Data.Add("bank", bank);
+
+                return response;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[PaymentService] [{Method}] Error", methodName);
+                throw;
+            }
+        }
+
+        public async Task<ResponseInfo> GetBanksAsync()
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                _logger.LogInformation("[PaymentService] [{Method}] Start", methodName);
+                var response = new ResponseInfo();
+
+                var banks = await _context.Banks.ToListAsync();
+                response.Data.Add("banks", banks);
+
+                _logger.LogInformation("[PaymentService] [{Method}] End", methodName);
+                return response;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[PaymentService] [{Method}] Error", methodName);
+                throw;
+            }
+        }
 
         public async Task<ResponseInfo> AddBankAsync(BankDto bank)
         {
@@ -82,7 +133,6 @@ namespace PaymentService.Services.Banks
                 await _context.Banks.AddAsync(bankEntity);
                 await _context.SaveChangesAsync();
 
-                response.Message = "Add bank successfully";
                 _logger.LogInformation("[PaymentService] [{Method}] End", methodName);
                 return response;
             }
@@ -93,7 +143,7 @@ namespace PaymentService.Services.Banks
             }
         }
 
-        public Task<ResponseInfo> UpdateBankAsync(BankDto bank)
+        public async Task<ResponseInfo> UpdateBankAsync(BankDto bank)
         {
             var methodName = GetActualAsyncMethodName();
             try
@@ -101,24 +151,23 @@ namespace PaymentService.Services.Banks
                 _logger.LogInformation("[PaymentService] [{Method}] Start", methodName);
                 var response = new ResponseInfo();
 
-                var bankEntity = _context.Banks.FirstOrDefault(b => b.Id == bank.Id);
+                var bankEntity = await _context.Banks.FirstOrDefaultAsync(b => b.Id == bank.Id);
                 if (bankEntity == null)
                 {
                     response.StatusCode = StatusCodes.Status400BadRequest;
                     response.Message = "Bank is not exist";
 
                     _logger.LogInformation("[PaymentService] [{Method}] End", methodName);
-                    return Task.FromResult(response);
+                    return response;
                 }
 
                 bankEntity.Name = bank.Name;
 
                 _context.Banks.Update(bankEntity);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
 
-                response.Message = "Update bank successfully";
                 _logger.LogInformation("[PaymentService] [{Method}] End", methodName);
-                return Task.FromResult(response);
+                return response;
             }
             catch (Exception e)
             {
@@ -127,7 +176,7 @@ namespace PaymentService.Services.Banks
             }
         }
 
-        public Task<ResponseInfo> DeleteBankAsync(int bankId)
+        public async Task<ResponseInfo> DeleteBankAsync(int bankId)
         {
             var methodName = GetActualAsyncMethodName();
             try
@@ -135,72 +184,21 @@ namespace PaymentService.Services.Banks
                 _logger.LogInformation("[PaymentService] [{Method}] Start", methodName);
                 var response = new ResponseInfo();
 
-                var bank = _context.Banks.FirstOrDefault(b => b.Id == bankId);
+                var bank = await _context.Banks.FirstOrDefaultAsync(b => b.Id == bankId);
                 if (bank == null)
                 {
                     response.StatusCode = StatusCodes.Status400BadRequest;
                     response.Message = "Bank is not exist";
 
                     _logger.LogInformation("[PaymentService] [{Method}] End", methodName);
-                    return Task.FromResult(response);
+                    return response;
                 }
 
                 _context.Banks.Remove(bank);
-                _context.SaveChanges();
-
-                response.Message = "Delete bank successfully";
-                _logger.LogInformation("[PaymentService] [{Method}] End", methodName);
-                return Task.FromResult(response);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "[PaymentService] [{Method}] Error", methodName);
-                throw;
-            }
-        }
-
-        public Task<ResponseInfo> GetBankAsync(int bankId)
-        {
-            var methodName = GetActualAsyncMethodName();
-            try
-            {
-                _logger.LogInformation("[PaymentService] [{Method}] Start", methodName);
-                var response = new ResponseInfo();
-
-                var bank = _context.Banks.FirstOrDefault(b => b.Id == bankId);
-                if (bank == null)
-                {
-                    response.StatusCode = StatusCodes.Status400BadRequest;
-                    response.Message = "Bank is not exist";
-
-                    _logger.LogInformation("[PaymentService] [{Method}] End", methodName);
-                    return Task.FromResult(response);
-                }
-
-                response.Data.Add("bank", bank);
-                _logger.LogInformation("[PaymentService] [{Method}] End", methodName);
-                return Task.FromResult(response);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "[PaymentService] [{Method}] Error", methodName);
-                throw;
-            }
-        }
-
-        public Task<ResponseInfo> GetBanksAsync()
-        {
-            var methodName = GetActualAsyncMethodName();
-            try
-            {
-                _logger.LogInformation("[PaymentService] [{Method}] Start", methodName);
-                var response = new ResponseInfo();
-
-                var banks = _context.Banks.ToList();
-                response.Data.Add("banks", banks);
+                await _context.SaveChangesAsync();
 
                 _logger.LogInformation("[PaymentService] [{Method}] End", methodName);
-                return Task.FromResult(response);
+                return response;
             }
             catch (Exception e)
             {

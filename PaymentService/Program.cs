@@ -32,6 +32,11 @@ builder.Services.AddCustomCorsConfig();
 builder.Services.AddControllers();
 builder.Services.AddAuthorization();
 
+if (builder.Environment.IsProduction())
+{
+    builder.WebHost.UseUrls("http://0.0.0.0:80");
+}
+
 var app = builder.Build();
 
 var dbInit = app.Services.GetRequiredService<IDbInitializer>();
@@ -63,10 +68,14 @@ app.UseRouting();
 app.UseCors("AllowSpecificOrigin");
 
 app.UseStaticFiles();
+
+// Đặt trước middleware Authentication và Authorization để mới có thể handle response khi không được phép truy cập
+app.UseMiddleware<CustomUnauthorizedMiddleware>();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseMiddleware<CustomUnauthorizedMiddleware>();
+app.UseMiddleware<ExceptionHandlerMiddleware>();
 app.MapControllers();
 
 await app.RunAsync();
