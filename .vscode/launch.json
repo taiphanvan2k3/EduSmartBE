@@ -64,6 +64,26 @@
             }
         },
         {
+            "name": "PaymentService",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "PaymentService",
+            "program": "${workspaceFolder}/PaymentService/bin/Debug/net8.0/PaymentService.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/PaymentService",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/Views"
+            }
+        },
+        {
             "name": ".NET Core Attach",
             "type": "coreclr",
             "request": "attach"
