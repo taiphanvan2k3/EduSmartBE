@@ -11,9 +11,9 @@ namespace CourseManagementService.Services.CourseManagement.Teacher.Schemas
 
         public string Description { get; set; } = string.Empty;
 
-        public List<string> CoreValues { get; set; }
+        public List<string> CoreValues { get; set; } = [];
 
-        public List<string> Prerequisites { get; set; }
+        public List<string> Prerequisites { get; set; } = [];
 
         public IFormFile Thumbnail { get; set; }
 
