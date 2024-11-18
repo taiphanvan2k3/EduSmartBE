@@ -34,11 +34,6 @@ namespace CourseManagementService.Controllers.LessonManagement
         /// <para>Created by: TaiPV</para>
         /// </summary>
         /// <param name="quizLessonCreateDto">Quiz lesson information is need for create</param>
-        /// <remarks>
-        /// NOTE: 
-        /// 
-        ///     This API is only used for the admin role (in Admin page) 
-        /// </remarks>
         [HttpPost]
         [Filters.Auth(Roles = "Teacher")]
         public async Task<IActionResult> CreateLesson(QuizLessonCreateDto quizLessonCreateDto)
@@ -57,11 +52,6 @@ namespace CourseManagementService.Controllers.LessonManagement
         /// <para>Created at: 2024/11/12</para>
         /// <para>Created by: TaiPV</para>
         /// </summary>
-        /// <remarks>
-        /// NOTE: 
-        /// 
-        ///     This API is only used for the admin role (in Admin page) 
-        /// </remarks>
         [HttpPut("{id}")]
         [Filters.Auth(Roles = "Teacher")]
         public async Task<IActionResult> UpdateLesson(Guid id, QuizLessonUpdateDto quizLessonUpdateDto)
@@ -81,11 +71,6 @@ namespace CourseManagementService.Controllers.LessonManagement
         /// <para>Created by: TaiPV</para>
         /// </summary>
         /// <param name="id">Id of quiz lesson is need for delete</param>
-        /// <remarks>
-        /// NOTE: 
-        /// 
-        ///     This API is only used for the admin role (in Admin page) 
-        /// </remarks>
         [HttpDelete("{id}")]
         [Filters.Auth(Roles = "Teacher")]
         public async Task<IActionResult> DeleteLesson(Guid id)

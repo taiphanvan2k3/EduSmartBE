@@ -10,6 +10,8 @@ namespace PaymentService.Databases.Schemas
 
         public int UserId { get; set; }
 
+        public bool IsAdminAccount { get; set; }
+
         [MaxLength(20)]
         public string AccountNumber { get; set; }
 
