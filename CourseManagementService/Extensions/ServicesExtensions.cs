@@ -90,6 +90,9 @@ namespace CourseManagementService.Extensions
                 // Chỉ hiển thị lock icon cho các API cần xác thực
                 opt.OperationFilter<AuthenticationRequirementOperationFilter>();
 
+                // Configure để hiển thị Enum dưới dạng 1-Active, 2-Inactive
+                opt.SchemaFilter<EnumSchemaFilter>();
+
                 // Configure để hiển thị chú thích
                 var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);

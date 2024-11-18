@@ -7,7 +7,7 @@ namespace PaymentService.Controllers
 {
     [Route("payment-service/api/bank-accounts")]
     [ApiController]
-    public class BankAccountController(IBankAccountService bankAccountService) : ControllerBase
+    public class BankAccountController(IBankAccountService bankAccountService) : BaseController
     {
         private readonly IBankAccountService _bankAccountService = bankAccountService ?? throw new ArgumentNullException(nameof(bankAccountService));
 
@@ -16,22 +16,15 @@ namespace PaymentService.Controllers
         /// <para>Created at: 9/11/2024</para>
         /// <para>Created by ManhTD</para>
         /// </summary>
-        /// <param name="bankAccount"></param>
-        /// <returns></returns>
         /// <response code="200">Withdrawal request</response>
         /// <response code="500">Internal server error</response>
+        [Filters.Auth]
         [HttpPost]
-        public async Task<ActionResult> AddBankAccount([FromBody] BankAccountDto bankAccount)
+        [ProducesResponseType(typeof(BankAccountDto), StatusCodes.Status200OK)]
+        public async Task<ActionResult> AddBankAccount([FromBody] BankAccountCreateDto bankAccountCreateDto)
         {
-            try
-            {
-                var response = await _bankAccountService.AddBankAccountAsync(bankAccount);
-                return Ok(response);
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ErrorResponseHelper.GetContentOfInternalServerResponse(e));
-            }
+            var response = await _bankAccountService.AddBankAccountAsync(bankAccountCreateDto);
+            return HandleResponseInfo(response, resourceName: "bankAccount");
         }
 
         /// <summary>

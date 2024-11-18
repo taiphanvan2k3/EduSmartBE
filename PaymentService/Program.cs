@@ -12,6 +12,7 @@ builder.AddAutoFact();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGenWithAuth();
 
+builder.Services.AddHttpContextAccessor(); // Add IHttpContextAccessor for getting HttpContext in services
 builder.Services.AddDataContext(builder.Configuration);
 builder.Services.AddScoped<IDbInitializer, DbInitializer>();
 builder.Services.AddCustomAuthentication(builder.Configuration);

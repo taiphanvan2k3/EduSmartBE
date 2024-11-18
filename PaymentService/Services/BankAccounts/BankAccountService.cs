@@ -1,4 +1,5 @@
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using PaymentService.Commons;
 using PaymentService.Services.BankAccounts.Schemas;
 using TblBankAccount = PaymentService.Databases.Schemas.BankAccount;
@@ -9,37 +10,32 @@ namespace PaymentService.Services.BankAccounts
     {
         /// <summary>
         /// Add a new bank account
-        /// <para>Author: ManhTD</para>
-        /// <para>Created at: 9/11/2024</para>
+        /// <para>Author: ManhTD - Created at: 2024/11/09</para>
+        /// <para>Author: TaiPV - Updated at: 2024/11/19</para>
         /// </summary>
-        /// <param name="bankAccount"></param>
-        /// <returns></returns>
-        public Task<ResponseInfo> AddBankAccountAsync(BankAccountDto bankAccount);
+        public Task<ResponseInfo> AddBankAccountAsync(BankAccountCreateUpdateDto bankAccountCreateDto);
 
         /// <summary>
         /// Update bank account information
-        /// <para>Author: ManhTD</para>
-        /// <para>Created at: 9/11/2024</para>
+        /// <para>Author: ManhTD - Created at: 2024/11/09</para>
+        /// <para>Author: TaiPV - Updated at: 2024/11/19</para> 
         /// </summary>
-        /// <param name="bankAccount"></param>
         /// <returns></returns>
-        public Task<ResponseInfo> UpdateBankAccountAsync(BankAccountDto bankAccount);
+        public Task<ResponseInfo> UpdateBankAccountAsync(Guid id, BankAccountCreateUpdateDto bankAccountUpdateDto);
 
         /// <summary>
         /// Delete a bank account
-        /// <para>Author: ManhTD</para>
-        /// <para>Created at: 9/11/2024</para>
+        /// <para>Author: ManhTD - Created at: 2024/11/09</para>
+        /// <para>Author: TaiPV - Updated at: 2024/11/19</para>
         /// </summary>
-        /// <param name="bankAccountId"></param>
         /// <returns></returns>
         public Task<ResponseInfo> DeleteBankAccountAsync(Guid bankAccountId);
 
         /// <summary>
         /// Get bank account by id
-        /// <para>Author: ManhTD</para>
-        /// <para>Created at: 9/11/2024</para>
+        /// <para>Author: ManhTD - Created at: 2024/11/09</para>
+        /// <para>Author: TaiPV - Updated at: 2024/11/19</para>
         /// </summary>
-        /// <param name="bankAccountId"></param>
         /// <returns></returns>
         public Task<ResponseInfo> GetBankAccountAsync(Guid bankAccountId);
     }
@@ -50,32 +46,34 @@ namespace PaymentService.Services.BankAccounts
     {
         private readonly IMapper _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
 
-        public Task<ResponseInfo> AddBankAccountAsync(BankAccountDto bankAccount)
+        public async Task<ResponseInfo> AddBankAccountAsync(BankAccountCreateUpdateDto bankAccountCreateDto)
         {
             var methodName = GetActualAsyncMethodName();
             try
             {
-                _logger.LogInformation("[PaymentService] [{Method}] Start", methodName);
+                LogInfo("Start", methodName);
                 var response = new ResponseInfo();
 
-                var isExist = _context.BankAccounts.Any(b => b.AccountNumber == bankAccount.AccountNumber);
+                var isExist = await _context.BankAccounts.AnyAsync(b =>
+                    b.AccountNumber == bankAccountCreateDto.AccountNumber);
                 if (isExist)
                 {
+                    response.Error = "BankExists";
                     response.StatusCode = StatusCodes.Status400BadRequest;
                     response.Message = "Bank account is already exist";
 
-                    _logger.LogInformation("[PaymentService] [{Method}] End", methodName);
-                    return Task.FromResult(response);
+                    LogInfo("End", methodName);
+                    return response;
                 }
 
-                var bankAccountEntity = _mapper.Map<TblBankAccount>(bankAccount);
+                var bankAccountEntity = _mapper.Map<TblBankAccount>(bankAccountCreateDto);
+                var currentUser = 
 
-                _context.BankAccounts.Add(bankAccountEntity);
-                _context.SaveChanges();
+                await _context.BankAccounts.AddAsync(bankAccountEntity);
+                await _context.SaveChangesAsync();
 
-                response.Message = "Add bank account successfully";
-                _logger.LogInformation("[PaymentService] [{Method}] End", methodName);
-                return Task.FromResult(response);
+                LogInfo("End", methodName);
+                return response;
             }
             catch (Exception e)
             {
@@ -84,7 +82,7 @@ namespace PaymentService.Services.BankAccounts
             }
         }
 
-        public Task<ResponseInfo> UpdateBankAccountAsync(BankAccountDto bankAccount)
+        public Task<ResponseInfo> UpdateBankAccountAsync(Guid id, BankAccountCreateUpdateDto bankAccountUpdateDto)
         {
             var methodName = GetActualAsyncMethodName();
             try
@@ -92,7 +90,7 @@ namespace PaymentService.Services.BankAccounts
                 _logger.LogInformation("[PaymentService] [{Method}] Start", methodName);
                 var response = new ResponseInfo();
 
-                var bankAccountEntity = _context.BankAccounts.FirstOrDefault(b => b.Id == bankAccount.Id);
+                var bankAccountEntity = _context.BankAccounts.FirstOrDefault(b => b.Id == id);
                 if (bankAccountEntity == null)
                 {
                     response.StatusCode = StatusCodes.Status400BadRequest;
@@ -102,10 +100,10 @@ namespace PaymentService.Services.BankAccounts
                     return Task.FromResult(response);
                 }
 
-                bankAccountEntity.AccountName = bankAccount.AccountName;
-                bankAccountEntity.AccountNumber = bankAccount.AccountNumber;
-                bankAccountEntity.BankId = bankAccount.BankId;
-                bankAccountEntity.IsPrimary = bankAccount.IsPrimary;
+                bankAccountEntity.AccountName = bankAccountUpdateDto.AccountName;
+                bankAccountEntity.AccountNumber = bankAccountUpdateDto.AccountNumber;
+                bankAccountEntity.BankId = bankAccountUpdateDto.BankId;
+                bankAccountEntity.IsPrimary = bankAccountUpdateDto.IsPrimary;
 
                 _context.BankAccounts.Update(bankAccountEntity);
                 _context.SaveChanges();
@@ -120,7 +118,7 @@ namespace PaymentService.Services.BankAccounts
                 throw;
             }
         }
-        
+
         public Task<ResponseInfo> DeleteBankAccountAsync(Guid bankAccountId)
         {
             var methodName = GetActualAsyncMethodName();

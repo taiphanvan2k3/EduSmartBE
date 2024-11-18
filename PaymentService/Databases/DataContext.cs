@@ -40,7 +40,7 @@ namespace PaymentService.Databases
 
         public DbSet<Bank> Banks { get; set; }
         public DbSet<BankAccount> BankAccounts { get; set; }
-        public DbSet<StudentTransaction> StudentTransactions { get; set; }
+        public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
         public DbSet<TeacherEarning> TeacherEarnings { get; set; }
         public DbSet<WithdrawalRequest> WithdrawalRequests { get; set; }
 
