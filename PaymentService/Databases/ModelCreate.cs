@@ -30,13 +30,19 @@ namespace PaymentService.Databases
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
-            modelBuilder.Entity<StudentTransaction>(entity =>
+            modelBuilder.Entity<PaymentTransaction>(entity =>
             {
-                entity.ToTable("StudentTransactions");
+                entity.ToTable("PaymentTransactions");
                 entity.HasKey(e => e.Id);
 
                 entity.Property(e => e.OrderStatus)
                     .HasConversion<string>();
+                entity.Property(e => e.PaymentMethod)
+                    .HasConversion<string>();
+                entity.Property(e => e.TransactionType)
+                    .HasConversion<string>();
+                entity.Property(e => e.RelatedInformation)
+                    .HasColumnType("json");
             });
 
             modelBuilder.Entity<TeacherEarning>(entity =>

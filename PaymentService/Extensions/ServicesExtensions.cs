@@ -8,7 +8,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Npgsql;
-using PaymentService.Settings;
 using System.Reflection;
 
 namespace PaymentService.Extensions
@@ -19,16 +18,20 @@ namespace PaymentService.Extensions
         {
             try
             {
-                services.AddDbContext<DataContext>(options =>
+                // Dùng AddDbContextPool để tạo ra một pool các DbContext, giúp tăng hiệu suất trong việc sử dụng các DbContext instances
+                services.AddDbContextPool<DataContext>(options =>
                     options.UseNpgsql(configuration.GetConnectionString("DefaultConnection") ?? Constants.CONNECTION_STRING)
                         .EnableSensitiveDataLogging() // cho phép log dữ liệu nhạy cảm
-                        .EnableDetailedErrors(),
-                    ServiceLifetime.Scoped);
+                        .EnableDetailedErrors());
 
                 services.AddScoped<DbConnection>(provider =>
                 {
                     return new NpgsqlConnection(configuration.GetConnectionString("DefaultConnection") ?? Constants.CONNECTION_STRING);
                 });
+
+                // Thêm IDbContextFactory để cho phép tạo ra các instance của DbContext 
+                // Dùng kiểu này vì DataContext có 2 constructor, 1 constructor không có IHttpContextAccessor dùng cho design-time
+                services.AddSingleton<IDbContextFactory<DataContext>, CustomDbContextFactory>();
             }
             catch (Exception e)
             {
@@ -84,6 +87,9 @@ namespace PaymentService.Extensions
 
                 // Chỉ hiển thị lock icon cho các API cần xác thực
                 opt.OperationFilter<AuthenticationRequirementOperationFilter>();
+
+                // Configure để hiển thị Enum dưới dạng 1-Active, 2-Inactive
+                opt.SchemaFilter<EnumSchemaFilter>();
 
                 // Configure để hiển thị chú thích
                 var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";

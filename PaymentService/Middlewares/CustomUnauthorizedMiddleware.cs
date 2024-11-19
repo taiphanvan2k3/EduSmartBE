@@ -1,4 +1,5 @@
 using System.Text.Json;
+using PaymentService.Commons.Helpers;
 
 namespace PaymentService.Middlewares
 {
@@ -20,22 +21,24 @@ namespace PaymentService.Middlewares
             if (context.Response.StatusCode == StatusCodes.Status401Unauthorized)
             {
                 context.Response.ContentType = "application/json";
-                var response = new
+                var response = new ErrorResponse
                 {
-                    message = "You need to be authenticated to access this resource.",
-                    statusCode = 401
+                    StatusCode = 401,
+                    Error = "Unauthorized",
+                    Message = "You need to be authenticated to access this resource.",
                 };
-                await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+                await context.Response.WriteAsync(JsonSerializerUtils.Serialize(response));
             }
             else if (context.Response.StatusCode == StatusCodes.Status403Forbidden)
             {
                 context.Response.ContentType = "application/json";
-                var response = new
+                var response = new ErrorResponse
                 {
-                    message = "You are not authorized to access this resource.",
-                    statusCode = 403
+                    StatusCode = 403,
+                    Error = "Forbidden",
+                    Message = "You are not authorized to access this resource.",
                 };
-                await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+                await context.Response.WriteAsync(JsonSerializerUtils.Serialize(response));
             }
         }
     }

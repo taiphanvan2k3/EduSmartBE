@@ -8,7 +8,8 @@ document.addEventListener("DOMContentLoaded", function () {
             .replace(/\n\s*\n/g, "<br />") // Thay thế hai dòng xuống liên tiếp thành một <br />
             .replace(/\n/g, "<br />") // Thay thế một dòng xuống
             .replace(/(<br \/>)+/g, "<br />") // Loại bỏ các <br /> thừa
-            .replace(/<br \/>Created by/g, "- Created by"); // Xoá <br/> trước "Created by"
+            .replace(/<br \/>Created by/g, "- Created by") // Xoá <br/> trước "Created by"
+            .replace(/<br \/>Modified by/g, "- Modified by"); // Xoá <br/> trước "Updated by"
 
         description.innerHTML = formattedHtml;
         isExecutedReplaceBr = true;
@@ -49,6 +50,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 isExecutedSetAuth = true;
             }
+        } else if (!swaggerToken) {
+            isExecutedSetAuth = true;
         }
     };
 

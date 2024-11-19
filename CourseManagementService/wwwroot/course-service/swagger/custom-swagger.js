@@ -4,7 +4,6 @@ document.addEventListener("DOMContentLoaded", function () {
     let isExecutedSetAuth = false;
 
     const replaceBr = function (description) {
-        console.log("replaceBr", description.innerHTML);
         const formattedHtml = description.innerHTML
             .replace(/\n\s*\n/g, "<br />") // Thay thế hai dòng xuống liên tiếp thành một <br />
             .replace(/\n/g, "<br />") // Thay thế một dòng xuống
