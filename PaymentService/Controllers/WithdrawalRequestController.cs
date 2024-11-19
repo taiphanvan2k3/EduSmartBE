@@ -165,8 +165,7 @@ namespace PaymentService.Controllers
         {
             try
             {
-                var response = new ResponseInfo();
-                // var response = await _withdrawalRequestService.DeleteWithdrawalRequestAsync(id);
+                var response = await _withdrawalRequestService.DeleteWithdrawalRequestAsync(id);
                 return Ok(response);
             }
             catch (Exception e)

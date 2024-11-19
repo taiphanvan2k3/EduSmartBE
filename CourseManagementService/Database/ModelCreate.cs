@@ -221,6 +221,25 @@ namespace CourseManagementService.Database
                 entity.HasIndex(lt => new { lt.LessonId, lt.StudentId });
             });
 
+            modelBuilder.Entity<SupportRequest>(entity =>
+            {
+                entity.ToTable("SupportRequests");
+                entity.HasKey(e => e.Id);
+
+                entity.Property(sr => sr.Status)
+                    .HasConversion<string>()
+                    .HasMaxLength(50);
+
+                entity.Property(sr => sr.Type)
+                    .HasConversion<string>()
+                    .HasMaxLength(100);
+
+                entity.HasIndex(sr => new { sr.FromUserId, sr.Status });
+                entity.HasIndex(sr => new { sr.ToUserId, sr.Status });
+                entity.HasIndex(sr => new { sr.FromUserId, sr.Type });
+                entity.HasIndex(sr => new { sr.ToUserId, sr.Type });
+            });
+
             return modelBuilder;
         }
 

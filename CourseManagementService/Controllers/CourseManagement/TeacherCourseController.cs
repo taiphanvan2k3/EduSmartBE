@@ -93,17 +93,6 @@ namespace CourseManagementService.Controllers.CourseManagement
         /// <para>Created at: 2024/10/02</para>
         /// </summary>
         /// <param name="courseCreateDto">Course information is need for create</param>
-        /// <remarks>
-        /// CourseType (Enum)
-        ///     
-        ///     1: Tutorial
-        ///     2: Direct - A course that is live and interactive
-        ///
-        /// CurrencyType (Enum)
-        /// 
-        ///     1: VND
-        ///     2: USD
-        /// </remarks>
         [HttpPost("courses")]
         [RequestSizeLimit(200 * 1024 * 1024)]
         [ProducesResponseType(typeof(CourseDto), StatusCodes.Status200OK)]

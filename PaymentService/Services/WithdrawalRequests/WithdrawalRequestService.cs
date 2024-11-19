@@ -37,13 +37,12 @@ namespace PaymentService.Services.WithdrawalRequests
 
         /// <summary>
         /// Delete withdrawal request
-        /// <para>Author: ManhTD</para>
-        /// <para>Created at: 9/11/2024</para>
+        /// <para>Author: ManhTD - Created at: 2024/11/09</para>
+        /// <para>Author: TaiPV - Updated at: 2024/11/19</para>
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="userId"></param>
+        /// <param name="id">Id of withdrawal request</param>
         /// <returns></returns>
-        Task<ResponseInfo> DeleteWithdrawalRequestAsync(Guid id, int userId);
+        Task<ResponseInfo> DeleteWithdrawalRequestAsync(Guid id);
 
         /// <summary>
         /// Bank money to teacher
@@ -160,7 +159,7 @@ namespace PaymentService.Services.WithdrawalRequests
             }
         }
 
-        public Task<ResponseInfo> DeleteWithdrawalRequestAsync(Guid id, int userId)
+        public Task<ResponseInfo> DeleteWithdrawalRequestAsync(Guid id)
         {
             var methodName = GetActualAsyncMethodName();
             try
@@ -178,7 +177,8 @@ namespace PaymentService.Services.WithdrawalRequests
                     return Task.FromResult(response);
                 }
 
-                if (withdrawalRequest.UserId != userId)
+                var currentUser = GetCurrentUser();
+                if (withdrawalRequest.UserId != currentUser.UserId || !currentUser.Roles.Contains("Admin"))
                 {
                     response.StatusCode = StatusCodes.Status403Forbidden;
                     response.Message = "You don't have permission to delete this withdrawalRequest";
@@ -190,7 +190,6 @@ namespace PaymentService.Services.WithdrawalRequests
                 _context.WithdrawalRequests.Remove(withdrawalRequest);
                 _context.SaveChanges();
 
-                response.Message = "Delete withdrawalRequest successfully";
                 _logger.LogInformation("[WithdrawalRequestService] [{Method}] End", methodName);
                 return Task.FromResult(response);
             }

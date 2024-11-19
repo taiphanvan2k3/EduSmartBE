@@ -1,6 +1,4 @@
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using PaymentService.Commons;
 using PaymentService.Commons.Helpers;
 using PaymentService.Databases.Schemas;
 using PaymentService.Services.Banks.Schemas;
