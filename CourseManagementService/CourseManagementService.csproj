@@ -40,5 +40,6 @@
 
     <ItemGroup>
       <Protobuf Include="Protos\user.proto" GrpcServices="Client" />
+      <Protobuf Include="Protos\payment.proto" GrpcServices="Client" />
     </ItemGroup>
 </Project>

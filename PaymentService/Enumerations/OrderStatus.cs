@@ -4,6 +4,6 @@ namespace PaymentService.Enumerations
     {
         New,
         SUCCESS,
-        FAILED,
+        FAILED
     }
 }

@@ -4,6 +4,7 @@ using CourseManagementService.Services.ChapterManagement;
 using CourseManagementService.Services.ChapterManagement.Schemas;
 using CourseManagementService.Services.CourseManagement.Public;
 using CourseManagementService.Services.CourseManagement.Public.Schemas;
+using CourseManagementService.Services.Grpc.PaymentService.Schemas;
 using CourseManagementService.Services.TagManagement;
 using CourseManagementService.Services.TagManagement.Schemas;
 using Microsoft.AspNetCore.Authorization;
@@ -16,7 +17,7 @@ namespace CourseManagementService.Controllers.CourseManagement
     public class PublicCourseController(IListOfPublicCourseService listOfPublicCourseService,
         IListOfChaptersService listOfChaptersService,
         IPublicCourseDetailService publicCourseDetailService,
-        IListOfTagService listOfTagService) : ControllerBase
+        IListOfTagService listOfTagService) : BaseController
     {
         private readonly IListOfPublicCourseService _listOfPublicCourseService = listOfPublicCourseService
             ?? throw new ArgumentNullException(nameof(listOfPublicCourseService));
@@ -118,6 +119,21 @@ namespace CourseManagementService.Controllers.CourseManagement
                 return StatusCode(StatusCodes.Status404NotFound, ErrorResponseHelper.GetContentOfNotFoundResponse("Course not found"));
             }
             return Ok(courses);
+        }
+
+        /// <summary>
+        /// [Public API] Get QR code for payment of course
+        /// <para>Created at: 2024/10/20</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="id">Course id</param>
+        [Authorize]
+        [HttpGet("{id}/payment-info")]
+        [ProducesResponseType(typeof(CoursePaymentInfo), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetCoursePaymentInfo(Guid id)
+        {
+            var responseInfo = await _publicCourseDetailService.GetCoursePaymentInfo(id);
+            return HandleResponseInfo(responseInfo, resourceName: "coursePaymentInfo");
         }
 
         /// <summary>

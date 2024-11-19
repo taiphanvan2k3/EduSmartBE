@@ -28,6 +28,8 @@ namespace PaymentService.Databases
                     .WithOne(wr => wr.BankAccount)
                     .HasForeignKey(wr => wr.BankAccountId)
                     .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => new { e.IsPrimary, e.IsAdminAccount });
             });
 
             modelBuilder.Entity<PaymentTransaction>(entity =>
@@ -41,8 +43,8 @@ namespace PaymentService.Databases
                     .HasConversion<string>();
                 entity.Property(e => e.TransactionType)
                     .HasConversion<string>();
-                entity.Property(e => e.RelatedInformation)
-                    .HasColumnType("json");
+                entity.Property(e => e.Currency)
+                    .HasConversion<string>();
             });
 
             modelBuilder.Entity<TeacherEarning>(entity =>
@@ -63,6 +65,29 @@ namespace PaymentService.Databases
                 entity.ToTable("WithdrawalRequests");
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Id).ValueGeneratedNever();
+            });
+
+            modelBuilder.Entity<StorageInfo>(entity =>
+            {
+                entity.ToTable("StorageInfos");
+                entity.HasKey(e => e.Id);
+
+                entity.HasIndex(e => e.UserId)
+                    .IsUnique();
+
+                entity.HasMany(e => e.ExtendStorages)
+                    .WithOne(es => es.StorageInfo)
+                    .HasForeignKey(es => es.StorageInfoId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<ExtendStorage>(entity =>
+            {
+                entity.ToTable("ExtendStorages");
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Currency)
+                    .HasConversion<string>();
             });
 
             return modelBuilder;
