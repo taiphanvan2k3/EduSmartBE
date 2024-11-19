@@ -5,20 +5,9 @@ using PaymentService.Databases.Schemas;
 
 namespace PaymentService.Databases
 {
-    public class DataContext : DbContext
+    public class DataContext(DbContextOptions<DataContext> options, IHttpContextAccessor context) : DbContext(options)
     {
-        private readonly IHttpContextAccessor _context;
-
-        // Constructor không có IHttpContextAccessor cho design-time
-        public DataContext(DbContextOptions<DataContext> options) : base(options)
-        {
-        }
-
-        // Constructor dùng cho runtime với IHttpContextAccessor
-        public DataContext(DbContextOptions<DataContext> options, IHttpContextAccessor context) : base(options)
-        {
-            _context = context;
-        }
+        private readonly IHttpContextAccessor _context = context;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

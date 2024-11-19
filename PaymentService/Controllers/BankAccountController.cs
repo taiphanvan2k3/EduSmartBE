@@ -5,95 +5,71 @@ using PaymentService.Services.BankAccounts.Schemas;
 
 namespace PaymentService.Controllers
 {
+    [Filters.Auth(Roles = "Admin,Teacher")]
     [Route("payment-service/api/bank-accounts")]
     [ApiController]
     public class BankAccountController(IBankAccountService bankAccountService) : BaseController
     {
-        private readonly IBankAccountService _bankAccountService = bankAccountService ?? throw new ArgumentNullException(nameof(bankAccountService));
+        private readonly IBankAccountService _bankAccountService = bankAccountService
+            ?? throw new ArgumentNullException(nameof(bankAccountService));
 
         /// <summary>
-        /// Get bank accounts
+        /// Get bank account
         /// <para>Created at: 9/11/2024</para>
         /// <para>Created by ManhTD</para>
+        /// <para>Modified at: 2024/11/19</para>
+        /// <para>Modified by: TaiPV</para>
         /// </summary>
-        /// <response code="200">Withdrawal request</response>
-        /// <response code="500">Internal server error</response>
-        [Filters.Auth]
+        /// <param name="id">Id of bank account</param>
+        [HttpGet("{id}")]
+        public async Task<ActionResult> GetBankAccount(Guid id)
+        {
+            var response = await _bankAccountService.GetBankAccountAsync(id);
+            return HandleResponseInfo(response, resourceName: "bankAccount");
+        }
+
+        /// <summary>
+        /// Add bank account
+        /// <para>Created at: 2024/11/09</para>
+        /// <para>Created by ManhTD</para>
+        /// <para>Modified at: 2024/11/19</para>
+        /// <para>Modified by: TaiPV</para>
+        /// </summary>
         [HttpPost]
         [ProducesResponseType(typeof(BankAccountDto), StatusCodes.Status200OK)]
-        public async Task<ActionResult> AddBankAccount([FromBody] BankAccountCreateDto bankAccountCreateDto)
+        public async Task<ActionResult> AddBankAccount([FromBody] BankAccountCreateUpdateDto bankAccountCreateDto)
         {
             var response = await _bankAccountService.AddBankAccountAsync(bankAccountCreateDto);
             return HandleResponseInfo(response, resourceName: "bankAccount");
         }
 
         /// <summary>
-        /// Get bank accounts
-        /// <para>Created at: 9/11/2024</para>
+        /// Update bank account
+        /// <para>Created at: 2024/11/09</para>
         /// <para>Created by ManhTD</para>
+        /// <para>Modified at: 2024/11/19</para>
+        /// <para>Modified by: TaiPV</para>
         /// </summary>
-        /// <param name="bankAccount"></param>
-        /// <returns></returns>
-        /// <response code="200">Withdrawal request</response>
-        /// <response code="500">Internal server error</response>
-        [HttpPut]
-        public async Task<ActionResult> UpdateBankAccount([FromBody] BankAccountDto bankAccount)
+        [HttpPut("{id}")]
+        public async Task<ActionResult> UpdateBankAccount(Guid id, [FromBody] BankAccountCreateUpdateDto bankAccountUpdate)
         {
-            try
-            {
-                var response = await _bankAccountService.UpdateBankAccountAsync(bankAccount);
-                return Ok(response);
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ErrorResponseHelper.GetContentOfInternalServerResponse(e));
-            }
+            var response = await _bankAccountService.UpdateBankAccountAsync(id, bankAccountUpdate);
+            return HandleResponseInfo(response, resourceName: "bankAccount");
         }
 
         /// <summary>
         /// Delete bank account
-        /// <para>Created at: 9/11/2024</para>
+        /// <para>Created at: 2024/11/09</para>
         /// <para>Created by ManhTD</para>
+        /// <para>Modified at: 2024/11/19</para>
+        /// <para>Modified by: TaiPV</para>
         /// </summary>
-        /// <param name="bankAccountId"></param>
-        /// <returns></returns>
-        /// <response code="200">Withdrawal request</response>
-        /// <response code="500">Internal server error</response>
-        [HttpDelete("{bankAccountId}")]
-        public async Task<ActionResult> DeleteBankAccount(Guid bankAccountId)
+        /// <param name="id">Id of bank account</param>
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeleteBankAccount(Guid id)
         {
-            try
-            {
-                var response = await _bankAccountService.DeleteBankAccountAsync(bankAccountId);
-                return Ok(response);
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ErrorResponseHelper.GetContentOfInternalServerResponse(e));
-            }
-        }
-
-        /// <summary>
-        /// Get bank account
-        /// <para>Created at: 9/11/2024</para>
-        /// <para>Created by ManhTD</para>
-        /// </summary>
-        /// <param name="bankAccountId"></param>
-        /// <returns></returns>
-        /// <response code="200">Withdrawal request</response>
-        /// <response code="500">Internal server error</response>
-        [HttpGet("{bankAccountId}")]
-        public async Task<ActionResult> GetBankAccount(Guid bankAccountId)
-        {
-            try
-            {
-                var response = await _bankAccountService.GetBankAccountAsync(bankAccountId);
-                return Ok(response);
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ErrorResponseHelper.GetContentOfInternalServerResponse(e));
-            }
+            var response = await _bankAccountService.DeleteBankAccountAsync(id);
+            return HandleResponseInfo(response, resourceId: id.ToString());
         }
     }
 }

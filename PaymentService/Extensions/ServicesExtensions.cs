@@ -30,8 +30,8 @@ namespace PaymentService.Extensions
                 });
 
                 // Thêm IDbContextFactory để cho phép tạo ra các instance của DbContext 
-                services.AddDbContextFactory<DataContext>(options =>
-                    options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+                // Dùng kiểu này vì DataContext có 2 constructor, 1 constructor không có IHttpContextAccessor dùng cho design-time
+                services.AddSingleton<IDbContextFactory<DataContext>, CustomDbContextFactory>();
             }
             catch (Exception e)
             {

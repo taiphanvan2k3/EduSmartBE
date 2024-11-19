@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using PaymentService.Services.AppState;
-using UserInfoState = PaymentService.Services.AppState.Schemas.UserInfo;
+using UserInfoState = PaymentService.Services.AppState.Schemas.UserInfoState;
 
 namespace PaymentService.Filters
 {
