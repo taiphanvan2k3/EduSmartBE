@@ -4,6 +4,7 @@ using PaymentService.Middlewares;
 using PaymentService.Databases.InitDb;
 using PaymentService.Extensions;
 using PaymentService.Commons;
+using PaymentService.GrpcServices;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.UseCustomLog(Constants.SERVICE_NAME);
@@ -32,6 +33,7 @@ builder.Services.AddCustomCorsConfig();
 
 builder.Services.AddControllers();
 builder.Services.AddAuthorization();
+builder.Services.AddGrpc();
 
 if (builder.Environment.IsProduction())
 {
@@ -77,6 +79,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseMiddleware<ExceptionHandlerMiddleware>();
+
+app.MapGrpcService<GrpcPaymentService>();
 app.MapControllers();
 
 await app.RunAsync();
