@@ -1,0 +1,43 @@
+syntax = "proto3";
+option csharp_namespace = "CourseManagementService.GrpcServices";
+import "google/protobuf/empty.proto";
+
+service Payment {
+    rpc GetAdminBankAccount(google.protobuf.Empty) returns (BankAccountResponse);
+    rpc CreateCoursePaymentTransaction(CoursePaymentTransactionRequest) returns (CoursePaymentTransactionResponse);
+    rpc GetExchangeRate(google.protobuf.Empty) returns (ExchangeRate);
+}
+
+enum Currency {
+    UNKNOWN = 0;
+    USD = 1;
+    VND = 2;
+}
+
+message ExchangeRate {
+    string from_currency = 1; // Tên tiền tệ gốc, ví dụ: USD
+    string to_currency = 2;   // Tên tiền tệ đích, ví dụ: VND
+    double rate = 3;          // Tỷ giá, ví dụ: 25397
+}
+
+message BankAccountResponse {
+    string bankBin = 1;
+    string bankName = 2;
+    string accountNumber = 3;
+    string accountName = 4;
+    bool isSuccess = 5;
+}
+
+message CoursePaymentTransactionRequest {
+    string code = 1;
+    int32 userId = 2;
+    double amount = 3;
+    Currency currency = 4;
+    string relatedInfo = 5;
+}
+
+message CoursePaymentTransactionResponse {
+    string transactionId = 1;
+    bool isSuccess = 2;
+    ExchangeRate ExchangeRate = 3;
+}

@@ -101,6 +101,11 @@
             "stopAll": true
         },
         {
+            "name": "Payment, Course",
+            "configurations": ["PaymentService", "CourseManagementService"],
+            "stopAll": true
+        },
+        {
             "name": "All Services",
             "configurations": ["AuthService", "UserService", "CourseManagementService"],
             "stopAll": true
