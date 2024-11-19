@@ -10,6 +10,15 @@ namespace CourseManagementService.Common
 
         public Dictionary<string, dynamic> Data { get; set; }
 
+        public bool IsSuccess
+        {
+            get
+            {
+                return StatusCode == StatusCodes.Status200OK
+                    || StatusCode == StatusCodes.Status201Created;
+            }
+        }
+
         public ResponseInfo()
         {
             StatusCode = StatusCodes.Status200OK;
