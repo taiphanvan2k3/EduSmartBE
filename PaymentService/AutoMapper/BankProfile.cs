@@ -8,7 +8,7 @@ namespace PaymentService.AutoMapper
     {
         public BankProfile()
         {
-            CreateMap<BankAccountCreateDto, TblBankAccount>();
+            CreateMap<BankAccountCreateUpdateDto, TblBankAccount>();
             CreateMap<TblBankAccount, BankAccountDto>();
         }
     }

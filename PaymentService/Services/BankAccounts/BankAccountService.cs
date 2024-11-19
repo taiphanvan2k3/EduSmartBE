@@ -9,6 +9,14 @@ namespace PaymentService.Services.BankAccounts
     public interface IBankAccountService
     {
         /// <summary>
+        /// Get bank account by id
+        /// <para>Author: ManhTD - Created at: 2024/11/09</para>
+        /// <para>Author: TaiPV - Updated at: 2024/11/19</para>
+        /// </summary>
+        /// <returns></returns>
+        public Task<ResponseInfo> GetBankAccountAsync(Guid bankAccountId);
+
+        /// <summary>
         /// Add a new bank account
         /// <para>Author: ManhTD - Created at: 2024/11/09</para>
         /// <para>Author: TaiPV - Updated at: 2024/11/19</para>
@@ -30,14 +38,6 @@ namespace PaymentService.Services.BankAccounts
         /// </summary>
         /// <returns></returns>
         public Task<ResponseInfo> DeleteBankAccountAsync(Guid bankAccountId);
-
-        /// <summary>
-        /// Get bank account by id
-        /// <para>Author: ManhTD - Created at: 2024/11/09</para>
-        /// <para>Author: TaiPV - Updated at: 2024/11/19</para>
-        /// </summary>
-        /// <returns></returns>
-        public Task<ResponseInfo> GetBankAccountAsync(Guid bankAccountId);
     }
 
     public class BankAccountService(IServiceProvider serviceProvider,
@@ -46,7 +46,7 @@ namespace PaymentService.Services.BankAccounts
     {
         private readonly IMapper _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
 
-        public async Task<ResponseInfo> AddBankAccountAsync(BankAccountCreateUpdateDto bankAccountCreateDto)
+        public async Task<ResponseInfo> GetBankAccountAsync(Guid bankAccountId)
         {
             var methodName = GetActualAsyncMethodName();
             try
@@ -54,23 +54,31 @@ namespace PaymentService.Services.BankAccounts
                 LogInfo("Start", methodName);
                 var response = new ResponseInfo();
 
-                var isExist = await _context.BankAccounts.AnyAsync(b =>
-                    b.AccountNumber == bankAccountCreateDto.AccountNumber);
-                if (isExist)
-                {
-                    response.Error = "BankExists";
-                    response.StatusCode = StatusCodes.Status400BadRequest;
-                    response.Message = "Bank account is already exist";
+                var bankAccount = await _context.BankAccounts
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(b => b.Id == bankAccountId);
+                var currentUser = GetCurrentUser();
 
-                    LogInfo("End", methodName);
+                if (bankAccount == null)
+                {
+                    response.StatusCode = StatusCodes.Status400BadRequest;
+                    response.Message = "Bank account is not exist";
+
+                    _logger.LogInformation("[PaymentService] [{Method}] End", methodName);
                     return response;
                 }
 
-                var bankAccountEntity = _mapper.Map<TblBankAccount>(bankAccountCreateDto);
-                var currentUser = 
+                if (!currentUser.IsAdmin && bankAccount.UserId != currentUser.UserId)
+                {
+                    response.StatusCode = StatusCodes.Status403Forbidden;
+                    response.Message = "You are not authorized to view this bank account";
 
-                await _context.BankAccounts.AddAsync(bankAccountEntity);
-                await _context.SaveChangesAsync();
+                    _logger.LogInformation("[PaymentService] [{Method}] End", methodName);
+                    return response;
+                }
+
+                var bankAccountDto = _mapper.Map<BankAccountDto>(bankAccount);
+                response.Data.Add("bankAccount", bankAccountDto);
 
                 LogInfo("End", methodName);
                 return response;
@@ -82,22 +90,97 @@ namespace PaymentService.Services.BankAccounts
             }
         }
 
-        public Task<ResponseInfo> UpdateBankAccountAsync(Guid id, BankAccountCreateUpdateDto bankAccountUpdateDto)
+        public async Task<ResponseInfo> AddBankAccountAsync(BankAccountCreateUpdateDto bankAccountCreateDto)
         {
             var methodName = GetActualAsyncMethodName();
             try
             {
-                _logger.LogInformation("[PaymentService] [{Method}] Start", methodName);
+                LogInfo("Start", methodName);
                 var response = new ResponseInfo();
 
-                var bankAccountEntity = _context.BankAccounts.FirstOrDefault(b => b.Id == id);
+                var isExist = await _context.BankAccounts.AnyAsync(b =>
+                    b.AccountNumber == bankAccountCreateDto.AccountNumber);
+
+                if (isExist)
+                {
+                    response.Error = "BankExists";
+                    response.StatusCode = StatusCodes.Status400BadRequest;
+                    response.Message = "Bank account is already exist";
+
+                    LogInfo("End", methodName);
+                    return response;
+                }
+
+                var bankAccountEntity = _mapper.Map<TblBankAccount>(bankAccountCreateDto);
+                if (bankAccountEntity == null)
+                {
+                    response.Error = "MappingFailed";
+                    response.StatusCode = StatusCodes.Status500InternalServerError;
+                    response.Message = "Failed to map bank account";
+
+                    LogInfo("End", methodName);
+                    return response;
+                }
+
+                var currentUser = GetCurrentUser();
+                bankAccountEntity.UserId = currentUser.UserId;
+                bankAccountEntity.IsAdminAccount = currentUser.IsAdmin;
+
+                var isExistPrimary = await _context.BankAccounts.AnyAsync(b =>
+                    b.UserId == currentUser.UserId && b.IsPrimary);
+                if (bankAccountEntity.IsPrimary && isExistPrimary)
+                {
+                    response.Error = "PrimaryAccountExists";
+                    response.StatusCode = StatusCodes.Status400BadRequest;
+                    response.Message = "Primary bank account is already exist";
+
+                    LogInfo("End", methodName);
+                    return response;
+                }
+
+                await _context.BankAccounts.AddAsync(bankAccountEntity);
+                await _context.SaveChangesAsync();
+
+                var bankAccountDto = _mapper.Map<BankAccountDto>(bankAccountEntity);
+
+                response.Data.Add("bankAccount", bankAccountDto);
+                LogInfo("End", methodName);
+                return response;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[PaymentService] [{Method}] Error", methodName);
+                throw;
+            }
+        }
+
+        public async Task<ResponseInfo> UpdateBankAccountAsync(Guid id, BankAccountCreateUpdateDto bankAccountUpdateDto)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var response = new ResponseInfo();
+
+                var currentUser = GetCurrentUser();
+
+                var bankAccountEntity = await _context.BankAccounts.FindAsync(id);
                 if (bankAccountEntity == null)
                 {
                     response.StatusCode = StatusCodes.Status400BadRequest;
                     response.Message = "Bank account is not exist";
 
-                    _logger.LogInformation("[PaymentService] [{Method}] End", methodName);
-                    return Task.FromResult(response);
+                    LogInfo("End", methodName);
+                    return response;
+                }
+
+                if (currentUser.UserId != bankAccountEntity.UserId)
+                {
+                    response.StatusCode = StatusCodes.Status403Forbidden;
+                    response.Message = "You are not authorized to update this bank account";
+
+                    LogInfo("End", methodName);
+                    return response;
                 }
 
                 bankAccountEntity.AccountName = bankAccountUpdateDto.AccountName;
@@ -105,12 +188,24 @@ namespace PaymentService.Services.BankAccounts
                 bankAccountEntity.BankId = bankAccountUpdateDto.BankId;
                 bankAccountEntity.IsPrimary = bankAccountUpdateDto.IsPrimary;
 
-                _context.BankAccounts.Update(bankAccountEntity);
-                _context.SaveChanges();
+                if (bankAccountEntity.IsPrimary)
+                {
+                    var existedPrimary = await _context.BankAccounts
+                        .FirstOrDefaultAsync(b => b.UserId == currentUser.UserId && b.IsPrimary && b.Id != id);
 
-                response.Message = "Update bank account successfully";
-                _logger.LogInformation("[PaymentService] [{Method}] End", methodName);
-                return Task.FromResult(response);
+                    if (existedPrimary != null)
+                    {
+                        existedPrimary.IsPrimary = false;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                var bankAccountDto = _mapper.Map<BankAccountDto>(bankAccountEntity);
+                response.Data.Add("bankAccount", bankAccountDto);
+
+                LogInfo("End", methodName);
+                return response;
             }
             catch (Exception e)
             {
@@ -119,13 +214,14 @@ namespace PaymentService.Services.BankAccounts
             }
         }
 
-        public Task<ResponseInfo> DeleteBankAccountAsync(Guid bankAccountId)
+        public async Task<ResponseInfo> DeleteBankAccountAsync(Guid bankAccountId)
         {
             var methodName = GetActualAsyncMethodName();
             try
             {
                 _logger.LogInformation("[PaymentService] [{Method}] Start", methodName);
                 var response = new ResponseInfo();
+                var currentUser = GetCurrentUser();
 
                 var bankAccount = _context.BankAccounts.FirstOrDefault(b => b.Id == bankAccountId);
                 if (bankAccount == null)
@@ -133,45 +229,26 @@ namespace PaymentService.Services.BankAccounts
                     response.StatusCode = StatusCodes.Status400BadRequest;
                     response.Message = "Bank account is not exist";
 
-                    _logger.LogInformation("[PaymentService] [{Method}] End", methodName);
-                    return Task.FromResult(response);
+                    LogInfo("End", methodName);
+                    return response;
+                }
+
+                if (!currentUser.IsAdmin && bankAccount.UserId != currentUser.UserId)
+                {
+                    response.StatusCode = StatusCodes.Status403Forbidden;
+                    response.Message = "You are not authorized to delete this bank account";
+
+                    LogInfo("End", methodName);
+                    return response;
                 }
 
                 _context.BankAccounts.Remove(bankAccount);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
 
-                response.Message = "Delete bank account successfully";
-                _logger.LogInformation("[PaymentService] [{Method}] End", methodName);
-                return Task.FromResult(response);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "[PaymentService] [{Method}] Error", methodName);
-                throw;
-            }
-        }
+                response.Data.Add("bankAccountId", bankAccountId);
 
-        public Task<ResponseInfo> GetBankAccountAsync(Guid bankAccountId)
-        {
-            var methodName = GetActualAsyncMethodName();
-            try
-            {
-                _logger.LogInformation("[PaymentService] [{Method}] Start", methodName);
-                var response = new ResponseInfo();
-
-                var bankAccount = _context.BankAccounts.FirstOrDefault(b => b.Id == bankAccountId);
-                if (bankAccount == null)
-                {
-                    response.StatusCode = StatusCodes.Status400BadRequest;
-                    response.Message = "Bank account is not exist";
-
-                    _logger.LogInformation("[PaymentService] [{Method}] End", methodName);
-                    return Task.FromResult(response);
-                }
-
-                response.Data.Add("bankAccount", bankAccount);
-                _logger.LogInformation("[PaymentService] [{Method}] End", methodName);
-                return Task.FromResult(response);
+                LogInfo("End", methodName);
+                return response;
             }
             catch (Exception e)
             {
