@@ -14,6 +14,8 @@ namespace PaymentService.Databases.Schemas
 
         public decimal Amount { get; set; }
 
+        public CurrencyType Currency { get; set; }
+
         [MaxLength(1000)]
         public string Error { get; set; }
 
