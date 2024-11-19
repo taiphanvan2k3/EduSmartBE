@@ -5,11 +5,15 @@ using CourseManagementService.Services.Cache;
 using CourseManagementService.Services.CategoryManagement.Schemas;
 using CourseManagementService.Services.ChapterManagement;
 using CourseManagementService.Services.CourseManagement.Public.Schemas;
+using CourseManagementService.Services.CourseManagement.Student;
 using CourseManagementService.Services.CourseManagement.Teacher.Schemas;
 using CourseManagementService.Services.Grpc;
+using CourseManagementService.Services.Grpc.PaymentService;
+using CourseManagementService.Services.Grpc.PaymentService.Schemas;
 using CourseManagementService.Services.LessonManagement.LessonBase;
 using CourseManagementService.Services.Medias;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace CourseManagementService.Services.CourseManagement.Public
 {
@@ -30,6 +34,15 @@ namespace CourseManagementService.Services.CourseManagement.Public
         /// <param name="courseId">Id of course</param>
         /// <returns></returns>
         public Task<bool> CanAccessCourseMaterial(Guid courseId);
+
+        /// <summary>
+        /// Generate QR code for payment
+        /// <para>Created at: 2024/10/20</para>
+        /// <para>Created by: TaiPV</para> 
+        /// </summary>
+        /// <param name="courseId"></param>
+        /// <returns></returns>
+        public Task<ResponseInfo> GetCoursePaymentInfo(Guid courseId);
     }
 
     public class PublicCourseDetailService(IServiceProvider serviceProvider,
@@ -38,6 +51,8 @@ namespace CourseManagementService.Services.CourseManagement.Public
     {
         private readonly IGrpcUserService _grpcUserService = serviceProvider.GetService<IGrpcUserService>()
             ?? throw new ArgumentNullException(ServiceInjectionError("IGrpcUserService"));
+        private readonly IGrpcPaymentService _grpcPaymentService = serviceProvider.GetService<IGrpcPaymentService>()
+            ?? throw new ArgumentNullException(ServiceInjectionError("IGrpcPaymentService"));
         private readonly ICacheService _cacheService = serviceProvider.GetRequiredService<ICacheService>()
             ?? throw new InvalidOperationException(ServiceInjectionError("ICacheService"));
         private readonly ILessonBaseDetailService _lessonBaseDetailService = serviceProvider.GetService<ILessonBaseDetailService>()
@@ -46,6 +61,8 @@ namespace CourseManagementService.Services.CourseManagement.Public
             ?? throw new ArgumentNullException(ServiceInjectionError("IListOfChaptersService"));
         private readonly IVideoService _videoService = serviceProvider.GetService<IVideoService>()
             ?? throw new ArgumentNullException(ServiceInjectionError("IVideoService"));
+        private readonly IStudentCourseDetailService _studentCourseDetailService = serviceProvider.GetService<IStudentCourseDetailService>()
+            ?? throw new ArgumentNullException(ServiceInjectionError("IStudentCourseDetailService"));
 
         public Task<bool> CanAccessCourseMaterial(Guid courseId)
         {
@@ -174,6 +191,89 @@ namespace CourseManagementService.Services.CourseManagement.Public
             }
         }
 
+        public async Task<ResponseInfo> GetCoursePaymentInfo(Guid courseId)
+        {
+            var method = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", method);
+                var responseInfo = new ResponseInfo();
+                var currentUser = GetCurrentUser();
+
+                if (await _studentCourseDetailService.IsCourseEnrolled(courseId))
+                {
+                    responseInfo.StatusCode = StatusCodes.Status400BadRequest;
+                    responseInfo.Message = "You have already enrolled this course";
+                    return responseInfo;
+                }
+
+                var course = await _context.Courses
+                    .Where(x => x.Id == courseId)
+                    .Select(x => new
+                    {
+                        x.Id,
+                        x.Price,
+                        CurrencyCode = x.Currency.Code,
+                        x.Name,
+                        x.TeacherId
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (course == null)
+                {
+                    responseInfo.StatusCode = StatusCodes.Status404NotFound;
+                    responseInfo.Message = "Course not found";
+                    return responseInfo;
+                }
+
+                var relatedInfo = JsonConvert.SerializeObject(new
+                {
+                    courseId = course.Id,
+                    teacherId = course.TeacherId
+                });
+
+                var transactionCode = $"SEP{Utils.GenerateRandomString(9)}";
+
+                // Get bank account and create transaction through gRPC
+                var getBankAccountTask = _grpcPaymentService.GetAdminBankAccountAsync();
+                var createTransactionTask = _grpcPaymentService.CreateCoursePaymentTransactionAsync(new PaymentTransactionData
+                {
+                    Amount = (double)course.Price,
+                    RelatedInfo = relatedInfo,
+                    UserId = currentUser.UserId,
+                    TransactionCode = transactionCode,
+                    CurrencyCode = course.CurrencyCode
+                });
+
+                await Task.WhenAll(getBankAccountTask, createTransactionTask);
+
+                // Handle response from gRPC
+                ResponseInfo bankAccountResponse = getBankAccountTask.Result;
+                ResponseInfo transactionResponse = createTransactionTask.Result;
+
+                if (!bankAccountResponse.IsSuccess || !transactionResponse.IsSuccess)
+                {
+                    responseInfo.StatusCode = StatusCodes.Status500InternalServerError;
+                    responseInfo.Message = "Failed to get bank account or create transaction";
+                    return responseInfo;
+                }
+
+                var adminAccount = bankAccountResponse.Data["adminAccount"] as BankAccountDto;
+                var transactionId = transactionResponse.Data["transactionId"] as string;
+                var usdToVndRate = transactionResponse.Data["exchangeRate"] as double? ?? 25397;
+                
+                var coursePaymentInfo = GetCoursePaymentInfo(adminAccount, course, transactionId, transactionCode, usdToVndRate);
+                responseInfo.Data.Add("coursePaymentInfo", coursePaymentInfo);
+
+                return responseInfo;
+            }
+            catch (Exception e)
+            {
+                LogError(e, method);
+                throw;
+            }
+        }
+
         private async Task FillTeacherInfo<T>(T course) where T : ICourseWithTeacher
         {
             var teachers = await _grpcUserService.GetListOfTeachers([course.Teacher.Id]);
@@ -185,6 +285,30 @@ namespace CourseManagementService.Services.CourseManagement.Public
                 course.Teacher.AvatarURL = teacher.AvatarURL;
                 course.Teacher.Email = teacher.Email;
             }
+        }
+
+        private static CoursePaymentInfo GetCoursePaymentInfo(BankAccountDto adminAccount, dynamic courseInfo,
+            string transactionId, string transactionCode, double usdToVndRate)
+        {
+            var qrData = new CoursePaymentQRData()
+            {
+                Amount = Utils.ExchangeCurrency(courseInfo.Price, courseInfo.CurrencyCode, "VND", (decimal)usdToVndRate),
+                AdminAccount = adminAccount,
+                TransactionOrder = transactionCode
+            };
+
+            var qrURL = Utils.GenerateQRCodeForCoursePayment(courseInfo.Id, qrData);
+            return new CoursePaymentInfo()
+            {
+                TransactionId = transactionId,
+                CourseName = courseInfo.Name,
+                PriceAtVnd = qrData.Amount,
+                PriceAtUsd = Utils.ExchangeCurrency(qrData.Amount, "VND", "USD", (decimal)usdToVndRate),
+                AccountName = adminAccount.AccountName,
+                AccountNumber = adminAccount.AccountNumber,
+                BankName = adminAccount.BankName,
+                QRCode = qrURL
+            };
         }
     }
 }
