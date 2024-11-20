@@ -1,8 +1,8 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { upload } = require('../middlewares/uploadFile');
-const { verifyTokenAndAttachUser } = require('../middlewares/auth');
-const MediaController = require('../controllers/media.controller');
+const { upload } = require("../middlewares/uploadFile");
+const { verifyTokenAndAttachUser } = require("../middlewares/auth");
+const MediaController = require("../controllers/media.controller");
 
 /**
  * @swagger
@@ -15,10 +15,15 @@ const MediaController = require('../controllers/media.controller');
  * @swagger
  * /media-service/api/:
  *   get:
- *     summary: Get user's media storage info
+ *     summary: |
+ *       Get user's media storage info
+ *       Created At: 2024/11/20
+ *       Created by: ManhTD
  *     description: Get user's media storage info
  *     tags:
  *       - Medias
+ *     x-author: John Doe
+ *     x-created-at: "2024-11-20T12:00:00Z"
  *     responses:
  *       200:
  *         description: Successfully uploaded
@@ -29,13 +34,16 @@ const MediaController = require('../controllers/media.controller');
  *     security:
  *       - BearerAuth: []
  */
-router.get('/', verifyTokenAndAttachUser, MediaController.getMedia);
+router.get("/", verifyTokenAndAttachUser, MediaController.getMedia);
 
 /**
  * @swagger
  * /media-service/api/upload-file:
  *   post:
- *     summary: Upload a file
+ *     summary: |
+ *       Upload a file
+ *       Created At: 2024-11-20
+ *       Created by: ManhTD
  *     description: Uploads a new file for a user.
  *     tags:
  *       - Medias
@@ -60,6 +68,11 @@ router.get('/', verifyTokenAndAttachUser, MediaController.getMedia);
  *       - BearerAuth: []
  */
 
-router.post('/upload-file', verifyTokenAndAttachUser, upload.single('file'), MediaController.uploadFile);
+router.post(
+    "/upload-file",
+    verifyTokenAndAttachUser,
+    upload.single("file"),
+    MediaController.uploadFile
+);
 
 module.exports = router;

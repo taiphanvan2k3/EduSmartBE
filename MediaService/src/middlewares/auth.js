@@ -1,10 +1,10 @@
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 
 const jwtSecret = process.env.JWT_SECRET;
 
 function verifyTokenAndAttachUser(req, res, next) {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Extract the token from "Bearer <token>"
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1]; // Extract the token from "Bearer <token>"
 
     if (!token) {
         return res.status(401).json({
@@ -42,4 +42,4 @@ function verifyTokenAndAttachUser(req, res, next) {
 
 module.exports = {
     verifyTokenAndAttachUser
-}
+};

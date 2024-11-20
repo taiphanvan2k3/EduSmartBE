@@ -1,5 +1,5 @@
-const { Pool } = require('pg');
-require('dotenv').config();
+const { Pool } = require("pg");
+require("dotenv").config();
 
 // Create a new pool using the connection string
 const pool = new Pool({
@@ -9,7 +9,7 @@ const pool = new Pool({
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
     ssl: {
-        rejectUnauthorized: process.env.DB_TRUST_CERT !== 'true', // Assuming DB_TRUST_CERT 'true' means trust the certificate
+        rejectUnauthorized: process.env.DB_TRUST_CERT !== "true" // Assuming DB_TRUST_CERT 'true' means trust the certificate
     }
 });
 
