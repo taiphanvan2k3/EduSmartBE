@@ -1,5 +1,5 @@
- const MediaRouter = require('./media.route');
+const MediaRouter = require("./media.route");
 
- module.exports = (app) => {
-    app.use('/media-service/api', MediaRouter);
- }
+module.exports = (app) => {
+    app.use("/media-service/api", MediaRouter);
+};
