@@ -27,6 +27,8 @@ restore_and_build_service:
           echo "No changes in ${service}, skipping build."
         fi
       done
+    - echo "Building MediaService..."
+    - cd MediaService && npm install && npm run build
   rules:
     # Unnecessary to build projects when pushing to main branch and only running the pipeline for merge request events
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -35,6 +37,7 @@ restore_and_build_service:
         - 'UserService/**/*'
         - 'CourseManagementService/**/*'
         - 'PaymentService/**/*'
+        - 'MediaService/**/*'
 
 deploy_services:
   stage: deploy
@@ -50,7 +53,7 @@ deploy_services:
     - echo "Pulling latest code from the repository"
     - ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_SERVER_IP "cd $PATH_TO_PROJECT && eval \"\$(ssh-agent -s)\" && ssh-add /root/.ssh/id_rsa_gitlab && git fetch --prune origin && git reset --hard origin/main && git clean -fd && git gc --prune=now && git pull origin main"
     - |
-      services=("authservice" "userservice" "coursemanagementservice" "paymentservice")
+      services=("authservice" "userservice" "coursemanagementservice" "paymentservice" "mediaservice")
       for service in "${services[@]}"; do
         # Kiểm tra xem có thay đổi nào trong service đó hoặc trong docker-compose.yml hoặc .gitlab-ci.yml không
         if git diff --name-only HEAD HEAD~1 | grep -qiE "^${service}/|^docker-compose.yml|.gitlab-ci.yml"; then
@@ -70,3 +73,4 @@ deploy_services:
         - 'UserService/**/*'
         - 'CourseManagementService/**/*'
         - 'PaymentService/**/*'
+        - 'MediaService/**/*'
