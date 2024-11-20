@@ -83,7 +83,23 @@ services:
       - rabbitmq
     networks:
       - microservices-network
-   
+
+  mediaservice:
+    build:
+      context: ./MediaService
+      dockerfile: Dockerfile
+    container_name: mediaservice
+    ports:
+      - "7154:7154"
+    environment:
+      - NODE_ENV=production
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASS=guest
+    depends_on:
+      - rabbitmq
+    networks:
+      - microservices-network
 
 networks:
   microservices-network:
