@@ -2,6 +2,7 @@ using System.Text.Json;
 using CourseManagementService.Common;
 using CourseManagementService.Database.InitDb;
 using CourseManagementService.Extensions;
+using CourseManagementService.GrpcServices;
 using CourseManagementService.Middlewares;
 using CourseManagementService.Settings;
 using Microsoft.AspNetCore.Mvc;
@@ -112,5 +113,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseMiddleware<ExceptionHandlerMiddleware>();
+
+app.MapGrpcService<GrpcCourseService>();
 app.MapControllers();
 await app.RunAsync();

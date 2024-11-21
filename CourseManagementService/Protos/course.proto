@@ -1,0 +1,18 @@
+syntax = "proto3";
+option csharp_namespace = "CourseManagementService.GrpcServices";
+import "google/protobuf/timestamp.proto";
+
+service Course {
+    rpc EnrollCourse(CourseEnrollmentRequest) returns (CourseEnrollmentResponse);
+}
+
+message CourseEnrollmentRequest {
+    string courseId = 1;
+    int32 studentId = 2;
+    google.protobuf.Timestamp enrollmentDate = 3;
+}
+
+message CourseEnrollmentResponse {
+    string enrollmentId = 1;
+    bool isSuccess = 2;
+}

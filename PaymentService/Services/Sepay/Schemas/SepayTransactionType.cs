@@ -1,6 +1,6 @@
 namespace PaymentService.Services.Sepay.Schemas
 {
-    public enum TransactionType
+    public enum SepayTransactionType
     {
         In,
         Out

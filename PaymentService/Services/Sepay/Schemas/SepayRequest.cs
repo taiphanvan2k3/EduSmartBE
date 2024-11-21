@@ -1,6 +1,8 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace PaymentService.Services.Sepay.Schemas
 {
-    public class SepayRequest
+    public class SepayRequest : IValidatableObject
     {
         public long Id { get; set; }
 
@@ -14,8 +16,24 @@ namespace PaymentService.Services.Sepay.Schemas
 
         public string Content { get; set; }
 
-        public TransactionType TransactionType { get; set; }
+        public string PaymentContent
+        {
+            get
+            {
+                return Content.Replace("QR - ", "");
+            }
+        }
+
+        public SepayTransactionType TransactionType { get; set; }
 
         public decimal TransferAmount { get; set; }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (Content == null || !Content.Contains("SEP"))
+            {
+                yield return new ValidationResult("Content must contain 'SEP'", [nameof(Content)]);
+            }
+        }
     }
 }
