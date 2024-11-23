@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
+using CourseManagementService.Common;
 using CourseManagementService.Database;
 using CourseManagementService.Services.AppState;
 using CourseManagementService.Services.AppState.Schemas;
@@ -78,6 +79,15 @@ namespace CourseManagementService.Services
                 UserName = currentUser.FindFirst("username")?.Value,
                 Email = currentUser.FindFirst(ClaimTypes.Email)?.Value,
                 Roles = currentUser.FindFirst(ClaimTypes.Role)?.Value.Split(',').ToList()
+            };
+        }
+
+        protected static ResponseInfo CreateEarlyResponseInfo(int statusCode, string message)
+        {
+            return new ResponseInfo
+            {
+                StatusCode = statusCode,
+                Message = message
             };
         }
     }

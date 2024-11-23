@@ -37,5 +37,21 @@ namespace PaymentService.Controllers
             return StatusCode(responseInfo.StatusCode, ErrorResponseHelper
                 .GetContentOfAnyError(responseInfo.StatusCode, responseInfo.Error, responseInfo.Message));
         }
+
+        protected dynamic HandleResponseInfoNoResource(ResponseInfo responseInfo)
+        {
+            if (responseInfo.StatusCode == StatusCodes.Status200OK
+                || responseInfo.StatusCode == StatusCodes.Status201Created)
+            {
+                return Ok(new
+                {
+                    responseInfo.StatusCode,
+                    responseInfo.Message
+                });
+            }
+
+            return StatusCode(responseInfo.StatusCode, ErrorResponseHelper
+                .GetContentOfAnyError(responseInfo.StatusCode, responseInfo.Error, responseInfo.Message));
+        }
     }
 }

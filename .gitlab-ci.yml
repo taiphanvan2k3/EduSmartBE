@@ -1,11 +1,11 @@
-image: mcr.microsoft.com/dotnet/sdk:8.0
-
 stages:
-  - restore_and_build
+  - restore_and_build_dotnet_services
+  - build_nodejs_services
   - deploy
 
 restore_and_build_service:
-  stage: restore_and_build
+  stage: restore_and_build_dotnet_services
+  image: mcr.microsoft.com/dotnet/sdk:8.0
   cache:
     key: ${CI_COMMIT_REF_SLUG}
     paths:
@@ -27,8 +27,6 @@ restore_and_build_service:
           echo "No changes in ${service}, skipping build."
         fi
       done
-    - echo "Building MediaService..."
-    - cd MediaService && npm install && npm run build
   rules:
     # Unnecessary to build projects when pushing to main branch and only running the pipeline for merge request events
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -39,9 +37,31 @@ restore_and_build_service:
         - 'PaymentService/**/*'
         - 'MediaService/**/*'
 
+build_media_service:
+  stage: build_nodejs_services
+  image: node:18
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-npm
+    paths:
+      - MediaService/node_modules/
+  script:
+    - echo "Checking changes in MediaService..."
+    - |
+      if git diff --name-only HEAD HEAD~1 | grep -q "MediaService/"; then
+        echo "Changes detected in MediaService, running build process..."
+        cd MediaService
+        npm install
+        npm run build
+      else
+        echo "No changes in MediaService, skipping build."
+      fi
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - 'MediaService/**/*'
+
 deploy_services:
   stage: deploy
-  image: mcr.microsoft.com/dotnet/sdk:8.0
   environment: production
   before_script:
     - apt-get update && apt-get install -y openssh-client  # Cài đặt SSH client bằng apt-get
