@@ -4,7 +4,7 @@ using PaymentService.Commons.Helpers;
 using PaymentService.Enumerations;
 using PaymentService.Services.PaymentTransactions.Course;
 using PaymentService.Services.PaymentTransactions.Course.Schemas;
-using PaymentService.Services.PaymentTransactions.Schemas;
+using PaymentService.Services.PaymentTransactions.Shared.Schemas;
 using PaymentService.Services.Sepay.Schemas;
 using TblPaymentTransaction = PaymentService.Databases.Schemas.PaymentTransaction;
 

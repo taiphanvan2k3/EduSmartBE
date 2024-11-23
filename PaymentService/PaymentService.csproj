@@ -36,6 +36,7 @@
   <ItemGroup>
     <!-- gRPC Protobuf files -->
     <Protobuf Include="Protos/payment.proto" GrpcServices="Server" />
+    <Protobuf Include="Protos/course.proto" GrpcServices="Client" />
   </ItemGroup>
 
 </Project>

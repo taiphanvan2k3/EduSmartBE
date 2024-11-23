@@ -7,7 +7,7 @@ namespace PaymentService.Controllers
 {
     [Route("payment-service/api/webhook")]
     [ApiController]
-    public class WebhookController(ISepayService sepayService, IConfiguration configuration) : ControllerBase
+    public class WebhookController(ISepayService sepayService, IConfiguration configuration) : BaseController
     {
         private readonly ISepayService _sepayService = sepayService
             ?? throw new ArgumentNullException(nameof(sepayService));
@@ -31,7 +31,7 @@ namespace PaymentService.Controllers
             }
 
             var responseInfo = await _sepayService.HandlePaymentRequest(request);
-            return Ok(responseInfo);
+            return HandleResponseInfoNoResource(responseInfo);
         }
     }
 }
