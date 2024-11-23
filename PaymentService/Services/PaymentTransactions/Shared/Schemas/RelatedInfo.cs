@@ -1,4 +1,4 @@
-namespace PaymentService.Services.PaymentTransactions.Schemas
+namespace PaymentService.Services.PaymentTransactions.Shared.Schemas
 {
     public static class RelatedInfo
     {

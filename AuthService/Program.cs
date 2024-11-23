@@ -60,7 +60,6 @@ builder.Services.AddControllers()
     });
 
 builder.Services.AddAuthorization();
-
 builder.Services.AddGrpc();
 
 if (builder.Environment.IsProduction())

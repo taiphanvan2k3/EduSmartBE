@@ -14,5 +14,6 @@ message CourseEnrollmentRequest {
 
 message CourseEnrollmentResponse {
     string enrollmentId = 1;
-    bool isSuccess = 2;
+    string message = 2;
+    bool isSuccess = 3;
 }

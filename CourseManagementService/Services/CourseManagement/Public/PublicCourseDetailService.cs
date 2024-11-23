@@ -202,9 +202,7 @@ namespace CourseManagementService.Services.CourseManagement.Public
 
                 if (await _studentCourseDetailService.IsCourseEnrolled(courseId))
                 {
-                    responseInfo.StatusCode = StatusCodes.Status400BadRequest;
-                    responseInfo.Message = "You have already enrolled this course";
-                    return responseInfo;
+                    return CreateEarlyResponseInfo(StatusCodes.Status400BadRequest, "You have already enrolled this course");
                 }
 
                 var course = await _context.Courses
@@ -221,9 +219,12 @@ namespace CourseManagementService.Services.CourseManagement.Public
 
                 if (course == null)
                 {
-                    responseInfo.StatusCode = StatusCodes.Status404NotFound;
-                    responseInfo.Message = "Course not found";
-                    return responseInfo;
+                    return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "Course not found");
+                }
+
+                if (course.TeacherId == currentUser.UserId)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status400BadRequest, "You cannot enroll your own course");
                 }
 
                 var relatedInfo = JsonConvert.SerializeObject(new
@@ -253,15 +254,14 @@ namespace CourseManagementService.Services.CourseManagement.Public
 
                 if (!bankAccountResponse.IsSuccess || !transactionResponse.IsSuccess)
                 {
-                    responseInfo.StatusCode = StatusCodes.Status500InternalServerError;
-                    responseInfo.Message = "Failed to get bank account or create transaction";
-                    return responseInfo;
+                    return CreateEarlyResponseInfo(StatusCodes.Status500InternalServerError, 
+                        "Failed to get bank account or create transaction");
                 }
 
                 var adminAccount = bankAccountResponse.Data["adminAccount"] as BankAccountDto;
                 var transactionId = transactionResponse.Data["transactionId"] as string;
                 var usdToVndRate = transactionResponse.Data["exchangeRate"] as double? ?? 25397;
-                
+
                 var coursePaymentInfo = GetCoursePaymentInfo(adminAccount, course, transactionId, transactionCode, usdToVndRate);
                 responseInfo.Data.Add("coursePaymentInfo", coursePaymentInfo);
 
