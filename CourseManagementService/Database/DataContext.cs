@@ -69,6 +69,12 @@ namespace CourseManagementService.Database
                     {
                         prop.SetValue(entry.Entity, value.Value.ToUniversalTime());
                     }
+
+                    if (prop.Name == "UpdatedAt" && updatedAtProperty != null && entry.State == EntityState.Modified)
+                    {
+                        entry.Property("UpdatedAt").CurrentValue = DateTimeOffset.UtcNow;
+                        entry.Property("UpdatedAt").IsModified = true;  // Đánh dấu là đã thay đổi
+                    }
                 }
             }
         }
