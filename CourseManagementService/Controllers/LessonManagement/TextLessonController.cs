@@ -14,7 +14,7 @@ namespace CourseManagementService.Controllers.LessonManagement
 
         /// <summary>
         /// Get a text lesson by id
-        /// <para>Created at: 2024/11/12</para>
+        /// <para>Created at: 2024/11/12</para> 
         /// <para>Created by: TaiPV</para>
         /// </summary>
         /// <param name="id">Id of text lesson</param>
@@ -34,8 +34,8 @@ namespace CourseManagementService.Controllers.LessonManagement
         /// <para>Created by: TaiPV</para>
         /// </summary>
         /// <param name="textLessonCreateDto">text lesson information is need for create</param>
-        [HttpPost]
         [Filters.Auth(Roles = "Teacher")]
+        [HttpPost]
         public async Task<IActionResult> CreateLesson(TextLessonCreateUpdateDto textLessonCreateDto)
         {
             if (!ModelState.IsValid)
@@ -52,8 +52,8 @@ namespace CourseManagementService.Controllers.LessonManagement
         /// <para>Created at: 2024/11/12</para>
         /// <para>Created by: TaiPV</para>
         /// </summary>
-        [HttpPut("{id}")]
         [Filters.Auth(Roles = "Teacher")]
+        [HttpPut("{id}")]
         public async Task<IActionResult> UpdateLesson(Guid id, TextLessonCreateUpdateDto textLessonCreateDto)
         {
             if (!ModelState.IsValid)
@@ -71,8 +71,8 @@ namespace CourseManagementService.Controllers.LessonManagement
         /// <para>Created by: TaiPV</para>
         /// </summary>
         /// <param name="id">Id of text lesson is need for delete</param>
-        [HttpDelete("{id}")]
         [Filters.Auth(Roles = "Teacher")]
+        [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteLesson(Guid id)
         {
             var responseInfo = await _textLessonDetailService.DeleteTextLesson(id);

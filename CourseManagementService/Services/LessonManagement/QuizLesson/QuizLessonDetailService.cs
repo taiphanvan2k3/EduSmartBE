@@ -9,7 +9,6 @@ using CourseManagementService.Enumerations;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper.QueryableExtensions;
-using Microsoft.Extensions.Azure;
 
 namespace CourseManagementService.Services.LessonManagement.QuizLesson
 {
@@ -79,21 +78,26 @@ namespace CourseManagementService.Services.LessonManagement.QuizLesson
                     return responseInfo;
                 }
 
-                var lessonEntity = await _context.Lessons
+                var lessonDto = await _context.Lessons
                     .AsNoTracking()
-                    .Include(l => l.QuizLesson)
                     .Where(l => l.Id == lessonId)
                     .ProjectTo<QuizLessonDetail>(_mapper.ConfigurationProvider)
                     .FirstOrDefaultAsync();
 
-                if (lessonEntity == null)
+                if (lessonDto == null)
                 {
                     responseInfo.StatusCode = StatusCodes.Status404NotFound;
                     responseInfo.Message = "Lesson not found";
                     return responseInfo;
                 }
 
-                responseInfo.Data.Add("lesson", lessonEntity);
+                (Guid? previousLessonId, Guid? nextLessonId) = await _lessonBaseDetailService.GetPreviousAndNextLessonId(
+                    lessonDto.ChapterOrder, lessonDto.LessonOrder);
+
+                lessonDto.PreviousLessonId = previousLessonId;
+                lessonDto.NextLessonId = nextLessonId;
+
+                responseInfo.Data.Add("lesson", lessonDto);
                 return responseInfo;
             }
             catch (Exception e)
@@ -212,6 +216,15 @@ namespace CourseManagementService.Services.LessonManagement.QuizLesson
 
                 lessonEntity.QuizLesson.Question = quizLessonUpdateDto.Question;
                 lessonEntity.QuizLesson.IsMultipleChoice = quizLessonUpdateDto.IsMultipleChoice;
+
+                if (quizLessonUpdateDto.IsPublished && lessonEntity.PublishedAt == null)
+                {
+                    lessonEntity.PublishedAt = DateTimeOffset.UtcNow;
+                }
+                else if (!quizLessonUpdateDto.IsPublished)
+                {
+                    lessonEntity.PublishedAt = null;
+                }
 
                 // Check xem answer có hợp lệ không
                 var oldAnswerIdsFromInput = quizLessonUpdateDto.Answers

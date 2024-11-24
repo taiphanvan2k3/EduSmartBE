@@ -13,17 +13,41 @@ namespace CourseManagementService.AutoMapper
     {
         public LessonProfile()
         {
-            var uploadStatusType = typeof(UploadStatus);
+            CreateMapForTextLesson();
+            CreateMapForVideoLesson();
+            CreateMapForQuizLesson();
+        }
+
+        private void CreateMapForTextLesson()
+        {
             var lessonTypesType = typeof(LessonType);
+            var difficultyLevelType = typeof(DifficultyLevel);
+
+            CreateMap<TextLessonCreateUpdateDto, TblLesson>()
+                .ForMember(dest => dest.LessonType, opt => opt.MapFrom(src => LessonType.Text))
+                .ForMember(dest => dest.DifficultyLevel, opt => opt.MapFrom(src => src.DifficultyLevel));
 
             CreateMap<TblLesson, LessonDetail>()
                 .ForMember(dest => dest.LessonType, opt => opt.MapFrom(src => new LookupDto()
                 {
                     Id = ((int)Enum.Parse(lessonTypesType, src.LessonType.ToString())).ToString(),
                     Name = src.LessonType.ToString()
-                }));
+                }))
+                .ForMember(dest => dest.DifficultyLevel, opt => opt.MapFrom(src => new LookupDto()
+                {
+                    Id = ((int)Enum.Parse(difficultyLevelType, src.DifficultyLevel.ToString())).ToString(),
+                    Name = src.DifficultyLevel.ToString()
+                }))
+                .ForMember(dest => dest.LessonOrder, opt => opt.MapFrom(src => src.Order))
+                .ForMember(dest => dest.ChapterOrder, opt => opt.MapFrom(src => src.Chapter.Order));
+        }
 
-            // Video Lesson
+        private void CreateMapForVideoLesson()
+        {
+            var uploadStatusType = typeof(UploadStatus);
+            var lessonTypesType = typeof(LessonType);
+            var difficultyLevelType = typeof(DifficultyLevel);
+
             CreateMap<TblVideoLesson, VideoLessonDetail>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.LessonId))
                 .ForMember(dest => dest.UploadStatus, opt => opt.MapFrom(src => new LookupDto()
@@ -41,12 +65,22 @@ namespace CourseManagementService.AutoMapper
                     Id = ((int)Enum.Parse(lessonTypesType, src.Lesson.LessonType.ToString())).ToString(),
                     Name = src.Lesson.LessonType.ToString()
                 }))
+                .ForMember(dest => dest.DifficultyLevel, opt => opt.MapFrom(src => new LookupDto()
+                {
+                    Id = ((int)Enum.Parse(difficultyLevelType, src.Lesson.DifficultyLevel.ToString())).ToString(),
+                    Name = src.Lesson.DifficultyLevel.ToString()
+                }))
                 .ForMember(dest => dest.DurationInSeconds, opt => opt.MapFrom(src => src.Lesson.DurationInSeconds))
                 .ForMember(dest => dest.IsPublished, opt => opt.MapFrom(src => src.Lesson.IsPublished))
                 .ForMember(dest => dest.IsCommentAllowed, opt => opt.MapFrom(src => src.Lesson.IsCommentAllowed))
                 .ForMember(dest => dest.IsRatingAllowed, opt => opt.MapFrom(src => src.Lesson.IsRatingAllowed));
+        }
 
-            // Quiz Lesson
+        private void CreateMapForQuizLesson()
+        {
+            var lessonTypesType = typeof(LessonType);
+            var difficultyLevelType = typeof(DifficultyLevel);
+
             CreateMap<TblLesson, QuizLessonDetail>()
                 .ForMember(dest => dest.Question, opt => opt.MapFrom(src => src.QuizLesson.Question))
                 .ForMember(dest => dest.IsMultipleChoice, opt => opt.MapFrom(src => src.QuizLesson.IsMultipleChoice))
@@ -64,10 +98,13 @@ namespace CourseManagementService.AutoMapper
                     Id = ((int)Enum.Parse(lessonTypesType, src.LessonType.ToString())).ToString(),
                     Name = src.LessonType.ToString()
                 }))
-                .ForMember(dest => dest.DurationInSeconds, opt => opt.MapFrom(src => src.DurationInSeconds))
-                .ForMember(dest => dest.IsPublished, opt => opt.MapFrom(src => src.IsPublished))
-                .ForMember(dest => dest.IsCommentAllowed, opt => opt.MapFrom(src => src.IsCommentAllowed))
-                .ForMember(dest => dest.IsRatingAllowed, opt => opt.MapFrom(src => src.IsRatingAllowed));
+                .ForMember(dest => dest.DifficultyLevel, opt => opt.MapFrom(src => new LookupDto()
+                {
+                    Id = ((int)Enum.Parse(difficultyLevelType, src.DifficultyLevel.ToString())).ToString(),
+                    Name = src.DifficultyLevel.ToString()
+                }))
+                .ForMember(dest => dest.LessonOrder, opt => opt.MapFrom(src => src.Order))
+                .ForMember(dest => dest.ChapterOrder, opt => opt.MapFrom(src => src.Chapter.Order));
         }
     }
 }
