@@ -186,7 +186,8 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson
                     IsRatingAllowed = videoLessonInfo.IsRatingAllowed,
                     CreatedBy = currentUser.UserId,
                     DurationInSeconds = videoLessonInfo.VideoDurationInSeconds ?? 0,
-                    Order = videoLessonOrder + 1
+                    Order = videoLessonOrder + 1,
+                    PublishedAt = videoLessonInfo.IsPublished ? DateTimeOffset.UtcNow : null
                 };
 
                 var videoLessonEntity = new TblVideoLesson()
@@ -256,6 +257,15 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson
                 videoLessonEntity.Lesson.IsPublished = videoLessonInfo.IsPublished;
                 videoLessonEntity.Lesson.IsCommentAllowed = videoLessonInfo.IsCommentAllowed;
                 videoLessonEntity.Lesson.IsRatingAllowed = videoLessonInfo.IsRatingAllowed;
+
+                if (videoLessonInfo.IsPublished && videoLessonEntity.Lesson.PublishedAt == null)
+                {
+                    videoLessonEntity.Lesson.PublishedAt = DateTimeOffset.UtcNow;
+                }
+                else if (!videoLessonInfo.IsPublished)
+                {
+                    videoLessonEntity.Lesson.PublishedAt = null;
+                }
 
                 var deletedResources = new Dictionary<string, string>()
                 {

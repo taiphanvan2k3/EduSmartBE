@@ -2,7 +2,6 @@ using CourseManagementService.Database.Schemas;
 using CourseManagementService.Enumerations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 
 namespace CourseManagementService.Database
@@ -153,7 +152,6 @@ namespace CourseManagementService.Database
                     .WithOne(ql => ql.Lesson)
                     .HasForeignKey<QuizLesson>(ql => ql.LessonId)
                     .OnDelete(DeleteBehavior.Cascade);
-
                 entity.HasOne(l => l.VideoLesson)
                     .WithOne(vl => vl.Lesson)
                     .HasForeignKey<VideoLesson>(vl => vl.LessonId)
@@ -164,6 +162,9 @@ namespace CourseManagementService.Database
                 entity.Property(l => l.IsCommentAllowed)
                     .HasDefaultValue(true);
                 entity.Property(l => l.LessonType)
+                    .HasConversion<string>()
+                    .HasMaxLength(50);
+                entity.Property(l => l.DifficultyLevel)
                     .HasConversion<string>()
                     .HasMaxLength(50);
             });
@@ -258,23 +259,12 @@ namespace CourseManagementService.Database
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
                 var createdAtProperty = entityType.ClrType.GetProperty("CreatedAt");
-                var updatedAtProperty = entityType.ClrType.GetProperty("UpdatedAt");
-
                 if (createdAtProperty != null)
                 {
                     modelBuilder.Entity(entityType.ClrType)
                         .Property(createdAtProperty.Name)
                         .HasDefaultValueSql("CURRENT_TIMESTAMP")
                         .ValueGeneratedOnAdd()
-                        .IsRequired();
-                }
-
-                if (updatedAtProperty != null)
-                {
-                    modelBuilder.Entity(entityType.ClrType)
-                        .Property(updatedAtProperty.Name)
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                        .ValueGeneratedOnAddOrUpdate()
                         .IsRequired();
                 }
             }

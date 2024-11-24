@@ -46,6 +46,9 @@ namespace CourseManagementService.Services.LessonManagement.TextLesson.Schemas
         [JsonProperty(Order = 7)]
         public Guid? NextLessonId { get; set; }
 
+        [JsonProperty(Order = 8)]
+        public LookupDto DifficultyLevel { get; set; }
+
         [JsonProperty(Order = 10)]
         public bool IsPublished { get; set; }
 
@@ -56,9 +59,9 @@ namespace CourseManagementService.Services.LessonManagement.TextLesson.Schemas
         public bool IsRatingAllowed { get; set; }
 
         [JsonProperty(Order = 13)]
-        public DateTimeOffset UpdatedAt { get; set; }
+        public DateTimeOffset? UpdatedAt { get; set; }
 
         [JsonProperty(Order = 14)]
-        public DateTimeOffset PublishedAt { get; set; }
+        public DateTimeOffset? PublishedAt { get; set; }
     }
 }

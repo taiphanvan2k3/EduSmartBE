@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using CourseManagementService.Enumerations;
 
 namespace CourseManagementService.Services.LessonManagement.TextLesson.Schemas
 {
@@ -16,5 +17,7 @@ namespace CourseManagementService.Services.LessonManagement.TextLesson.Schemas
         public bool IsCommentAllowed { get; set; } = true;
 
         public bool IsRatingAllowed { get; set; } = true;
+
+        public DifficultyLevel DifficultyLevel { get; set; }
     }
 }
