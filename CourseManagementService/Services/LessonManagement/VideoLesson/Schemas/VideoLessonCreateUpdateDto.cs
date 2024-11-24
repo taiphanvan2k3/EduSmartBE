@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using CourseManagementService.Services.LessonManagement.TextLesson.Schemas;
 
 namespace CourseManagementService.Services.LessonManagement.VideoLesson.Schemas
 {

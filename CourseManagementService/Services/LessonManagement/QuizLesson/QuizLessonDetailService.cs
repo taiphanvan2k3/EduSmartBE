@@ -136,7 +136,6 @@ namespace CourseManagementService.Services.LessonManagement.QuizLesson
                     Title = quizLessonCreateDto.Title,
                     Description = null,
                     ChapterId = quizLessonCreateDto.ChapterId,
-                    DurationInSeconds = quizLessonCreateDto.DurationInSeconds,
                     IsPublished = quizLessonCreateDto.IsPublished,
                     IsCommentAllowed = quizLessonCreateDto.IsCommentAllowed,
                     IsRatingAllowed = quizLessonCreateDto.IsRatingAllowed,
@@ -210,7 +209,6 @@ namespace CourseManagementService.Services.LessonManagement.QuizLesson
 
                 lessonEntity.Title = quizLessonUpdateDto.Title;
                 lessonEntity.ChapterId = quizLessonUpdateDto.ChapterId;
-                lessonEntity.DurationInSeconds = quizLessonUpdateDto.DurationInSeconds;
 
                 lessonEntity.QuizLesson.Question = quizLessonUpdateDto.Question;
                 lessonEntity.QuizLesson.IsMultipleChoice = quizLessonUpdateDto.IsMultipleChoice;

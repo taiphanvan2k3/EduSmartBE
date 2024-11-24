@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace CourseManagementService.Services.LessonManagement.VideoLesson.Schemas
+namespace CourseManagementService.Services.LessonManagement.TextLesson.Schemas
 {
     public class TextLessonCreateUpdateDto
     {
@@ -16,7 +16,5 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson.Schemas
         public bool IsCommentAllowed { get; set; } = true;
 
         public bool IsRatingAllowed { get; set; } = true;
-
-        public int DurationInSeconds { get; set; }
     }
 }
