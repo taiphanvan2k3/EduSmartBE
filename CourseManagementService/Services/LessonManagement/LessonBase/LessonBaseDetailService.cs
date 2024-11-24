@@ -1,3 +1,4 @@
+using System.Diagnostics.Eventing.Reader;
 using CourseManagementService.Services.LessonManagement.LessonBase.Schemas;
 using Microsoft.EntityFrameworkCore;
 
@@ -39,6 +40,14 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
         /// <param name="userId"></param>
         /// <returns></returns>
         public Task<bool> CanModifyCourseMaterial(Guid courseId, int userId);
+
+        /// <summary>
+        /// Check if the user can create a lesson in the chapter
+        /// <para>Created at: 2024/11/24</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <returns></returns>
+        public Task<bool> CanCreateLessonInChapter(Guid chapterId, int userId);
 
         /// <summary>
         /// Check if the user can modify the lesson material (create, update, delete)
@@ -186,6 +195,26 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
             }
         }
 
+        public async Task<bool> CanCreateLessonInChapter(Guid chapterId, int userId)
+        {
+            var method = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", method);
+
+                var isCanCreate = await _context.Chapters
+                    .AnyAsync(c => c.Id == chapterId && c.Course.TeacherId == userId);
+
+                LogInfo("End", method);
+                return isCanCreate;
+            }
+            catch (Exception e)
+            {
+                LogError(e, method);
+                throw;
+            }
+        }
+
         public async Task<bool> CanModifyLessonMaterial(Guid lessonId, int userId)
         {
             var method = GetActualAsyncMethodName();
@@ -241,7 +270,7 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
                     {
                         LessonId = lt.LessonId,
                         TimeSpent = lt.TimeSpent,
-                        LastAccessed = lt.UpdatedAt
+                        LastAccessed = lt.UpdatedAt ?? lt.CreatedAt
                     })
                     .ToListAsync();
 

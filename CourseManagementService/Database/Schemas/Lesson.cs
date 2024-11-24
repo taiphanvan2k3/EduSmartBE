@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using CourseManagementService.Enumerations;
 using Microsoft.EntityFrameworkCore;
 
@@ -37,6 +36,8 @@ namespace CourseManagementService.Database.Schemas
 
         public int Order { get; set; }
 
+        public DifficultyLevel DifficultyLevel { get; set; }
+
         [Comment("This lesson is a quiz lesson")]
         public virtual QuizLesson QuizLesson { get; set; }
 
@@ -46,8 +47,5 @@ namespace CourseManagementService.Database.Schemas
         public virtual ICollection<LessonRating> Ratings { get; set; }
 
         public virtual ICollection<LessonTracking> LessonTrackings { get; set; }
-
-        [NotMapped]
-        public int CompositeOrder => Chapter.Order * 1000 + Order;
     }
 }
