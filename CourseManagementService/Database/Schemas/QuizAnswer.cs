@@ -8,7 +8,7 @@ namespace CourseManagementService.Database.Schemas
         public long Id { get; set; }
 
         [Required]
-        [MaxLength(300)]
+        [MaxLength(500)]
         public string Answer { get; set; }
 
         public bool IsCorrect { get; set; }
