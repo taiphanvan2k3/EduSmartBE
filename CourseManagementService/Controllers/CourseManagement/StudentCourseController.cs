@@ -1,3 +1,4 @@
+using CourseManagementService.Common.Helpers;
 using CourseManagementService.Services.CourseManagement.Public.Schemas;
 using CourseManagementService.Services.CourseManagement.Student;
 using CourseManagementService.Services.CourseManagement.Student.Schemas;
@@ -31,11 +32,13 @@ namespace CourseManagementService.Controllers.CourseManagement
         }
 
         /// <summary>
-        /// View course progress of one student
+        /// View course progress of a student
+        /// <para>Created at: 2024/11/24</para>
+        /// <para>Created by: TaiPV</para>
         /// </summary>
-        /// <param name="userId"></param>
-        /// <returns></returns>
         [HttpGet("{userId}/courses")]
+        [ProducesResponseType(typeof(List<EnrolledCourseInfo>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ErrorResponse>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetCoursesByUserId([FromRoute] int userId)
         {
             var responseInfo = await _listOfStudentCoursesService.GetCoursesByUserId(userId);
