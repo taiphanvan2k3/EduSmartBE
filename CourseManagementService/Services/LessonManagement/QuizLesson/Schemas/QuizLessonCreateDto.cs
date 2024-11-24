@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using CourseManagementService.Services.LessonManagement.VideoLesson.Schemas;
+using CourseManagementService.Services.LessonManagement.TextLesson.Schemas;
 
 namespace CourseManagementService.Services.LessonManagement.QuizLesson.Schemas
 {
@@ -30,11 +30,6 @@ namespace CourseManagementService.Services.LessonManagement.QuizLesson.Schemas
             if (!IsMultipleChoice && Answers.Count(a => a.IsCorrect) != 1)
             {
                 yield return new ValidationResult("Exactly 1 correct answer is required", [nameof(Answers)]);
-            }
-
-            if (DurationInSeconds <= 0)
-            {
-                yield return new ValidationResult("Estimated learning time must be greater than 0", [nameof(DurationInSeconds)]);
             }
         }
     }
