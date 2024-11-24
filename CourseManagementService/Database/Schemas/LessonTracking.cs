@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 namespace CourseManagementService.Database.Schemas
 {
     /// <summary>
-    /// Check whether a student has completed a lesson
+    /// Check the time spent on each lesson
     /// </summary>
     public class LessonTracking : BaseEntity
     {
@@ -22,5 +22,7 @@ namespace CourseManagementService.Database.Schemas
 
         [Comment("The time spent on the lesson in minutes")]
         public long TimeSpent { get; set; }
+
+        public bool IsCompleted { get; set; }
     }
 }

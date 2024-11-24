@@ -29,6 +29,9 @@ namespace CourseManagementService.Services.Cache
             public static int ExpireTimeInMinutes => 10;
         }
 
+        /// <summary>
+        /// Giảng viên xem danh sách học viên đã đăng ký (tổng thể hoặc trong một khoá học)
+        /// </summary>
         public static class StudentEnrollments
         {
             public static class Overall
@@ -65,6 +68,24 @@ namespace CourseManagementService.Services.Cache
             public static string PrefixKey => "CourseDetail";
             public static string Key(Guid courseId, int userId) => $"CourseDetail_{courseId}_{userId}";
             public static int ExpireTimeInMinutes => 30;
+        }
+
+        /// <summary>
+        /// Người dùng khác xem tiến độ học tập của 1 học viên khác
+        /// </summary>
+        public static class CourseProgressOfOtherUser
+        {
+            public static string Key(int userId) => $"CourseProgressOfOtherUser_{userId}";
+            public static int ExpireTimeInMinutes => 15;
+        }
+
+        /// <summary>
+        /// Danh sách khoá học mà học viên đã đăng ký
+        /// </summary>
+        public static class EnrolledCourses
+        {
+            public static string Key(int userId) => $"EnrolledCourses_{userId}";
+            public static int ExpireTimeInMinutes => 15;
         }
     }
 }

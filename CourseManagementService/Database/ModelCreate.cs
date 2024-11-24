@@ -1,6 +1,8 @@
 using CourseManagementService.Database.Schemas;
+using CourseManagementService.Enumerations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 
 namespace CourseManagementService.Database
@@ -128,10 +130,18 @@ namespace CourseManagementService.Database
                 entity.ToTable("CourseEnrollments");
                 entity.HasKey(e => new { e.CourseId, e.StudentId });
 
+                entity.HasIndex(e => new { e.StudentId, e.LeaveDate });
+                entity.HasIndex(e => new { e.CourseId, e.StudentId, e.LeaveDate });
+
                 entity.HasOne(e => e.Course)
                     .WithMany(c => c.Enrollments)
                     .HasForeignKey(e => e.CourseId)
                     .OnDelete(DeleteBehavior.Restrict);
+
+                entity.Property(e => e.VisibilityStatus)
+                    .HasDefaultValue(CourseProgressVisibility.Unknown)
+                    .HasConversion<string>()
+                    .HasMaxLength(50);
             });
 
             modelBuilder.Entity<Lesson>(entity =>
