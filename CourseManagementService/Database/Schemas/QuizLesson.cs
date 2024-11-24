@@ -7,7 +7,6 @@ namespace CourseManagementService.Database.Schemas
         public Guid Id { get; set; }
 
         [Required]
-        [MaxLength(300)]
         public string Question { get; set; }
 
         public Guid LessonId { get; set; }

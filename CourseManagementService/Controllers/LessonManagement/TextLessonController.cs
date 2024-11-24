@@ -1,81 +1,81 @@
 using CourseManagementService.Common.Helpers;
-using CourseManagementService.Services.LessonManagement.QuizLesson;
-using CourseManagementService.Services.LessonManagement.QuizLesson.Schemas;
+using CourseManagementService.Services.LessonManagement.TextLesson;
+using CourseManagementService.Services.LessonManagement.TextLesson.Schemas;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CourseManagementService.Controllers.LessonManagement
 {
-    [Route("course-service/api/quiz-lessons", Order = 9)]
+    [Route("course-service/api/text-lessons", Order = 7)]
     [ApiController]
-    public class QuizLessonController(IQuizLessonDetailService quizLessonDetailService) : BaseController
+    public class TextLessonController(ITextLessonDetailService textLessonDetailService) : BaseController
     {
-        private readonly IQuizLessonDetailService _quizLessonDetailService = quizLessonDetailService
-            ?? throw new ArgumentNullException(nameof(quizLessonDetailService));
+        private readonly ITextLessonDetailService _textLessonDetailService = textLessonDetailService
+            ?? throw new ArgumentNullException(nameof(textLessonDetailService));
 
         /// <summary>
-        /// Get a quiz lesson by id
+        /// Get a text lesson by id
         /// <para>Created at: 2024/11/12</para>
         /// <para>Created by: TaiPV</para>
         /// </summary>
-        /// <param name="id">Id of quiz lesson</param>
+        /// <param name="id">Id of text lesson</param>
         [HttpGet("{id}")]
         [Filters.Auth]
-        [ProducesResponseType(typeof(QuizLessonDetail), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(LessonDetail), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetQuizLessonById(Guid id)
+        public async Task<IActionResult> GetTextLessonById(Guid id)
         {
-            var responseInfo = await _quizLessonDetailService.GetQuizLessonDetail(id);
+            var responseInfo = await _textLessonDetailService.GetTextLessonDetail(id);
             return HandleResponseInfo(responseInfo, resourceName: "lesson");
         }
 
         /// <summary>
-        /// Create a new quiz lesson
+        /// Create a new text lesson
         /// <para>Created at: 2024/11/12</para>
         /// <para>Created by: TaiPV</para>
         /// </summary>
-        /// <param name="quizLessonCreateDto">Quiz lesson information is need for create</param>
+        /// <param name="textLessonCreateDto">text lesson information is need for create</param>
         [HttpPost]
         [Filters.Auth(Roles = "Teacher")]
-        public async Task<IActionResult> CreateLesson(QuizLessonCreateDto quizLessonCreateDto)
+        public async Task<IActionResult> CreateLesson(TextLessonCreateUpdateDto textLessonCreateDto)
         {
             if (!ModelState.IsValid)
             {
                 return GetInvalidModelStateResponse();
             }
 
-            var responseInfo = await _quizLessonDetailService.CreateQuizLesson(quizLessonCreateDto);
+            var responseInfo = await _textLessonDetailService.CreateTextLesson(textLessonCreateDto);
             return HandleResponseInfo(responseInfo, resourceName: "lesson");
         }
 
         /// <summary>
-        /// Update a quiz lesson
+        /// Update a text lesson
         /// <para>Created at: 2024/11/12</para>
         /// <para>Created by: TaiPV</para>
         /// </summary>
         [HttpPut("{id}")]
         [Filters.Auth(Roles = "Teacher")]
-        public async Task<IActionResult> UpdateLesson(Guid id, QuizLessonUpdateDto quizLessonUpdateDto)
+        public async Task<IActionResult> UpdateLesson(Guid id, TextLessonCreateUpdateDto textLessonCreateDto)
         {
             if (!ModelState.IsValid)
             {
                 return GetInvalidModelStateResponse();
             }
 
-            var responseInfo = await _quizLessonDetailService.UpdateQuizLesson(id, quizLessonUpdateDto);
+            var responseInfo = await _textLessonDetailService.UpdateTextLesson(id, textLessonCreateDto);
             return HandleResponseInfo(responseInfo, resourceName: "lesson");
         }
 
         /// <summary>
-        /// Delete a quiz lesson
+        /// Delete a text lesson
         /// <para>Created at: 2024/11/12</para>
         /// <para>Created by: TaiPV</para>
         /// </summary>
-        /// <param name="id">Id of quiz lesson is need for delete</param>
+        /// <param name="id">Id of text lesson is need for delete</param>
         [HttpDelete("{id}")]
         [Filters.Auth(Roles = "Teacher")]
         public async Task<IActionResult> DeleteLesson(Guid id)
         {
-            var responseInfo = await _quizLessonDetailService.DeleteQuizLesson(id);
+            var responseInfo = await _textLessonDetailService.DeleteTextLesson(id);
             return HandleResponseInfo(responseInfo, resourceId: id.ToString());
         }
     }
