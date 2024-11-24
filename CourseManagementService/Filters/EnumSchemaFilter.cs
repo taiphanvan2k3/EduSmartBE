@@ -14,7 +14,7 @@ namespace CourseManagementService.Filters
             {
                 schema.Enum = Enum.GetValues(context.Type)
                     .Cast<object>()
-                    .Select(e => new OpenApiString($"{(int)e} - {GetEnumName(context.Type, e)}"))
+                    .Select(e => new OpenApiString(GetEnumName(context.Type, e)))
                     .Cast<IOpenApiAny>() // Chuyển đổi đúng kiểu
                     .ToList();
             }

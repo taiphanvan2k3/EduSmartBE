@@ -5,7 +5,7 @@ namespace CourseManagementService.Services.Grpc
 {
     public interface IGrpcUserService
     {
-        public Task<bool> CheckIfTeacherExists(int teacherId);
+        public Task<bool> CheckUserExist(int teacherId);
         public Task<ListOfUsersResponse> GetListOfTeachers(List<int> teacherIds);
         public Task<ListOfUsersResponse> GetListOfStudents(List<int> studentIds);
         public Task<ListOfUsersResponse> GetTeachersByName(string name);
@@ -23,7 +23,7 @@ namespace CourseManagementService.Services.Grpc
             _channel = GrpcChannel.ForAddress(configuration["ExternalServices:UserService:GrpcUrl"]);
         }
 
-        public async Task<bool> CheckIfTeacherExists(int teacherId)
+        public async Task<bool> CheckUserExist(int teacherId)
         {
             var methodName = GetActualAsyncMethodName();
             try
@@ -46,7 +46,10 @@ namespace CourseManagementService.Services.Grpc
             {
                 _logger.LogInformation("[{ServiceName}] {MethodName} Start", _serviceName, methodName);
                 var client = new User.UserClient(_channel);
+
                 var response = await client.GetListOfTeachersAsync(new UsersRequest { Ids = { teacherIds } });
+
+                _logger.LogInformation("[{ServiceName}] {MethodName} End", _serviceName, methodName);
                 return response;
             }
             catch (Exception e)
