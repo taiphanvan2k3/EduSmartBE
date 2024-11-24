@@ -267,7 +267,7 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                 var currencyTask = dbContextForCurrency.Currencies.FindAsync((int)courseCreateDto.Currency).AsTask();
 
                 var isValidSelectedTagsTask = IsValidSelectedTags(courseCreateDto.TagIds);
-                var isExistTeacherTask = _grpcUserService.CheckIfTeacherExists(_appStateService.UserInfo.UserId);
+                var isExistTeacherTask = _grpcUserService.CheckUserExist(_appStateService.UserInfo.UserId);
                 await Task.WhenAll(categoryTask, currencyTask, isValidSelectedTagsTask, isExistTeacherTask);
 
                 var errorMessages = new List<string>();
