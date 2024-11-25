@@ -1,6 +1,7 @@
 using CourseManagementService.Common;
 using CourseManagementService.Common.Helpers;
 using CourseManagementService.Services.CategoryManagement.Schemas;
+using CourseManagementService.Services.LessonManagement.LessonBase.Schemas;
 using Newtonsoft.Json;
 
 namespace CourseManagementService.Services.CourseManagement.Public.Schemas
@@ -27,7 +28,7 @@ namespace CourseManagementService.Services.CourseManagement.Public.Schemas
 
         public int TotalStudents { get; set; }
 
-        public Guid? FirstLessonId { get; set; }
+        public FirstLessonInfo FirstLesson { get; set; }
 
         [JsonIgnore]
         public List<long> TotalSecondsByChapter { get; set; } = [];
