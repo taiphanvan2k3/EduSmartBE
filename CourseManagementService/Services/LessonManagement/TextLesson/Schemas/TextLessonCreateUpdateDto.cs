@@ -18,6 +18,7 @@ namespace CourseManagementService.Services.LessonManagement.TextLesson.Schemas
 
         public bool IsRatingAllowed { get; set; } = true;
 
+        [EnumDataType(typeof(DifficultyLevel))]
         public DifficultyLevel DifficultyLevel { get; set; }
     }
 }

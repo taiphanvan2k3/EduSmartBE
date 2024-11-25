@@ -157,7 +157,8 @@ namespace CourseManagementService.Services.LessonManagement.QuizLesson
                             IsCorrect = a.IsCorrect,
                             Explanation = a.Explanation
                         }).ToList()
-                    }
+                    },
+                    DifficultyLevel = quizLessonCreateDto.DifficultyLevel
                 };
 
                 await _context.Lessons.AddAsync(lessonEntity);
