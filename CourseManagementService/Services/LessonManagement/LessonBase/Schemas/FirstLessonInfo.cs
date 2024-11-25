@@ -2,12 +2,10 @@ using CourseManagementService.Common;
 
 namespace CourseManagementService.Services.LessonManagement.LessonBase.Schemas
 {
-    public class ContinueLessonInfo
+    public class FirstLessonInfo
     {
-        public Guid LessonId { get; set; }
+        public Guid Id { get; set; }
 
         public LookupDto LessonType { get; set; }
-
-        public long TimeSpent { get; set; }
     }
 }
