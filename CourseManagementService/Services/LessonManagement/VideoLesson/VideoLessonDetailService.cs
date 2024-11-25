@@ -187,7 +187,8 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson
                     CreatedBy = currentUser.UserId,
                     DurationInSeconds = videoLessonInfo.VideoDurationInSeconds ?? 0,
                     Order = videoLessonOrder + 1,
-                    PublishedAt = videoLessonInfo.IsPublished ? DateTimeOffset.UtcNow : null
+                    PublishedAt = videoLessonInfo.IsPublished ? DateTimeOffset.UtcNow : null,
+                    DifficultyLevel = videoLessonInfo.DifficultyLevel
                 };
 
                 var videoLessonEntity = new TblVideoLesson()
