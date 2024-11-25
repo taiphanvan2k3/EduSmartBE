@@ -1,4 +1,6 @@
 using System.Diagnostics.Eventing.Reader;
+using CourseManagementService.Common;
+using CourseManagementService.Enumerations;
 using CourseManagementService.Services.LessonManagement.LessonBase.Schemas;
 using Microsoft.EntityFrameworkCore;
 
@@ -83,7 +85,7 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
         /// </summary>
         /// <param name="courseId"></param>
         /// <returns></returns>
-        public Task<Guid> GetFirstLessonId(Guid courseId);
+        public Task<FirstLessonInfo> GetFirstLessonInfo(Guid courseId);
 
         /// <summary>
         /// Get the previous and next lesson id of the lesson having the lessonId
@@ -284,20 +286,30 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
             }
         }
 
-        public async Task<Guid> GetFirstLessonId(Guid courseId)
+        public async Task<FirstLessonInfo> GetFirstLessonInfo(Guid courseId)
         {
             var methodName = GetActualAsyncMethodName();
             try
             {
                 LogInfo("Start", methodName);
-                var lessonId = await _context.Lessons
+                var lessonTypeEnum = typeof(LessonType);
+
+                var firstLesson = await _context.Lessons
                     .Where(l => l.Chapter.CourseId == courseId && l.Chapter.Order <= 1)
                     .OrderBy(l => l.Order)
-                    .Select(l => l.Id)
+                    .Select(l => new FirstLessonInfo()
+                    {
+                        Id = l.Id,
+                        LessonType = new LookupDto()
+                        {
+                            Id = ((int)Enum.Parse(lessonTypeEnum, l.LessonType.ToString())).ToString(),
+                            Name = l.LessonType.ToString()
+                        }
+                    })
                     .FirstOrDefaultAsync();
 
                 LogInfo("End", methodName);
-                return lessonId;
+                return firstLesson;
             }
             catch (Exception e)
             {
@@ -384,7 +396,11 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
                     return new ContinueLessonInfo()
                     {
                         LessonId = lastLearnedLesson.LessonId,
-                        LessonType = lastLearnedLesson.LessonType,
+                        LessonType = new LookupDto()
+                        {
+                            Id = ((int)lastLearnedLesson.LessonType).ToString(),
+                            Name = lastLearnedLesson.LessonType.ToString()
+                        },
                         TimeSpent = lastLearnedLesson.TimeSpent
                     };
                 }
@@ -392,7 +408,11 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
                 return new ContinueLessonInfo()
                 {
                     LessonId = nextLesson.Id,
-                    LessonType = nextLesson.LessonType,
+                    LessonType = new LookupDto()
+                    {
+                        Id = ((int)nextLesson.LessonType).ToString(),
+                        Name = nextLesson.LessonType.ToString()
+                    },
                     TimeSpent = 0
                 };
             }
