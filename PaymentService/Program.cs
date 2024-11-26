@@ -87,7 +87,7 @@ app.UseAuthorization();
 app.UseMiddleware<ExceptionHandlerMiddleware>();
 
 app.MapGrpcService<GrpcPaymentService>();
-app.MapHub<NotificationHub>("/hub/notification");
+app.MapHub<NotificationHub>("/payment-service/hub/notification");
 
 app.MapControllers();
 

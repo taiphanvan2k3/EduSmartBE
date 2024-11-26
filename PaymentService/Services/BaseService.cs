@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
+using PaymentService.Commons;
 using PaymentService.Databases;
 using PaymentService.Services.AppState;
 using PaymentService.Services.AppState.Schemas;
@@ -79,6 +80,29 @@ namespace PaymentService.Services
                 UserName = currentUser.FindFirst("username")?.Value,
                 Email = currentUser.FindFirst(ClaimTypes.Email)?.Value,
                 Roles = currentUser.FindFirst(ClaimTypes.Role)?.Value.Split(',').ToList()
+            };
+        }
+
+        protected static ResponseInfo CreateEarlyResponseInfo(int statusCode, string error = "", string message = "")
+        {
+            if (string.IsNullOrEmpty(error))
+            {
+                error = statusCode switch
+                {
+                    StatusCodes.Status400BadRequest => "BadRequest",
+                    StatusCodes.Status401Unauthorized => "Unauthorized",
+                    StatusCodes.Status403Forbidden => "Forbidden",
+                    StatusCodes.Status404NotFound => "NotFound",
+                    StatusCodes.Status500InternalServerError => "InternalServerError",
+                    _ => "UnknownError"
+                };
+            }
+
+            return new ResponseInfo
+            {
+                StatusCode = statusCode,
+                Error = error,
+                Message = message
             };
         }
     }

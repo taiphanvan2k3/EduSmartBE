@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using PaymentService.Commons;
 using PaymentService.Commons.Helpers;
 using PaymentService.Enumerations;
+using PaymentService.Hubs;
 using PaymentService.Services.PaymentTransactions.Course;
 using PaymentService.Services.PaymentTransactions.Course.Schemas;
 using PaymentService.Services.PaymentTransactions.Shared.Schemas;
@@ -20,25 +22,35 @@ namespace PaymentService.Services.Sepay
     {
         private readonly ICoursePaymentDetailService _coursePaymentDetailService = serviceProvider.GetRequiredService<ICoursePaymentDetailService>()
             ?? throw new InvalidOperationException(ServiceInjectionError(nameof(ICoursePaymentDetailService)));
+        private readonly IHubContext<NotificationHub> _hubContext = serviceProvider.GetRequiredService<IHubContext<NotificationHub>>()
+            ?? throw new ArgumentNullException(ServiceInjectionError(nameof(IHubContext<NotificationHub>)));
 
         public async Task<ResponseInfo> HandlePaymentRequest(SepayRequest sepayRequest)
         {
             var methodName = GetActualAsyncMethodName();
+            TblPaymentTransaction paymentTransaction = null;
             try
             {
                 LogInfo("Start", methodName);
                 var responseInfo = new ResponseInfo();
 
-                var paymentTransaction = await _context.PaymentTransactions
+                paymentTransaction = await _context.PaymentTransactions
                     .AsNoTracking()
                     .FirstOrDefaultAsync(p => p.Code == sepayRequest.PaymentContent
-                        && p.PaymentMethod == PaymentMethod.Sepay
-                        && p.OrderStatus == OrderStatus.New);
+                        && p.PaymentMethod == PaymentMethod.Sepay);
 
                 if (paymentTransaction == null)
                 {
-                    responseInfo.Message = "Payment transaction not found";
-                    responseInfo.StatusCode = StatusCodes.Status404NotFound;
+                    return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "NotFound", "Payment transaction not found");
+                }
+
+                if (paymentTransaction.OrderStatus == OrderStatus.SUCCESS)
+                {
+                    responseInfo = CreateEarlyResponseInfo(StatusCodes.Status400BadRequest, 
+                        "InvalidStatus", "Payment transaction is already completed");
+
+                    await NotifyClient(paymentTransaction.UserId.ToString(),
+                        paymentTransaction.TransactionType.ToString(), responseInfo);
                     return responseInfo;
                 }
 
@@ -50,20 +62,24 @@ namespace PaymentService.Services.Sepay
 
                 if (sepayRequest.TransferAmount != expectedAmount)
                 {
-                    responseInfo.Message = "Transfer amount is not correct";
-                    responseInfo.StatusCode = StatusCodes.Status400BadRequest;
-                    return responseInfo;
-                }
-
-                // Tiền vào tài khoản Admin
-                if (sepayRequest.TransactionType == SepayTransactionType.In)
-                {
-                    responseInfo = await HandleTransactionInByType(sepayRequest, paymentTransaction);
+                    responseInfo = CreateEarlyResponseInfo(StatusCodes.Status400BadRequest,
+                        "InvalidAmount", "Transfer amount is not correct");
                 }
                 else
                 {
-                    // TODO: Admin chuyển tiền vào tài khoản khác
+                    // Tiền vào tài khoản Admin
+                    if (sepayRequest.TransactionType == SepayTransactionType.In)
+                    {
+                        responseInfo = await HandleTransactionInByType(sepayRequest, paymentTransaction);
+                    }
+                    else
+                    {
+                        // TODO: Admin chuyển tiền vào tài khoản khác
+                    }
                 }
+
+                await _hubContext.Clients.User(paymentTransaction.UserId.ToString())
+                    .SendAsync($"{paymentTransaction.TransactionType}Completed", responseInfo);
 
                 LogInfo("End", methodName);
                 return responseInfo;
@@ -71,6 +87,15 @@ namespace PaymentService.Services.Sepay
             catch (Exception e)
             {
                 LogError(e, methodName);
+
+                if (paymentTransaction != null)
+                {
+                    var responseInfo = CreateEarlyResponseInfo(StatusCodes.Status500InternalServerError,
+                        "InternalServerError", e.InnerException?.Message ?? e.Message);
+
+                    await NotifyClient(paymentTransaction.UserId.ToString(),
+                        paymentTransaction.TransactionType.ToString(), responseInfo);
+                }
                 throw;
             }
         }
@@ -97,10 +122,17 @@ namespace PaymentService.Services.Sepay
                     };
 
                     responseInfo = await _coursePaymentDetailService.BuyCourse(coursePaymentRequest);
+                    responseInfo.Data.Add("courseId", decodedRelatedInfo.CourseId);
+                    responseInfo.Data.Add("buyerId", paymentTransaction.UserId);
                     break;
             }
 
             return responseInfo;
+        }
+
+        private async Task NotifyClient(string userId, string transactionType, ResponseInfo response)
+        {
+            await _hubContext.Clients.User(userId).SendAsync($"{transactionType}Completed", response);
         }
     }
 }
