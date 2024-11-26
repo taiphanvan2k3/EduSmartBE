@@ -6,6 +6,7 @@ using CourseManagementService.Common.Helpers;
 using CourseManagementService.Enumerations;
 using CourseManagementService.Services.ChapterManagement;
 using CourseManagementService.Services.LessonManagement.LessonBase;
+using CourseManagementService.Services.LessonManagement.LessonBase.Schemas;
 using CourseManagementService.Services.LessonManagement.VideoLesson.Schemas;
 using CourseManagementService.Services.Medias;
 using CourseManagementService.Services.Medias.Schemas;
@@ -136,11 +137,11 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson
                 }
 
                 videoLesson.VideoURLWithSAS = _videoService.GetVideoURLWithSAS(videoLesson.BaseBlobURL);
-                (Guid? previousLessonId, Guid? nextLessonId) = await _lessonBaseDetailService.GetPreviousAndNextLessonId(
+                (LessonInfoBase previousLesson, LessonInfoBase nextLesson) = await _lessonBaseDetailService.GetPreviousAndNextLessonId(
                      videoLesson.ChapterOrder, videoLesson.LessonOrder);
 
-                videoLesson.PreviousLessonId = previousLessonId;
-                videoLesson.NextLessonId = nextLessonId;
+                videoLesson.PreviousLesson = previousLesson;
+                videoLesson.NextLesson = nextLesson;
 
                 responseInfo.Data.Add("lesson", videoLesson);
                 LogInfo("End", methodName);

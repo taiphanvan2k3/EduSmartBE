@@ -1,5 +1,6 @@
 using CourseManagementService.Common;
 using CourseManagementService.Common.Helpers;
+using CourseManagementService.Services.LessonManagement.LessonBase.Schemas;
 using Newtonsoft.Json;
 
 namespace CourseManagementService.Services.LessonManagement.TextLesson.Schemas
@@ -41,10 +42,10 @@ namespace CourseManagementService.Services.LessonManagement.TextLesson.Schemas
         }
 
         [JsonProperty(Order = 6)]
-        public Guid? PreviousLessonId { get; set; }
+        public LessonInfoBase PreviousLesson { get; set; }
 
         [JsonProperty(Order = 7)]
-        public Guid? NextLessonId { get; set; }
+        public LessonInfoBase NextLesson { get; set; }
 
         [JsonProperty(Order = 8)]
         public LookupDto DifficultyLevel { get; set; }
