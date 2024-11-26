@@ -176,8 +176,8 @@ namespace CourseManagementService.Services.CourseManagement.Public
                 if (courseDetail.Course.IsRegistered)
                 {
                     courseDetail.LearnedLessons = await _lessonBaseDetailService.GetLearnedLessons(courseId, currentUser.UserId);
-                    courseDetail.Course.FirstLesson = await _lessonBaseDetailService.GetFirstLessonInfo(courseId);
                 }
+                courseDetail.Course.FirstLesson = await _lessonBaseDetailService.GetFirstLessonInfo(courseId);
 
                 _cacheService.SetData(cacheKey, courseDetail, DateTimeOffset.Now.AddMinutes(CacheManager.CourseDetail.ExpireTimeInMinutes));
 
