@@ -64,6 +64,22 @@ namespace PaymentService.Extensions
                     ValidateAudience = true,
                     ValidAudience = configuration["JWTSetting:Audience"],
                 };
+
+                // Enable JWT for SignalR
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/payment-service/hub"))
+                        {
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
             return services;
@@ -107,7 +123,7 @@ namespace PaymentService.Extensions
                 options.AddPolicy("AllowSpecificOrigin",
                     builder =>
                     {
-                        builder.WithOrigins("http://localhost:3000", "http://localhost:3030")
+                        builder.WithOrigins("http://localhost:3000", "http://localhost:3030", "http://127.0.0.1:5500")
                             .AllowAnyHeader()
                             .AllowAnyMethod()
                             .AllowCredentials(); // Cho phép client gửi cookie qua cross-origin
