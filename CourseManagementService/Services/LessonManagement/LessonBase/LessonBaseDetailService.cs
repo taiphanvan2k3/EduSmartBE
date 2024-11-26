@@ -85,7 +85,7 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
         /// </summary>
         /// <param name="courseId"></param>
         /// <returns></returns>
-        public Task<FirstLessonInfo> GetFirstLessonInfo(Guid courseId);
+        public Task<LessonInfoBase> GetFirstLessonInfo(Guid courseId);
 
         /// <summary>
         /// Get the previous and next lesson id of the lesson having the lessonId
@@ -93,7 +93,7 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
         /// <para>Created by: TaiPV</para>
         /// </summary>
         /// <returns></returns>
-        public Task<(Guid?, Guid?)> GetPreviousAndNextLessonId(int currentChapterOrder, int currentLessonOrder);
+        public Task<(LessonInfoBase, LessonInfoBase)> GetPreviousAndNextLessonId(int currentChapterOrder, int currentLessonOrder);
 
         /// <summary>
         /// Get the lesson id that the user should continue learning
@@ -286,7 +286,7 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
             }
         }
 
-        public async Task<FirstLessonInfo> GetFirstLessonInfo(Guid courseId)
+        public async Task<LessonInfoBase> GetFirstLessonInfo(Guid courseId)
         {
             var methodName = GetActualAsyncMethodName();
             try
@@ -307,7 +307,7 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
                 var firstLesson = await _context.Lessons
                     .Where(l => l.ChapterId == firstPublishedChapter.Id && l.IsPublished)
                     .OrderBy(l => l.Order)
-                    .Select(l => new FirstLessonInfo()
+                    .Select(l => new LessonInfoBase()
                     {
                         Id = l.Id,
                         LessonType = new LookupDto()
@@ -328,28 +328,47 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
             }
         }
 
-        public async Task<(Guid?, Guid?)> GetPreviousAndNextLessonId(int currentChapterOrder, int currentLessonOrder)
+        public async Task<(LessonInfoBase, LessonInfoBase)> GetPreviousAndNextLessonId(int currentChapterOrder, int currentLessonOrder)
         {
             var methodName = GetActualAsyncMethodName();
 
             try
             {
                 LogInfo("Start", methodName);
+                var lessonTypeEnum = typeof(LessonType);
 
                 int currentCompositeOrder = currentChapterOrder * 1000 + currentLessonOrder;
                 var previousLesson = await _context.Lessons
                     .Where(l => l.Chapter.IsPublished && l.IsPublished)
                     .Where(l => l.Chapter.Order * 1000 + l.Order < currentCompositeOrder)
                     .OrderByDescending(l => l.Chapter.Order * 1000 + l.Order)
+                    .Select(l => new LessonInfoBase()
+                    {
+                        Id = l.Id,
+                        LessonType = new LookupDto()
+                        {
+                            Id = ((int)Enum.Parse(lessonTypeEnum, l.LessonType.ToString())).ToString(),
+                            Name = l.LessonType.ToString()
+                        }
+                    })
                     .FirstOrDefaultAsync();
 
                 var nextLesson = await _context.Lessons
                     .Where(l => l.Chapter.IsPublished && l.IsPublished)
                     .Where(l => l.Chapter.Order * 1000 + l.Order > currentCompositeOrder)
                     .OrderBy(l => l.Chapter.Order * 1000 + l.Order)
+                    .Select(l => new LessonInfoBase()
+                    {
+                        Id = l.Id,
+                        LessonType = new LookupDto()
+                        {
+                            Id = ((int)Enum.Parse(lessonTypeEnum, l.LessonType.ToString())).ToString(),
+                            Name = l.LessonType.ToString()
+                        }
+                    })
                     .FirstOrDefaultAsync();
 
-                return (previousLesson?.Id, nextLesson?.Id);
+                return (previousLesson, nextLesson);
             }
             catch (Exception e)
             {

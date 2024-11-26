@@ -2,7 +2,7 @@ using CourseManagementService.Common;
 
 namespace CourseManagementService.Services.LessonManagement.LessonBase.Schemas
 {
-    public class FirstLessonInfo
+    public class LessonInfoBase
     {
         public Guid Id { get; set; }
 

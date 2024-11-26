@@ -3,6 +3,7 @@ using AutoMapper.QueryableExtensions;
 using CourseManagementService.Common;
 using CourseManagementService.Services.ChapterManagement;
 using CourseManagementService.Services.LessonManagement.LessonBase;
+using CourseManagementService.Services.LessonManagement.LessonBase.Schemas;
 using CourseManagementService.Services.LessonManagement.TextLesson.Schemas;
 using Microsoft.EntityFrameworkCore;
 using TblLesson = CourseManagementService.Database.Schemas.Lesson;
@@ -89,11 +90,11 @@ namespace CourseManagementService.Services.LessonManagement.TextLesson
                     return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "Lesson not found");
                 }
 
-                (Guid? previousLessonId, Guid? nextLessonId) = await _lessonBaseDetailService.GetPreviousAndNextLessonId(
+                (LessonInfoBase previousLesson, LessonInfoBase nextLesson) = await _lessonBaseDetailService.GetPreviousAndNextLessonId(
                     lessonDetail.ChapterOrder, lessonDetail.LessonOrder);
 
-                lessonDetail.PreviousLessonId = previousLessonId;
-                lessonDetail.NextLessonId = nextLessonId;
+                lessonDetail.PreviousLesson = previousLesson;
+                lessonDetail.NextLesson = nextLesson;
 
                 responseInfo.Data.Add("lesson", lessonDetail);
 
