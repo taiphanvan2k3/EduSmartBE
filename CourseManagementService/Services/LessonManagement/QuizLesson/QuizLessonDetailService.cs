@@ -9,6 +9,7 @@ using CourseManagementService.Enumerations;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper.QueryableExtensions;
+using CourseManagementService.Services.LessonManagement.LessonBase.Schemas;
 
 namespace CourseManagementService.Services.LessonManagement.QuizLesson
 {
@@ -91,11 +92,11 @@ namespace CourseManagementService.Services.LessonManagement.QuizLesson
                     return responseInfo;
                 }
 
-                (Guid? previousLessonId, Guid? nextLessonId) = await _lessonBaseDetailService.GetPreviousAndNextLessonId(
+                (LessonInfoBase previousLesson, LessonInfoBase nextLesson) = await _lessonBaseDetailService.GetPreviousAndNextLessonId(
                     lessonDto.ChapterOrder, lessonDto.LessonOrder);
 
-                lessonDto.PreviousLessonId = previousLessonId;
-                lessonDto.NextLessonId = nextLessonId;
+                lessonDto.PreviousLesson = previousLesson;
+                lessonDto.NextLesson = nextLesson;
 
                 responseInfo.Data.Add("lesson", lessonDto);
                 return responseInfo;
