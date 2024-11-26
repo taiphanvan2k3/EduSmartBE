@@ -5,6 +5,8 @@ using PaymentService.Databases.InitDb;
 using PaymentService.Extensions;
 using PaymentService.Commons;
 using PaymentService.GrpcServices;
+using PaymentService.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.UseCustomLog(Constants.SERVICE_NAME);
@@ -34,6 +36,10 @@ builder.Services.AddCustomCorsConfig();
 builder.Services.AddControllers();
 builder.Services.AddAuthorization();
 builder.Services.AddGrpc();
+
+// Add SignalR
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 
 if (builder.Environment.IsProduction())
 {
@@ -81,6 +87,8 @@ app.UseAuthorization();
 app.UseMiddleware<ExceptionHandlerMiddleware>();
 
 app.MapGrpcService<GrpcPaymentService>();
+app.MapHub<NotificationHub>("/payment-service/hub/notification");
+
 app.MapControllers();
 
 await app.RunAsync();

@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using CourseManagementService.Database;
+using CourseManagementService.Enumerations;
 using CourseManagementService.Services.Cache;
 using Grpc.Core;
 using Microsoft.EntityFrameworkCore;
@@ -42,7 +43,8 @@ namespace CourseManagementService.GrpcServices
                     {
                         CourseId = courseId,
                         StudentId = request.StudentId,
-                        EnrollmentDate = request.EnrollmentDate.ToDateTimeOffset().ToUniversalTime()
+                        EnrollmentDate = request.EnrollmentDate.ToDateTimeOffset().ToUniversalTime(),
+                        VisibilityStatus = CourseProgressVisibility.Private
                     };
 
                     await _context.CourseEnrollments.AddAsync(courseEnrollment);
