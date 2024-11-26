@@ -294,8 +294,18 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
                 LogInfo("Start", methodName);
                 var lessonTypeEnum = typeof(LessonType);
 
+                var firstPublishedChapter = await _context.Chapters
+                    .Where(c => c.CourseId == courseId && c.IsPublished && c.Lessons.Any(l => l.IsPublished))
+                    .OrderBy(c => c.Order)
+                    .FirstOrDefaultAsync();
+
+                if (firstPublishedChapter == null)
+                {
+                    return null;
+                }
+
                 var firstLesson = await _context.Lessons
-                    .Where(l => l.Chapter.CourseId == courseId && l.Chapter.Order <= 1)
+                    .Where(l => l.ChapterId == firstPublishedChapter.Id && l.IsPublished)
                     .OrderBy(l => l.Order)
                     .Select(l => new FirstLessonInfo()
                     {
@@ -328,11 +338,13 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
 
                 int currentCompositeOrder = currentChapterOrder * 1000 + currentLessonOrder;
                 var previousLesson = await _context.Lessons
+                    .Where(l => l.Chapter.IsPublished && l.IsPublished)
                     .Where(l => l.Chapter.Order * 1000 + l.Order < currentCompositeOrder)
                     .OrderByDescending(l => l.Chapter.Order * 1000 + l.Order)
                     .FirstOrDefaultAsync();
 
                 var nextLesson = await _context.Lessons
+                    .Where(l => l.Chapter.IsPublished && l.IsPublished)
                     .Where(l => l.Chapter.Order * 1000 + l.Order > currentCompositeOrder)
                     .OrderBy(l => l.Chapter.Order * 1000 + l.Order)
                     .FirstOrDefaultAsync();
@@ -382,6 +394,7 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
                 // Lấy bài học tiếp theo có thể học
                 var currentCompositeOrder = lastLearnedLesson.ChapterOrder * 1000 + lastLearnedLesson.LessonOrder;
                 var nextLesson = await _context.Lessons
+                    .Where(l => l.Chapter.IsPublished && l.IsPublished)
                     .Where(l => l.Chapter.CourseId == courseId && l.Chapter.Order * 1000 + l.Order > currentCompositeOrder)
                     .OrderBy(l => l.Chapter.Order * 1000 + l.Order)
                     .Select(l => new
