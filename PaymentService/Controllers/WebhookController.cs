@@ -33,5 +33,25 @@ namespace PaymentService.Controllers
             var responseInfo = await _sepayService.HandlePaymentRequest(request);
             return HandleResponseInfoNoResource(responseInfo);
         }
+
+        [HttpPost("sepay/receive")]
+        public IActionResult ReceiveWebhook([FromBody] SepayWithdrawlRequest request)
+        {
+            try
+            {
+                if (request == null)
+                {
+                    return BadRequest("Invalid request body");
+                }
+
+                _sepayService.SaveWithdrawalTransaction(request);
+
+                return Ok(new { message = "Webhook received and processed successfully" });
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status200OK, e.Message);
+            }
+        }
     }
 }
