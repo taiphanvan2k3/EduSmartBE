@@ -54,7 +54,8 @@ namespace PaymentService.Services.WithdrawalRequests
                         RequestedAt = x.RequestedAt,
                         ApprovedAt = x.ApprovedAt,
                         BankAccountNumber = x.BankAccount.AccountNumber,
-                        BankName = x.BankAccount.AccountName
+                        BankName = x.BankAccount.Bank.ShortName,
+                        BankAccountName = x.BankAccount.AccountName
                     });
 
                 var paginatedWithdrawalRequests = await withdrawalRequestsQuery.ToPaginatedListAsync(searchCondition.CurrentPage, searchCondition.PageSize);
@@ -89,8 +90,9 @@ namespace PaymentService.Services.WithdrawalRequests
                         Status = x.Status,
                         RequestedAt = x.RequestedAt,
                         ApprovedAt = x.ApprovedAt,
-                        BankAccountNumber = x.BankAccount.AccountNumber,
-                        BankName = x.BankAccount.AccountName
+                        BankAccountNumber = x.BankAccount.Bank.Name,
+                        BankName = x.BankAccount.AccountName,
+                        BankAccountName = x.BankAccount.AccountName
                     });
 
                 var paginatedWithdrawalRequests = await withdrawalRequestsQuery.ToPaginatedListAsync(searchCondition.CurrentPage, searchCondition.PageSize);
