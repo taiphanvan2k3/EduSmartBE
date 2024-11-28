@@ -1,6 +1,7 @@
 using CourseManagementService.Common;
 using CourseManagementService.GrpcServices;
 using CourseManagementService.Services.Grpc.PaymentService.Schemas;
+using CourseManagementService.Services.Grpc.UserService;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Net.Client;
 using CurrencyEnumGrpc = CourseManagementService.GrpcServices.Currency;

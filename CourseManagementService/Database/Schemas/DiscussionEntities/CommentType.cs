@@ -1,4 +1,4 @@
-namespace CourseManagementService.Database.Schemas.Discussion
+namespace CourseManagementService.Database.Schemas.DiscussionEntities
 {
     public enum CommentType
     {

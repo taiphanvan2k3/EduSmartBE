@@ -1,11 +1,12 @@
 using CourseManagementService.GrpcServices;
 using Grpc.Net.Client;
 
-namespace CourseManagementService.Services.Grpc
+namespace CourseManagementService.Services.Grpc.UserService
 {
     public interface IGrpcUserService
     {
         public Task<bool> CheckUserExist(int teacherId);
+        public Task<ListOfUsersResponse> GetListOfUsers(List<int> userIds);
         public Task<ListOfUsersResponse> GetListOfTeachers(List<int> teacherIds);
         public Task<ListOfUsersResponse> GetListOfStudents(List<int> studentIds);
         public Task<ListOfUsersResponse> GetTeachersByName(string name);
@@ -31,6 +32,26 @@ namespace CourseManagementService.Services.Grpc
                 _logger.LogInformation("[{ServiceName}] {MethodName} Start", _serviceName, methodName);
                 var client = new User.UserClient(_channel);
                 return (await client.CheckUserExistAsync(new UserRequest { Id = teacherId })).IsExist;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[{ServiceName}] {MethodName} Error", _serviceName, methodName);
+                throw;
+            }
+        }
+
+        public async Task<ListOfUsersResponse> GetListOfUsers(List<int> userIds)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                _logger.LogInformation("[{ServiceName}] {MethodName} Start", _serviceName, methodName);
+                var client = new User.UserClient(_channel);
+
+                var response = await client.GetListOfUsersAsync(new UsersRequest { Ids = { userIds } });
+
+                _logger.LogInformation("[{ServiceName}] {MethodName} End", _serviceName, methodName);
+                return response;
             }
             catch (Exception e)
             {
