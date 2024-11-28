@@ -16,6 +16,8 @@ namespace PaymentService.Services.WithdrawalRequests.Schemas
 
         public string BankAccountNumber { get; set; }
 
+        public string BankAccountName { get; set; }
+
         public RequestStatus Status { get; set; }
 
         public DateTimeOffset RequestedAt { get; set; }
