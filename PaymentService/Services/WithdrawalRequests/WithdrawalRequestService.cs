@@ -1,8 +1,10 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using PaymentService.Commons;
+using PaymentService.Enumerations;
 using PaymentService.Services.WithdrawalRequests.Schemas;
 using TblWithdrawalRequest = PaymentService.Databases.Schemas.WithdrawalRequest;
+using TblTeacherEarning = PaymentService.Databases.Schemas.TeacherEarning;
 
 namespace PaymentService.Services.WithdrawalRequests
 {
@@ -15,7 +17,7 @@ namespace PaymentService.Services.WithdrawalRequests
         /// </summary>
         /// <param name="withdrawalRequest"></param>
         /// <returns></returns>
-        Task<ResponseInfo> AddWithdrawalRequestAsync(WithdrawalRequestDto withdrawalRequest);
+        Task<ResponseInfo> AddWithdrawalRequestAsync(WithdrawalRequestPost withdrawalRequest);
 
         /// <summary>
         /// Get withdrawal request by id
@@ -62,7 +64,7 @@ namespace PaymentService.Services.WithdrawalRequests
     {
         private readonly IMapper _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
 
-        public async Task<ResponseInfo> AddWithdrawalRequestAsync(WithdrawalRequestDto withdrawalRequest)
+        public async Task<ResponseInfo> AddWithdrawalRequestAsync(WithdrawalRequestPost withdrawalRequest)
         {
             var methodName = GetActualAsyncMethodName();
             try
@@ -70,12 +72,48 @@ namespace PaymentService.Services.WithdrawalRequests
                 _logger.LogInformation("[WithdrawalRequestService] [{Method}] Start", methodName);
                 var response = new ResponseInfo();
 
-                var withdrawalRequestEntity = _mapper.Map<TblWithdrawalRequest>(withdrawalRequest);
+                int userId = GetCurrentUser().UserId;
 
-                await _context.WithdrawalRequests.AddAsync(withdrawalRequestEntity);
-                await _context.SaveChangesAsync();
+                var teacherEarning = await _context.TeacherEarnings.FirstOrDefaultAsync(e => e.UserId == userId);
 
-                response.Message = "Add withdrawalRequest successfully";
+                if (teacherEarning is null)
+                {
+                    teacherEarning = new TblTeacherEarning
+                    {
+                        UserId = userId,
+                        CurrentBalance = 0,
+                        TotalWithdrawn = 0
+                    };
+                    await _context.TeacherEarnings.AddAsync(teacherEarning);
+                    await _context.SaveChangesAsync();
+                    response.Message = "No teacher earning found. Created new teacher earning";
+                    response.StatusCode = StatusCodes.Status400BadRequest;
+                }
+                else
+                {
+                    if (teacherEarning.CurrentBalance < withdrawalRequest.Amount)
+                    {
+                        response.Message = "Not enough balance";
+                        response.StatusCode = StatusCodes.Status400BadRequest;
+                    }
+                    else
+                    {
+                        var withdrawalRequestEntity = new TblWithdrawalRequest
+                        {
+                            Id = Guid.NewGuid(),
+                            UserId = userId,
+                            Amount = withdrawalRequest.Amount,
+                            BankAccountId = withdrawalRequest.BankAccountId,
+                            Status = RequestStatus.Pending,
+                            RequestedAt = DateTime.Now
+                        };
+
+                        await _context.WithdrawalRequests.AddAsync(withdrawalRequestEntity);
+                        await _context.SaveChangesAsync();
+
+                        response.Message = "Add withdrawalRequest successfully";
+                    }
+                }
                 _logger.LogInformation("[WithdrawalRequestService] [{Method}] End", methodName);
                 return response;
             }
