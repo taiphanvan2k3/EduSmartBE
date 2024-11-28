@@ -8,7 +8,7 @@ using CourseManagementService.GrpcServices;
 using CourseManagementService.Services.Cache;
 using CourseManagementService.Services.CourseManagement.Public.Schemas;
 using CourseManagementService.Services.CourseManagement.Teacher.Schemas;
-using CourseManagementService.Services.Grpc;
+using CourseManagementService.Services.Grpc.UserService;
 using CourseManagementService.Services.LessonManagement.LessonBase.Schemas;
 using CourseManagementService.Services.Medias;
 using Grpc.Net.Client;

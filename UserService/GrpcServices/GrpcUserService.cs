@@ -69,6 +69,47 @@ namespace UserService.GrpcServices
             }
         }
 
+        public override async Task<ListOfUsersResponse> GetListOfUsers(UsersRequest request, ServerCallContext context)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                _logger.LogInformation("[GrpcUserService] [{Method}] Start", methodName);
+
+                var userQuery = _context.Users.AsQueryable();
+                if (request.Ids.Count == 1)
+                {
+                    userQuery = userQuery.Where(u => u.Id == request.Ids[0]);
+                }
+                else
+                {
+                    userQuery = userQuery.Where(u => request.Ids.Contains(u.Id));
+                }
+
+                var users = await userQuery
+                    .Select(u => new SimpleUserResponse()
+                    {
+                        Id = u.Id,
+                        UserName = u.UserName,
+                        FullName = $"{u.UserInfo.FirstName} {u.UserInfo.LastName}",
+                        AvatarURL = u.UserInfo.AvatarURL,
+                        Email = u.Email
+                    })
+                    .ToListAsync();
+
+                var listOfUsers = new ListOfUsersResponse();
+                listOfUsers.Users.AddRange(users);
+
+                _logger.LogInformation("[GrpcUserService] [{Method}] End", methodName);
+                return listOfUsers;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[GrpcUserService] [{Method}] Error", methodName);
+                throw;
+            }
+        }
+
         public override async Task<ListOfUsersResponse> GetListOfTeachers(UsersRequest request, ServerCallContext context)
         {
             var methodName = GetActualAsyncMethodName();

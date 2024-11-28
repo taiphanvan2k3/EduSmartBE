@@ -4,7 +4,7 @@ using CourseManagementService.Enumerations;
 using CourseManagementService.Services.Cache;
 using CourseManagementService.Services.CourseManagement.Student.Schemas;
 using CourseManagementService.Services.CourseManagement.Teacher.Schemas;
-using CourseManagementService.Services.Grpc;
+using CourseManagementService.Services.Grpc.UserService;
 using Microsoft.EntityFrameworkCore;
 
 namespace CourseManagementService.Services.CourseManagement.Student

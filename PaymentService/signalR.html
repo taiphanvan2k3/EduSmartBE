@@ -14,14 +14,14 @@
 
         <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr/dist/browser/signalr.min.js"></script>
         <script>
-            const hubUrl = "http://localhost:7153/payment-service/hub/notification";
+            const hubUrl = "https://edusmart.info.vn/payment-service/hub/notification";
             let connection = null;
 
             const status = document.getElementById("status");
             const connectBtn = document.getElementById("connectBtn");
             const disconnectBtn = document.getElementById("disconnectBtn");
 
-            const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im14dCIsImVtYWlsIjoibWFpeHVhbnRydW9uZzIwMDN0QGdtYWlsLmNvbSIsInVzZXJJZCI6IjE1NCIsImlzcyI6IlNtYXJ0RWR1LkF1dGhTZXJ2aWNlIiwiYXVkIjoiU21hcnRFZHUuQ2xpZW50cyIsInJvbGUiOiJTdHVkZW50IiwibmJmIjoxNzMyNjI5NzcyLCJleHAiOjE3MzI2MzA2NzIsImlhdCI6MTczMjYyOTc3Mn0.Q-dPa_iIru_k3mEsw7El4XBDNpwxzrLWn6oKWOHkz8s";
+            const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im14dCIsImVtYWlsIjoibWFpeHVhbnRydW9uZzIwMDN0QGdtYWlsLmNvbSIsInVzZXJJZCI6IjE1NCIsImlzcyI6IlNtYXJ0RWR1LkF1dGhTZXJ2aWNlIiwiYXVkIjoiU21hcnRFZHUuQ2xpZW50cyIsInJvbGUiOiJTdHVkZW50IiwibmJmIjoxNzMyODE1NDU2LCJleHAiOjE3MzI4MTYzNTYsImlhdCI6MTczMjgxNTQ1Nn0.L5S6biZE5r95eM1kJUmrPBFCDNrTy0ouka_vYlXcBTk";
 
             // Connect to SignalR
             connectBtn.addEventListener("click", async () => {

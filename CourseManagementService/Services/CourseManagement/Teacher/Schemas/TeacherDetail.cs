@@ -4,6 +4,6 @@ namespace CourseManagementService.Services.CourseManagement.Teacher.Schemas
 {
     public class TeacherDetail : UserDetail
     {
-        public string FullName { get; set; }
+        public new string FullName { get; set; }
     }
 }

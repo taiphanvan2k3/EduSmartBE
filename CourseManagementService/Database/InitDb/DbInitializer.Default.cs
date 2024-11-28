@@ -1,4 +1,5 @@
 using CourseManagementService.Database.Schemas;
+using CourseManagementService.Database.Schemas.DiscussionEntities;
 using Microsoft.EntityFrameworkCore;
 
 namespace CourseManagementService.Database.InitDb
@@ -14,6 +15,7 @@ namespace CourseManagementService.Database.InitDb
                 await SeedCategoryData();
                 await SeedTagData();
                 await SeedCurrencyData();
+                await SeedDiscussionTypeData();
 
                 await _context.SaveChangesAsync();
                 _logger.LogInformation("[DbInitializer] Seeding default data completed");
@@ -92,6 +94,36 @@ namespace CourseManagementService.Database.InitDb
                         Name = "US Dollar",
                         Code = "USD"
                     });
+            }
+        }
+
+        private async Task SeedDiscussionTypeData()
+        {
+            if (!await _context.DiscussionTypes.AnyAsync())
+            {
+                await _context.DiscussionTypes.AddRangeAsync
+                (
+                    new DiscussionType()
+                    {
+                        Name = "Show dự án"
+                    },
+                    new DiscussionType()
+                    {
+                        Name = "Báo lỗi bài học"
+                    },
+                    new DiscussionType()
+                    {
+                        Name = "Cần trợ giúp"
+                    },
+                    new DiscussionType()
+                    {
+                        Name = "Đóng góp ý kiến"
+                    },
+                    new DiscussionType()
+                    {
+                        Name = "Khác"
+                    }
+                );
             }
         }
     }
