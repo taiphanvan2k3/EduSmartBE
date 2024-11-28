@@ -10,7 +10,7 @@ namespace PaymentService.Controllers
     [Route("payment-service/api/withdrawal-requests")]
     [ApiController]
     public class WithdrawalRequestController(IListOfWithdrawalRequestService listOfWithdrawalRequestService,
-        WithdrawalRequestService withdrawalRequestService) : ControllerBase
+        IWithdrawalRequestService withdrawalRequestService) : ControllerBase
     {
         private readonly IListOfWithdrawalRequestService _listOfWithdrawalRequestService = listOfWithdrawalRequestService
             ?? throw new ArgumentNullException(nameof(listOfWithdrawalRequestService));
@@ -86,7 +86,7 @@ namespace PaymentService.Controllers
         [Filters.Auth(Roles = "Teacher")]
         [HttpPost]
         [ProducesResponseType(typeof(ResponseInfo), StatusCodes.Status200OK)]
-        public async Task<IActionResult> AddWithdrawalRequest([FromBody] WithdrawalRequestDto withdrawalRequest)
+        public async Task<IActionResult> AddWithdrawalRequest([FromBody] WithdrawalRequestPost withdrawalRequest)
         {
             try
             {
