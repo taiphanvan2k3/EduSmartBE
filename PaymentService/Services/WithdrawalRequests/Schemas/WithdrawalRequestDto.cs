@@ -12,6 +12,10 @@ namespace PaymentService.Services.WithdrawalRequests.Schemas
 
         public Guid BankAccountId { get; set; }
 
+        public string BankName { get; set; }
+
+        public string BankAccountNumber { get; set; }
+
         public RequestStatus Status { get; set; }
 
         public DateTimeOffset RequestedAt { get; set; }
