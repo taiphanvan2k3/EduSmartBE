@@ -36,6 +36,13 @@ namespace CourseManagementService.Services.CourseManagement.Public
         public Task<bool> CanAccessCourseMaterial(Guid courseId);
 
         /// <summary>
+        /// Check a user's registration status for a course
+        /// </summary>
+        /// <param name="courseId">Id of course</param>
+        /// <returns></returns>
+        public Task<ResponseInfo> GetRegistrationStatus(Guid courseId);
+
+        /// <summary>
         /// Generate QR code for payment
         /// <para>Created at: 2024/10/20</para>
         /// <para>Created by: TaiPV</para> 
@@ -152,7 +159,10 @@ namespace CourseManagementService.Services.CourseManagement.Public
                             TotalStudents = x.Enrollments.Count,
                             TotalLessons = x.Chapters.SelectMany(x => x.Lessons).Count(),
                             TotalSecondsByChapter = x.Chapters.Select(c => c.Lessons.Sum(l => l.DurationInSeconds)).ToList(),
-                            IsRegistered = currentUser != null && x.Enrollments.Any(x => x.StudentId == currentUser.UserId),
+                            IsRegistered = currentUser != null && (
+                                x.Enrollments.Any(e => e.StudentId == currentUser.UserId)
+                                || x.TeacherId == currentUser.UserId
+                            ),
                             IsPublished = x.IsPublished
                         }
                     })
@@ -187,6 +197,32 @@ namespace CourseManagementService.Services.CourseManagement.Public
             catch (Exception e)
             {
                 LogError(e, method);
+                throw;
+            }
+        }
+
+        public async Task<ResponseInfo> GetRegistrationStatus(Guid courseId)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var isCourseExist = await _context.Courses.AnyAsync(x => x.Id == courseId);
+                if (!isCourseExist)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "Course not found");
+                }
+
+                var responseInfo = new ResponseInfo();
+                bool isRegistered = await CanAccessCourseMaterial(courseId);
+                responseInfo.Data.Add("isRegistered", isRegistered);
+
+                LogInfo("End", methodName);
+                return responseInfo;
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
                 throw;
             }
         }
