@@ -180,5 +180,19 @@ namespace CourseManagementService.Controllers.CourseManagement
             var tags = await _listOfTagService.GetTags();
             return Ok(tags);
         }
+
+        /// <summary>
+        /// Get a user's registration status of course
+        /// <para>Created at: 2024/11/28</para>
+        /// <para>Created by: TaiV</para> 
+        /// </summary>
+        /// <param name="id">Id of course</param>
+        [Authorize]
+        [HttpGet("{id}/registration-status")]
+        public async Task<IActionResult> GetRegistrationStatus(Guid id)
+        {
+            var responseInfo = await _publicCourseDetailService.GetRegistrationStatus(id);
+            return HandleResponseInfo(responseInfo, resourceName: "isRegistered");
+        }
     }
 }
