@@ -17,6 +17,9 @@ namespace CourseManagementService.Services.Cache
             public static int ExpireTimeInMinutes => 30;
         }
 
+        /// <summary>
+        /// Danh sách khoá học mà giảng viên đang sở hữu
+        /// </summary>
         public static class OwnedCourses
         {
             public static string Key(int userId) => $"OwnedCourses_{userId}";
