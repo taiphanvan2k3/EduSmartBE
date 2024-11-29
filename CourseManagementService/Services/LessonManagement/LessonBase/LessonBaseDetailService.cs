@@ -1,4 +1,3 @@
-using System.Diagnostics.Eventing.Reader;
 using CourseManagementService.Common;
 using CourseManagementService.Enumerations;
 using CourseManagementService.Services.LessonManagement.LessonBase.Schemas;

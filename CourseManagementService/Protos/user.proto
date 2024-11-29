@@ -5,6 +5,7 @@ import "google/protobuf/wrappers.proto";
 service User {
     rpc GetUserInfo (UserRequest) returns (UserResponse);
     rpc CheckUserExist (UserRequest) returns (CheckUserExistResponse);
+    rpc GetListOfUsers (UsersRequest) returns (ListOfUsersResponse);
     rpc GetListOfTeachers (UsersRequest) returns (ListOfUsersResponse);
     rpc GetListOfStudents (UsersRequest) returns (ListOfUsersResponse);
     rpc GetTeachersByName(UserRequest) returns (ListOfUsersResponse);

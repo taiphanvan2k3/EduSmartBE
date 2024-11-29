@@ -85,7 +85,7 @@ namespace CourseManagementService.Extensions
                     BearerFormat = "JWT",
                 });
 
-                opt.OrderActionsBy(api => api.ActionDescriptor.AttributeRouteInfo.Order.ToString());
+                opt.OrderActionsBy(api => api.ActionDescriptor.AttributeRouteInfo.Order.ToString().PadLeft(10, '0'));
 
                 // Chỉ hiển thị lock icon cho các API cần xác thực
                 opt.OperationFilter<AuthenticationRequirementOperationFilter>();
