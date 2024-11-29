@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using CourseManagementService.Database.Schemas.DiscussionEntities;
 using CourseManagementService.Enumerations;
 using Microsoft.EntityFrameworkCore;
 
@@ -47,5 +48,7 @@ namespace CourseManagementService.Database.Schemas
         public virtual ICollection<LessonRating> Ratings { get; set; }
 
         public virtual ICollection<LessonTracking> LessonTrackings { get; set; }
+
+        public virtual ICollection<Discussion> Discussions { get; set; }
     }
 }

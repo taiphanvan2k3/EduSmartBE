@@ -1,4 +1,6 @@
+using System.Reflection;
 using CourseManagementService.Database.Schemas;
+using CourseManagementService.Database.Schemas.DiscussionEntities;
 using Microsoft.EntityFrameworkCore;
 
 namespace CourseManagementService.Database
@@ -15,6 +17,9 @@ namespace CourseManagementService.Database
         {
             base.OnModelCreating(modelBuilder);
             ModelCreate.OnModelCreating(modelBuilder);
+
+            // Sử dụng các file cấu hình riêng cho từng entity
+            modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
             ModelCreate.ConfigureForBaseEntity(modelBuilder);
         }
 
@@ -32,6 +37,9 @@ namespace CourseManagementService.Database
         public DbSet<CourseRating> CourseRatings { get; set; }
         public DbSet<LessonRating> LessonRatings { get; set; }
         public DbSet<LessonTracking> LessonTrackings { get; set; }
+        public DbSet<Discussion> Discussions { get; set; }
+        public DbSet<DiscussionType> DiscussionTypes { get; set; }
+        public DbSet<Comment> Comments { get; set; }
 
         public override int SaveChanges()
         {
