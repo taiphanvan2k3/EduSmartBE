@@ -55,6 +55,9 @@ namespace CourseManagementService.GrpcServices
 
                     // Clear cache for student's owned courses
                     _cacheService.RemoveData(CacheManager.EnrolledCourses.Key(request.StudentId));
+                    _cacheService.RemoveData(CacheManager.CourseDetail.Key(courseId, request.StudentId));
+                    _cacheService.RemoveData(CacheManager.PopularCourses.Key(request.StudentId));
+                    _cacheService.RemoveData(CacheManager.RecommendedCourses.Key(request.StudentId));
                 }
 
                 _logger.LogInformation("[GrpcCourseService] [{Method}] End", methodName);

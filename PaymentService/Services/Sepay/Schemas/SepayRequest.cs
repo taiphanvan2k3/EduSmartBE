@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
 
 namespace PaymentService.Services.Sepay.Schemas
 {
@@ -20,7 +21,11 @@ namespace PaymentService.Services.Sepay.Schemas
         {
             get
             {
-                return Content.Replace("QR - ", "");
+                // Ví dụ như QR - SEP123456 hay IBFT - SEP123456 hay SEP123456 thì cắt bỏ phần QR - hoặc IBFT - để lấy SEP123456
+                string pattern = @"\bSEP\d+\b";
+                var match = Regex.Match(Content, pattern);
+
+                return match.Success ? match.Value : null;
             }
         }
 
