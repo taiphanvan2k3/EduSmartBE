@@ -25,7 +25,7 @@ namespace PaymentService.Services.Sepay
         /// <param name="sepayWithdrawlRequest"></param>
         /// <returns></returns>
         void SaveWithdrawalTransaction(SepayWithdrawlRequest sepayWithdrawlRequest);
-        
+
     }
 
     public class SepayService(IServiceProvider serviceProvider, ILogger<SepayService> logger)
@@ -57,7 +57,7 @@ namespace PaymentService.Services.Sepay
 
                 if (paymentTransaction.OrderStatus == OrderStatus.SUCCESS)
                 {
-                    responseInfo = CreateEarlyResponseInfo(StatusCodes.Status400BadRequest, 
+                    responseInfo = CreateEarlyResponseInfo(StatusCodes.Status400BadRequest,
                         "InvalidStatus", "Payment transaction is already completed");
 
                     await NotifyClient(paymentTransaction.UserId.ToString(),
@@ -120,7 +120,7 @@ namespace PaymentService.Services.Sepay
                     var decodedRelatedInfo = JsonSerializerUtils.Deserialize<RelatedInfo.BuyCourse>(paymentTransaction.RelatedInformation);
 
                     // Giờ của Sepay là giờ của Việt Nam => Đang ở sẵn múi +7 rồi
-                    DateTimeOffset paymentDate = DateTime.Parse(sepayRequest.TransactionDate).ToUniversalTime();
+                    DateTimeOffset paymentDate = DateTimeOffset.Parse($"{sepayRequest.TransactionDate} +07:00").ToUniversalTime();
 
                     var coursePaymentRequest = new CoursePaymentRequest()
                     {
