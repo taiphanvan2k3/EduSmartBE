@@ -40,6 +40,7 @@ namespace CourseManagementService.Database
         public DbSet<Discussion> Discussions { get; set; }
         public DbSet<DiscussionType> DiscussionTypes { get; set; }
         public DbSet<Comment> Comments { get; set; }
+        public DbSet<Reaction> Reactions { get; set; }
 
         public override int SaveChanges()
         {
