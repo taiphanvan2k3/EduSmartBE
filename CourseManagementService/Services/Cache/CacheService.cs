@@ -16,6 +16,13 @@ namespace CourseManagementService.Services.Cache
         T GetData<T>(string key);
 
         /// <summary>
+        /// Get multiple data from cache by keys (MGET)
+        /// <para>Author: TaiPV</para>
+        /// <para>Created: 30/11/2024</para>
+        /// </summary>
+        public Task<List<T>> GetMultipleDataAsync<T>(List<string> keys);
+
+        /// <summary>
         /// Set data to cache by key
         /// <para>Author: TaiPV</para>
         /// <para>Created: 08/10/2024</para>
@@ -43,9 +50,11 @@ namespace CourseManagementService.Services.Cache
         Task RemoveDataByPattern(string pattern);
     }
 
-    public class CacheService(IConnectionMultiplexer connectionMultiplexer) : ICacheService
+    public class CacheService(IConnectionMultiplexer connectionMultiplexer, ILogger<CacheService> logger) : ICacheService
     {
         private readonly IDatabase _cacheDb = connectionMultiplexer.GetDatabase();
+        private readonly ILogger<CacheService> _logger = logger
+            ?? throw new ArgumentNullException(nameof(logger));
 
         public T GetData<T>(string key)
         {
@@ -60,6 +69,19 @@ namespace CourseManagementService.Services.Cache
                 return JsonSerializer.Deserialize<T>(value, options);
             }
             return default;
+        }
+
+        public async Task<List<T>> GetMultipleDataAsync<T>(List<string> keys)
+        {
+            var redisValues = await _cacheDb.StringGetAsync(keys.Select(x => (RedisKey)x).ToArray());
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+
+            return redisValues
+                .Select(value => value.HasValue ? JsonSerializer.Deserialize<T>(value, options) : default)
+                .ToList();
         }
 
         public object RemoveData(string key)
@@ -99,19 +121,27 @@ namespace CourseManagementService.Services.Cache
 
         public bool SetData<T>(string key, T value, DateTimeOffset timeEnd)
         {
-            var expireTime = timeEnd.DateTime.Subtract(DateTime.Now);
-
-            if (_cacheDb == null)
+            try
             {
+                var expireTime = timeEnd.DateTime.Subtract(DateTime.Now);
+
+                if (_cacheDb == null)
+                {
+                    return false;
+                }
+
+                // Trả về true nếu set thành công, ngược lại trả về false. Nếu key đã tồn tại thì sẽ bị ghi đè.
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                };
+                return _cacheDb.StringSet(key, JsonSerializer.Serialize(value, options), expireTime);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error when set data to cache with key: {Key}", key);
                 return false;
             }
-
-            // Trả về true nếu set thành công, ngược lại trả về false. Nếu key đã tồn tại thì sẽ bị ghi đè.
-            var options = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            };
-            return _cacheDb.StringSet(key, JsonSerializer.Serialize(value, options), expireTime);
         }
     }
 }

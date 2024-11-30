@@ -5,6 +5,16 @@ namespace CourseManagementService.Services.Cache
 {
     public static class CacheManager
     {
+        public static class User
+        {
+            public static string Key(int userId, bool withRole = false)
+            {
+                return withRole ? $"User_WithRole:{userId}" : $"User:{userId}";
+            }
+
+            public static int ExpireTimeInMinutes => 60;
+        }
+
         public static class PopularCourses
         {
             public static string Key(int userId) => $"PopularCourses_{userId}";
@@ -89,6 +99,13 @@ namespace CourseManagementService.Services.Cache
         {
             public static string Key(int userId) => $"EnrolledCourses_{userId}";
             public static int ExpireTimeInMinutes => 15;
+        }
+
+        public static class TeacherIdOfCourse
+        {
+            public static string KeyFromCourseId(Guid courseId) => $"TeacherIdOfCourse:FromCourseId:{courseId}";
+            public static string KeyFromDiscussionId(Guid discussionId) => $"TeacherIdOfDiscussion:FromDiscussionId:{discussionId}";
+            public static int ExpireTimeInMinutes => 60 * 24 * 100; // 100 days
         }
     }
 }
