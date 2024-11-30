@@ -7,6 +7,8 @@ namespace CourseManagementService.Database.Schemas.DiscussionEntities
     {
         public Guid Id { get; set; }
 
+        public string Content { get; set; }
+
         public int CreatedBy { get; set; }
 
         public int? MentionedUserId { get; set; }
@@ -28,12 +30,15 @@ namespace CourseManagementService.Database.Schemas.DiscussionEntities
         [Required]
         public string RoleOfUser { get; set; }
 
-        public CommentType Type { get; set; }
+        /// <summary>
+        /// User can restore the comment if it is deleted
+        /// </summary>
+        public bool IsDelFlag { get; set; }
 
         public Discussion Discussion { get; set; }
 
-        public virtual ICollection<Comment> Replies { get; set; }
+        public virtual ICollection<Comment> Replies { get; set; } = [];
 
-        public virtual ICollection<Reaction> Reactions { get; set; }
+        public virtual ICollection<Reaction> Reactions { get; set; } = [];
     }
 }
