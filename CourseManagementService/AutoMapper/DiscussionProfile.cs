@@ -21,7 +21,7 @@ namespace CourseManagementService.AutoMapper
                 .ForMember(dest => dest.User, opt => opt.MapFrom(src => new UserDetail
                 {
                     Id = src.CreatedBy,
-                    Role = src.RoleOfUser
+                    Roles = src.RoleOfUser
                 }));
         }
     }

@@ -69,7 +69,39 @@ namespace UserService.GrpcServices
             }
         }
 
-        public override async Task<ListOfUsersResponse> GetListOfUsers(UsersRequest request, ServerCallContext context)
+        public override async Task<UserWithRoleResponse> GetUserInfoWithRole(UserRequest request, ServerCallContext context)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                _logger.LogInformation("[GrpcUserService] [{Method}] Start", methodName);
+
+                var user = await _context.Users
+                    .Where(u => u.Id == request.Id)
+                    .Select(u => new UserWithRoleResponse
+                    {
+                        Id = u.Id,
+                        UserName = u.UserName,
+                        FirstName = u.UserInfo.FirstName,
+                        LastName = u.UserInfo.LastName,
+                        Email = u.Email,
+                        AvatarURL = u.UserInfo.AvatarURL,
+                        Roles = string.Join(",", u.UserRoles.Select(ur => ur.Role.Name).ToList())
+                    })
+                    .FirstOrDefaultAsync()
+                    ?? throw new RpcException(new Status(StatusCode.NotFound, "User not found"));
+
+                _logger.LogInformation("[GrpcUserService] [{Method}] End", methodName);
+                return user;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[GrpcUserService] [{Method}] Error", methodName);
+                throw;
+            }
+        }
+
+        public override async Task<ListOfUsersWithRoleResponse> GetListOfUsers(UsersRequest request, ServerCallContext context)
         {
             var methodName = GetActualAsyncMethodName();
             try
@@ -87,17 +119,19 @@ namespace UserService.GrpcServices
                 }
 
                 var users = await userQuery
-                    .Select(u => new SimpleUserResponse()
+                    .Select(u => new UserWithRoleResponse()
                     {
                         Id = u.Id,
                         UserName = u.UserName,
-                        FullName = $"{u.UserInfo.FirstName} {u.UserInfo.LastName}",
+                        FirstName = u.UserInfo.FirstName,
+                        LastName = u.UserInfo.LastName,
                         AvatarURL = u.UserInfo.AvatarURL,
-                        Email = u.Email
+                        Email = u.Email,
+                        Roles = string.Join(",", u.UserRoles.Select(ur => ur.Role.Name).ToList())
                     })
                     .ToListAsync();
 
-                var listOfUsers = new ListOfUsersResponse();
+                var listOfUsers = new ListOfUsersWithRoleResponse();
                 listOfUsers.Users.AddRange(users);
 
                 _logger.LogInformation("[GrpcUserService] [{Method}] End", methodName);

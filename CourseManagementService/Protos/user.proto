@@ -4,8 +4,9 @@ import "google/protobuf/wrappers.proto";
 
 service User {
     rpc GetUserInfo (UserRequest) returns (UserResponse);
+    rpc GetUserInfoWithRole (UserRequest) returns (UserWithRoleResponse);
     rpc CheckUserExist (UserRequest) returns (CheckUserExistResponse);
-    rpc GetListOfUsers (UsersRequest) returns (ListOfUsersResponse);
+    rpc GetListOfUsers (UsersRequest) returns (ListOfUsersWithRoleResponse);
     rpc GetListOfTeachers (UsersRequest) returns (ListOfUsersResponse);
     rpc GetListOfStudents (UsersRequest) returns (ListOfUsersResponse);
     rpc GetTeachersByName(UserRequest) returns (ListOfUsersResponse);
@@ -38,8 +39,22 @@ message UserResponse {
     string email = 5;
 }
 
+message UserWithRoleResponse {
+    int32 id = 1;
+    string userName = 2;
+    string firstName = 3;
+    string lastName = 4;
+    string email = 5;
+    string avatarURL = 6;
+    string roles = 7;
+}
+
 message ListOfUsersResponse {
     repeated SimpleUserResponse users = 1;
+}
+
+message ListOfUsersWithRoleResponse {
+    repeated UserWithRoleResponse users = 1;
 }
 
 message CheckUserExistResponse {

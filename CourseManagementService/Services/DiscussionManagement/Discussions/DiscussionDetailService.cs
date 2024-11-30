@@ -1,6 +1,7 @@
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using CourseManagementService.Common;
+using CourseManagementService.Services.Cache;
 using CourseManagementService.Services.DiscussionManagement.Discussions.Schemas;
 using CourseManagementService.Services.Grpc.UserService;
 using CourseManagementService.Services.LessonManagement.LessonBase;
@@ -35,6 +36,37 @@ namespace CourseManagementService.Services.DiscussionManagement.Discussions
         /// <param name="id">Id of discussion</param>
         /// <param name="discussionUpdate">Information of discussion</param>
         public Task<ResponseInfo> UpdateDiscussion(Guid id, DiscussionUpdateDto discussionUpdate);
+
+        /// <summary>
+        /// Delete a discussion
+        /// <para>Created at: 2024/11/28</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public Task<ResponseInfo> DeleteDiscussion(Guid id);
+
+        /// <summary>
+        /// Get discussion types
+        /// <para>Created at: 2024/11/30</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <returns></returns>
+        public Task<List<LookupDto>> GetDiscussionTypes();
+
+        /// <summary>
+        /// Check if user can access discussion
+        /// <para>Created at: 2024/11/30</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        public Task<bool> CanAccessDiscussion(Guid discussionId, int userId);
+
+        /// <summary>
+        /// Get teacher id of course
+        /// <para>Created at: 2024/11/30</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        public Task<int> GetTeacherIdOfCourse(Guid discussionId);
     }
 
     public class DiscussionDetailService(IServiceProvider serviceProvider, ILogger<DiscussionDetailService> logger)
@@ -46,6 +78,8 @@ namespace CourseManagementService.Services.DiscussionManagement.Discussions
             ?? throw new InvalidDataException(ServiceInjectionError(nameof(ILessonBaseDetailService)));
         private readonly IGrpcUserService _grpcUserService = serviceProvider.GetService<IGrpcUserService>()
             ?? throw new InvalidDataException(ServiceInjectionError(nameof(IGrpcUserService)));
+        private readonly ICacheService _cacheService = serviceProvider.GetService<ICacheService>()
+            ?? throw new InvalidDataException(ServiceInjectionError(nameof(ICacheService)));
 
         public async Task<ResponseInfo> GetDiscussion(Guid id)
         {
@@ -73,18 +107,42 @@ namespace CourseManagementService.Services.DiscussionManagement.Discussions
                     }
                 }
 
-                var grpcResponse = await _grpcUserService.GetListOfUsers([discussionDto.User.Id]);
-                var userData = grpcResponse.Users.FirstOrDefault();
-                discussionDto.User.Username = userData?.UserName;
-                discussionDto.User.FullName = userData?.FullName;
-                discussionDto.User.AvatarURL = userData?.AvatarURL;
-                discussionDto.User.Email = userData?.Email;
+                var teacherIdInCourse = await GetTeacherIdOfCourse(id);
+                var userInfo = await _grpcUserService.GetUserInfoWithRole(discussionDto.User.Id);
+                discussionDto.User = userInfo;
+                discussionDto.User.RoleInCourse = discussionDto.User.Id == teacherIdInCourse
+                    ? "Teacher"
+                    : "Student";
 
                 var responseInfo = new ResponseInfo();
                 responseInfo.Data.Add("discussion", discussionDto);
 
                 LogInfo("End", methodName);
                 return responseInfo;
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+        }
+
+        public async Task<List<LookupDto>> GetDiscussionTypes()
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var discussionTypes = await _context.DiscussionTypes
+                    .Select(d => new LookupDto()
+                    {
+                        Id = d.Id.ToString(),
+                        Name = d.Name
+                    })
+                    .ToListAsync();
+
+                LogInfo("End", methodName);
+                return discussionTypes;
             }
             catch (Exception e)
             {
@@ -159,7 +217,7 @@ namespace CourseManagementService.Services.DiscussionManagement.Discussions
                 if (!await _lessonBaseDetailService.CanAccessLessonMaterial(discussionEntity.LessonId, currentUser.UserId)
                     || discussionEntity.CreatedBy != currentUser.UserId)
                 {
-                    return CreateEarlyResponseInfo(StatusCodes.Status403Forbidden, "You do not have permission to access this lesson");
+                    return CreateEarlyResponseInfo(StatusCodes.Status403Forbidden, "You have no longer permission to update this discussion");
                 }
 
                 discussionEntity.Title = discussionUpdate.Title;
@@ -172,6 +230,114 @@ namespace CourseManagementService.Services.DiscussionManagement.Discussions
 
                 LogInfo("End", methodName);
                 return responseInfo;
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+        }
+
+        public async Task<ResponseInfo> DeleteDiscussion(Guid id)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var currentUser = GetCurrentUser();
+
+                var discussionEntity = await _context.Discussions
+                    .Where(d => d.Id == id)
+                    .FirstOrDefaultAsync();
+                if (discussionEntity == null)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "Discussion not found");
+                }
+
+                if (discussionEntity.CreatedBy != currentUser.UserId)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status403Forbidden, "You have permission to delete this discussion");
+                }
+
+                if (!await _lessonBaseDetailService.CanAccessLessonMaterial(discussionEntity.LessonId, currentUser.UserId))
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status403Forbidden, "You have no longer permission to delete this discussion");
+                }
+
+                // Check có comments nào của discussion này không
+                var hasComments = await _context.Comments
+                    .AnyAsync(dc => dc.DiscussionId == id);
+                if (hasComments)
+                {
+                    discussionEntity.IsDelFlag = true;
+                }
+                else
+                {
+                    _context.Discussions.Remove(discussionEntity);
+                }
+
+                await _context.SaveChangesAsync();
+
+                var responseInfo = new ResponseInfo();
+                responseInfo.Data.Add("discussionId", id);
+
+                LogInfo("End", methodName);
+                return responseInfo;
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+        }
+
+        public async Task<bool> CanAccessDiscussion(Guid discussionId, int userId)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                var canAccess = await _context.Discussions
+                    .Where(d => d.Id == discussionId)
+                    .Select(d => new
+                    {
+                        d.Course.TeacherId,
+                        d.CreatedBy,
+                        IsEnrolled = d.Course.Enrollments.Any(e => e.StudentId == userId && e.LeaveDate == null)
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (canAccess == null) return false;
+                return canAccess.TeacherId == userId || (canAccess.CreatedBy == userId && canAccess.IsEnrolled);
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+        }
+
+        public async Task<int> GetTeacherIdOfCourse(Guid discussionId)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var cachedTeacherId = _cacheService.GetData<int>(CacheManager.TeacherIdOfCourse.KeyFromDiscussionId(discussionId));
+                if (cachedTeacherId != 0)
+                {
+                    return cachedTeacherId;
+                }
+
+                var teacherId = await _context.Discussions
+                    .Where(d => d.Id == discussionId)
+                    .Select(d => d.Course.TeacherId)
+                    .FirstOrDefaultAsync();
+
+                _cacheService.SetData(CacheManager.TeacherIdOfCourse.KeyFromDiscussionId(discussionId), teacherId,
+                    DateTimeOffset.Now.AddMinutes(CacheManager.TeacherIdOfCourse.ExpireTimeInMinutes));
+
+                LogInfo("End", methodName);
+                return teacherId;
             }
             catch (Exception e)
             {

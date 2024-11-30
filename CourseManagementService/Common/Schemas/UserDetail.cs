@@ -1,3 +1,6 @@
+using System.Text.Json.Serialization;
+using Newtonsoft.Json;
+
 namespace CourseManagementService.Common.Schemas
 {
     public class UserDetail
@@ -12,6 +15,10 @@ namespace CourseManagementService.Common.Schemas
 
         public string AvatarURL { get; set; }
 
-        public string Role { get; set; }
+        [JsonPropertyName("roleInSystem")]
+        [JsonProperty("roleInSystem")]
+        public string Roles { get; set; }
+
+        public string RoleInCourse { get; set; }
     }
 }

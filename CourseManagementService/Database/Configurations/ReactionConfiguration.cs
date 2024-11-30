@@ -8,6 +8,8 @@ namespace CourseManagementService.Database.Configurations
     {
         public void Configure(EntityTypeBuilder<Reaction> builder)
         {
+            builder.ToTable("Reactions");
+
             builder.Property(r => r.Type)
                 .IsRequired()
                 .HasMaxLength(50);
