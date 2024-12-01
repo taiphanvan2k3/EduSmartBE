@@ -12,7 +12,7 @@ namespace CourseManagementService.Controllers
             return StatusCode(StatusCodes.Status400BadRequest, ErrorResponseHelper.GetContentOfBadRequestResponse(modelStateErrors));
         }
 
-        protected dynamic HandleResponseInfo(ResponseInfo responseInfo, string resourceId = "", string resourceName = "")
+        protected dynamic HandleResponseInfo(ResponseInfo responseInfo, string resourceId = "", string resourceName = "", bool isWrapperInObject = true)
         {
             if (responseInfo.StatusCode == StatusCodes.Status200OK
                 || responseInfo.StatusCode == StatusCodes.Status201Created)
@@ -20,12 +20,19 @@ namespace CourseManagementService.Controllers
                 var data = responseInfo.Data.TryGetValue(resourceName, out var resource) ? resource : null;
                 if (data != null)
                 {
-                    var result = new Dictionary<string, object>
+                    if (isWrapperInObject)
                     {
-                        { resourceName, data }
-                    };
+                        var result = new Dictionary<string, object>
+                        {
+                            { resourceName, data }
+                        };
 
-                    return Ok(result);
+                        return Ok(result);
+                    }
+                    else
+                    {
+                        return Ok(data);
+                    }
                 }
 
                 return Ok(new

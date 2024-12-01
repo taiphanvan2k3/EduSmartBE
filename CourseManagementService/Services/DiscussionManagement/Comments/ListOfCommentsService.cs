@@ -106,7 +106,7 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                     return CreateEarlyResponseInfo(StatusCodes.Status403Forbidden, "You do not have permission to access this discussion");
                 }
 
-                var comments = await _context.Comments
+                PaginatedList<CommentDetail> comments = await _context.Comments
                     .Where(c => c.ParentId == commentId
                         && (!c.IsDelFlag || c.CreatedBy == currentUser.UserId))
                     .OrderBy(c => c.CreatedAt)
