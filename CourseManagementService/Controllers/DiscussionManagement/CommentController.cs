@@ -25,6 +25,7 @@ namespace CourseManagementService.Controllers.DiscussionManagement
         /// </summary>
         /// <param name="id">Id of comment</param>
         [HttpGet("{id}/reactions")]
+        [ProducesResponseType(typeof(List<ReactionDetail>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetCommentReactionsAsync(Guid id)
         {
             var responseInfo = await _commentDetailService.GetReactions(id);
@@ -39,10 +40,11 @@ namespace CourseManagementService.Controllers.DiscussionManagement
         /// <param name="id">Id of comment</param>
         /// <param name="paramsSearch">Pagination</param>
         [HttpGet("{id}/reply-comments")]
+        [ProducesResponseType(typeof(PaginatedList<CommentDetail>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetReplyCommentsAsync([FromRoute] Guid id, [FromQuery] ParamsSearch paramsSearch)
         {
             var responseInfo = await _listOfCommentsService.GetListOfReplies(id, paramsSearch);
-            return HandleResponseInfo(responseInfo, resourceName: "replies");
+            return HandleResponseInfo(responseInfo, resourceName: "replies", isWrapperInObject: false);
         }
 
         /// <summary>
@@ -54,6 +56,7 @@ namespace CourseManagementService.Controllers.DiscussionManagement
         /// <param name="commentUpdate">Content of comment</param>
         /// <returns></returns>
         [HttpPut("{id}")]
+        [ProducesResponseType(typeof(CommentDetail), StatusCodes.Status200OK)]
         public async Task<IActionResult> UpdateCommentAsync(Guid id, [FromBody] CommentUpdateDto commentUpdate)
         {
             if (!ModelState.IsValid)
