@@ -1,4 +1,3 @@
-using CourseManagementService.Common;
 using CourseManagementService.Common.Helpers;
 using CourseManagementService.Common.Schemas;
 using CourseManagementService.Services.CategoryManagement;
