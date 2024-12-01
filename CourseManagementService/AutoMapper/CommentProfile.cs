@@ -16,7 +16,7 @@ namespace CourseManagementService.AutoMapper
                     Id = src.CreatedBy,
                     RoleInCourse = src.RoleOfUser
                 }))
-                .ForMember(dest => dest.MentionedUser, opt => opt.MapFrom(src => new UserDetail
+                .ForMember(dest => dest.MentionedUser, opt => opt.MapFrom(src => !src.MentionedUserId.HasValue ? null : new UserDetail
                 {
                     Id = src.MentionedUserId ?? 0,
                 }))
