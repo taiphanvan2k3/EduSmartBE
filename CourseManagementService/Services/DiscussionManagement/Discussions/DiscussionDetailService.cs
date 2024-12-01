@@ -2,6 +2,7 @@ using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using CourseManagementService.Common;
 using CourseManagementService.Services.Cache;
+using CourseManagementService.Services.DiscussionManagement.Comments.Schemas;
 using CourseManagementService.Services.DiscussionManagement.Discussions.Schemas;
 using CourseManagementService.Services.Grpc.UserService;
 using CourseManagementService.Services.LessonManagement.LessonBase;
@@ -67,6 +68,15 @@ namespace CourseManagementService.Services.DiscussionManagement.Discussions
         /// <para>Created by: TaiPV</para>
         /// </summary>
         public Task<int> GetTeacherIdOfCourse(Guid discussionId);
+
+        /// <summary>
+        /// Mark a comment as best answer
+        /// <para>Created at: 2024/12/01</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="markBestAnswerRequest"></param>
+        /// <returns></returns>
+        public Task<ResponseInfo> MarkBestComment(MarkBestAnswerRequest markBestAnswerRequest);
     }
 
     public class DiscussionDetailService(IServiceProvider serviceProvider, ILogger<DiscussionDetailService> logger)
@@ -338,6 +348,64 @@ namespace CourseManagementService.Services.DiscussionManagement.Discussions
 
                 LogInfo("End", methodName);
                 return teacherId;
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+        }
+
+        public async Task<ResponseInfo> MarkBestComment(MarkBestAnswerRequest markBestAnswerRequest)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var currentUser = GetCurrentUser();
+
+                var discussionEntity = await _context.Discussions.FindAsync(markBestAnswerRequest.DiscussionId);
+                if (discussionEntity == null)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "Discussion not found");
+                }
+
+                if (discussionEntity.CreatedBy != currentUser.UserId)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status403Forbidden, "You have no permission to mark best answer");
+                }
+
+                if (discussionEntity.IsAnswered && markBestAnswerRequest.IsTurnOn)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status400BadRequest, "Discussion has already had best answer");
+                }
+
+                var commentEntity = await _context.Comments.FindAsync(markBestAnswerRequest.CommentId);
+                if (commentEntity == null)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "Comment not found");
+                }
+
+                if (commentEntity.DiscussionId != markBestAnswerRequest.DiscussionId)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status400BadRequest, "Comment does not belong to this discussion");
+                }
+
+                commentEntity.IsApproved = markBestAnswerRequest.IsTurnOn;
+                discussionEntity.IsAnswered = markBestAnswerRequest.IsTurnOn;
+
+                await _context.SaveChangesAsync();
+                var responseInfo = new ResponseInfo();
+
+                responseInfo.Data.Add("bestAnswerInfo", new
+                {
+                    DiscussionId = discussionEntity.Id,
+                    CommentId = commentEntity.Id,
+                    IsBestAnswer = markBestAnswerRequest.IsTurnOn
+                });
+
+                LogInfo("End", methodName);
+                return responseInfo;
             }
             catch (Exception e)
             {

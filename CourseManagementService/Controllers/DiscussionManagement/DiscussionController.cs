@@ -1,3 +1,4 @@
+using CourseManagementService.Common;
 using CourseManagementService.Common.Schemas;
 using CourseManagementService.Services.DiscussionManagement.Comments;
 using CourseManagementService.Services.DiscussionManagement.Comments.Schemas;
@@ -27,19 +28,29 @@ namespace CourseManagementService.Controllers.DiscussionManagement
         /// <para>Created at: 2024/11/28</para>
         /// <para>Created by: TaiPV</para>
         /// </summary>
-        /// <param name="id">Id of quiz lesson</param>
+        /// <param name="id">Id of discussion</param>
         [HttpGet("{id}")]
+        [ProducesResponseType(typeof(DiscussionDetail), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetDiscussion(Guid id)
         {
             var responseInfo = await _discussionDetailService.GetDiscussion(id);
             return HandleResponseInfo(responseInfo, resourceName: "discussion");
         }
 
+        /// <summary>
+        /// Get list of parent comments of a discussion
+        /// <para>Created at: 2024/11/30</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="id">Id of discussion</param>
+        /// <param name="paramsSearch">Pagination</param>
+        /// <returns></returns>
         [HttpGet("{id}/comments")]
+        [ProducesResponseType(typeof(PaginatedList<CommentDetail>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetComments([FromRoute] Guid id, [FromQuery] ParamsSearch paramsSearch)
         {
             var responseInfo = await _listOfCommentsService.GetListOfComments(id, paramsSearch);
-            return HandleResponseInfo(responseInfo, resourceName: "comments");
+            return HandleResponseInfo(responseInfo, resourceName: "comments", isWrapperInObject: false);
         }
 
         /// <summary>
@@ -48,6 +59,7 @@ namespace CourseManagementService.Controllers.DiscussionManagement
         /// <para>Created by: TaiPV</para>
         /// </summary>
         [HttpGet("types")]
+        [ProducesResponseType(typeof(List<LookupDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetDiscussionTypes()
         {
             var discussionTypes = await _discussionDetailService.GetDiscussionTypes();
@@ -61,6 +73,7 @@ namespace CourseManagementService.Controllers.DiscussionManagement
         /// </summary>
         /// <returns></returns>
         [HttpPost]
+        [ProducesResponseType(typeof(DiscussionCreateDto), StatusCodes.Status201Created)]
         public async Task<IActionResult> CreateDiscussion([FromBody] DiscussionCreateDto discussionCreate)
         {
             if (!ModelState.IsValid)
@@ -80,6 +93,7 @@ namespace CourseManagementService.Controllers.DiscussionManagement
         /// <param name="id">Id of discussion</param>
         /// <param name="commentCreate">Content of comment</param>
         [HttpPost("{id}/comments")]
+        [ProducesResponseType(typeof(CommentDetail), StatusCodes.Status201Created)]
         public async Task<IActionResult> CreateComment(Guid id, [FromBody] CommentCreateDto commentCreate)
         {
             if (!ModelState.IsValid)
@@ -97,7 +111,10 @@ namespace CourseManagementService.Controllers.DiscussionManagement
         /// <para>Created at: 2024/11/28</para>
         /// <para>Created by: TaiPV</para>
         /// </summary>
+        /// <param name="id">Id of discussion</param>
+        /// <param name="discussionUpdate">Content of discussion</param>
         [HttpPut("{id}")]
+        [ProducesResponseType(typeof(DiscussionCreateDto), StatusCodes.Status200OK)]
         public async Task<IActionResult> UpdateDiscussion(Guid id, [FromBody] DiscussionUpdateDto discussionUpdate)
         {
             if (!ModelState.IsValid)
@@ -107,6 +124,22 @@ namespace CourseManagementService.Controllers.DiscussionManagement
 
             var responseInfo = await _discussionDetailService.UpdateDiscussion(id, discussionUpdate);
             return HandleResponseInfo(responseInfo, resourceName: "discussion");
+        }
+
+        /// <summary>
+        /// Mark a comment as best answer in a discussion
+        /// <para>Created at: 2024/12/01</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="id">Id of discussion</param>
+        /// <param name="markBestAnswerRequest"></param>
+        /// <returns></returns>
+        [HttpPut("{id}/best-answer")]
+        public async Task<IActionResult> MarkBestAnswer(Guid id, [FromBody] MarkBestAnswerRequest markBestAnswerRequest)
+        {
+            markBestAnswerRequest.DiscussionId = id;
+            var responseInfo = await _discussionDetailService.MarkBestComment(markBestAnswerRequest);
+            return HandleResponseInfo(responseInfo, resourceName: "bestAnswerInfo");
         }
 
         /// <summary>
