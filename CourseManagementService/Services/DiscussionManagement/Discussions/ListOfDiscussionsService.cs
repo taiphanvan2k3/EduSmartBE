@@ -30,9 +30,11 @@ namespace CourseManagementService.Services.DiscussionManagement.Discussions
                     throw new UnauthorizedAccessException("You are not allowed to access this resource");
                 }
 
+                // BUG: Cần sử dụng () để đảm bảo thứ tự thực hiện của các toán tử logic
+                // nếu không thì nó sẽ (x.LessonId == lessonId && searchCondition.TargetUserType == TargetUserType.Me) ? ... : ...
                 var discussions = await _context.Discussions
-                    .Where(x => x.LessonId == lessonId && searchCondition.TargetUserType == TargetUserType.Me
-                        ? x.CreatedBy == currentUser.UserId : x.CreatedBy != currentUser.UserId)
+                    .Where(x => x.LessonId == lessonId && (searchCondition.TargetUserType == TargetUserType.Me
+                        ? x.CreatedBy == currentUser.UserId : x.CreatedBy != currentUser.UserId))
                     .Select(x => new DiscussionInfo()
                     {
                         Id = x.Id,
