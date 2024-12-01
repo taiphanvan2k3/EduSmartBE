@@ -24,12 +24,28 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
         public Task<bool> CanAccessCourseMaterial(Guid courseId, int userId);
 
         /// <summary>
+        /// Check if the user can access the course material
+        /// <para>Created at: 2024/11/04</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <returns></returns>
+        public Task<ResponseInfo> CheckCoursePermission(Guid courseId, int userId);
+
+        /// <summary>
         /// Check if the user can access the lesson material
         /// <para>Created at: 2024/11/12</para>
         /// <para>Created by: TaiPV</para>
         /// </summary>
         /// <returns></returns>
         public Task<bool> CanAccessLessonMaterial(Guid lessonId, int userId);
+
+        /// <summary>
+        /// Check if the user can access the lesson material
+        /// <para>Created at: 2024/11/12</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <returns></returns>
+        public Task<ResponseInfo> CheckLessonPermission(Guid lessonId, int userId);
 
         /// <summary>
         /// Check if the user can modify the course material (create, update, delete)
@@ -173,6 +189,95 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
             {
                 LogError(e, method);
                 throw;
+            }
+        }
+
+        public async Task<ResponseInfo> CheckCoursePermission(Guid courseId, int userId)
+        {
+            var method = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", method);
+                var responseInfo = new ResponseInfo();
+
+                var course = await _context.Courses
+                    .Where(c => c.Id == courseId)
+                    .Select(c => new
+                    {
+                        c.TeacherId,
+                        IsEnrolled = c.Enrollments.Any(e => e.StudentId == userId && !e.LeaveDate.HasValue)
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (course == null)
+                {
+                    responseInfo.Error = "Course not found";
+                    responseInfo.StatusCode = StatusCodes.Status404NotFound;
+                    return responseInfo;
+                }
+
+                if (course.TeacherId != userId && !course.IsEnrolled)
+                {
+                    responseInfo.Error = "You are not allowed to access this resource";
+                    responseInfo.StatusCode = StatusCodes.Status403Forbidden;
+                    return responseInfo;
+                }
+
+                return responseInfo;
+            }
+            catch (Exception e)
+            {
+                LogError(e, method);
+                throw;
+            }
+            finally
+            {
+                LogInfo("End", method);
+            }
+        }
+
+        public async Task<ResponseInfo> CheckLessonPermission(Guid lessonId, int userId)
+        {
+            var method = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", method);
+                var responseInfo = new ResponseInfo();
+
+                var lesson = await _context.Lessons
+                    .Where(l => l.Id == lessonId)
+                    .Select(l => new
+                    {
+                        l.Chapter.Course.TeacherId,
+                        IsEnrolled = l.Chapter.Course
+                            .Enrollments.Any(e => e.StudentId == userId && !e.LeaveDate.HasValue)
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (lesson == null)
+                {
+                    responseInfo.Error = "Lesson not found";
+                    responseInfo.StatusCode = StatusCodes.Status404NotFound;
+                    return responseInfo;
+                }
+
+                if (lesson.TeacherId != userId && !lesson.IsEnrolled)
+                {
+                    responseInfo.Error = "You are not allowed to access this resource";
+                    responseInfo.StatusCode = StatusCodes.Status403Forbidden;
+                    return responseInfo;
+                }
+
+                return responseInfo;
+            }
+            catch (Exception e)
+            {
+                LogError(e, method);
+                throw;
+            }
+            finally
+            {
+                LogInfo("End", method);
             }
         }
 
