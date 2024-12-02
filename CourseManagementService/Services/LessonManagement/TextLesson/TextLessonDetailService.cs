@@ -90,7 +90,7 @@ namespace CourseManagementService.Services.LessonManagement.TextLesson
                     return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "Lesson not found");
                 }
 
-                (LessonInfoBase previousLesson, LessonInfoBase nextLesson) = await _lessonBaseDetailService.GetPreviousAndNextLessonId(
+                (LessonInfoBase previousLesson, LessonInfoBase nextLesson) = await _lessonBaseDetailService.GetPreviousAndNextLessonId(courseId,
                     lessonDetail.ChapterOrder, lessonDetail.LessonOrder);
 
                 lessonDetail.PreviousLesson = previousLesson;
