@@ -107,5 +107,16 @@ namespace CourseManagementService.Services.Cache
             public static string KeyFromDiscussionId(Guid discussionId) => $"TeacherIdOfDiscussion:FromDiscussionId:{discussionId}";
             public static int ExpireTimeInMinutes => 60 * 24 * 100; // 100 days
         }
+
+        public static class DiscussionInCourse
+        {
+            public static string Key(Guid courseId, int userId, string keyword, int currentPage, int pageSize)
+            {
+                return $"DiscussionInCourse:{courseId}:{userId}_{keyword}_{currentPage}_{pageSize}";
+            }
+
+            public static int ExpireTimeInMinutesForStudent => 60;
+            public static int ExpireTimeInMinutesForTeacher => 10;
+        }
     }
 }

@@ -12,10 +12,14 @@ namespace CourseManagementService.Controllers.DiscussionManagement
     [Route("course-service/api/discussions", Order = 10)]
     [ApiController]
     [Authorize]
-    public class DiscussionController(IDiscussionDetailService discussionDetailService,
+    public class DiscussionController(
+        IListOfDiscussionsService listOfDiscussionsService,
+        IDiscussionDetailService discussionDetailService,
         IListOfCommentsService listOfCommentsService,
         ICommentDetailService commentDetailService) : BaseController
     {
+        private readonly IListOfDiscussionsService _listOfDiscussionsService = listOfDiscussionsService
+            ?? throw new ArgumentNullException(nameof(listOfDiscussionsService));
         private readonly IDiscussionDetailService _discussionDetailService = discussionDetailService
             ?? throw new ArgumentNullException(nameof(discussionDetailService));
         private readonly IListOfCommentsService _listOfCommentsService = listOfCommentsService
@@ -35,6 +39,29 @@ namespace CourseManagementService.Controllers.DiscussionManagement
         {
             var responseInfo = await _discussionDetailService.GetDiscussion(id);
             return HandleResponseInfo(responseInfo, resourceName: "discussion");
+        }
+
+        /// <summary>
+        /// Get list of my discussions or discussions (for teacher) in a course
+        /// <para>Created at: 2024/12/02</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="courseId">Id of course</param>
+        /// <param name="searchCondition">Search condition</param>
+        // Endpoint này sử dụng đường dẫn tuyệt đối và do vậy cần thêm Order = 10 để xác định thứ tự của controller
+        [HttpGet("/course-service/api/courses/{courseId}/discussions", Order = 10)]
+        [ProducesResponseType(typeof(PaginatedList<LessonWithDiscussion>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetDiscussions([FromRoute] Guid courseId,
+            [FromQuery] DiscussionSearchCondition searchCondition)
+        {
+            if (!ModelState.IsValid)
+            {
+                return GetInvalidModelStateResponse();
+            }
+
+            searchCondition.CourseId = courseId;
+            var responseInfo = await _listOfDiscussionsService.GetMyDiscussions(searchCondition);
+            return HandleResponseInfo(responseInfo, resourceName: "discussions", isWrapperInObject: false);
         }
 
         /// <summary>
