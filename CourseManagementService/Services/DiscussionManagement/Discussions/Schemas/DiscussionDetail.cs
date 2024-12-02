@@ -14,9 +14,6 @@ namespace CourseManagementService.Services.DiscussionManagement.Discussions.Sche
         [JsonProperty(Order = 7)]
         public Guid LessonId { get; set; }
 
-        [JsonProperty(Order = 8)]
-        public DateTimeOffset CreatedAt { get; set; }
-
         [JsonProperty(Order = 9)]
         public DateTimeOffset? UpdatedAt { get; set; }
     }
