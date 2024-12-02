@@ -29,7 +29,7 @@ namespace PaymentService.Controllers
         /// </remarks>
         /// <response code="200">Revenue of all courses of teacher</response>
         /// <response code="500">Internal server error</response>
-        [HttpGet("/me/revenue")]
+        [HttpGet("me/revenue")]
         [Filters.Auth(Roles = "Teacher")]
         [ProducesResponseType(typeof(decimal), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetRevenueAllCoursesOfTeacher(int currencyType)
@@ -62,7 +62,7 @@ namespace PaymentService.Controllers
         /// </remarks>
         /// <response code="200">Revenue of all courses of teacher</response>
         /// <response code="500">Internal server error</response>
-        [HttpGet("/me/revenue-list")]
+        [HttpGet("me/revenue-list")]
         [Filters.Auth(Roles = "Teacher")]
         [ProducesResponseType(typeof(ResponseInfo), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetListOfRevenueAllCoursesOfTeacher(int currencyType)
@@ -92,7 +92,7 @@ namespace PaymentService.Controllers
         /// <response code="200">Total withdrawal amount of teacher</response>
         /// <response code="500">Internal server error</response>
         /// <response code="401">Unauthorized</response>
-        [HttpGet("/me/total-withdrawal")]
+        [HttpGet("me/total-withdrawal")]
         [Filters.Auth(Roles = "Teacher")]
         [ProducesResponseType(typeof(decimal), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetTotalWithdrawal()
