@@ -48,6 +48,13 @@ namespace CourseManagementService.Services.Cache
         /// </summary>
         /// <param name="pattern"></param>
         Task RemoveDataByPattern(string pattern);
+
+        /// <summary>
+        /// Remove data from cache by patterns
+        /// </summary>
+        /// <param name="patterns"></param>
+        /// <returns></returns>
+        Task RemoveDataByPatterns(List<string> patterns);
     }
 
     public class CacheService(IConnectionMultiplexer connectionMultiplexer, ILogger<CacheService> logger) : ICacheService
@@ -102,21 +109,58 @@ namespace CourseManagementService.Services.Cache
 
         public async Task RemoveDataByPattern(string pattern)
         {
-            if (_cacheDb == null)
+            try
             {
-                return;
-            }
+                if (_cacheDb == null)
+                {
+                    return;
+                }
 
-            var endpoints = _cacheDb.Multiplexer.GetEndPoints();
-            var server = _cacheDb.Multiplexer.GetServer(endpoints[0]);
-            var keys = server.Keys(pattern: pattern + "*");
-            List<Task> tasks = [];
-            foreach (var key in keys)
+                var endpoints = _cacheDb.Multiplexer.GetEndPoints();
+                var server = _cacheDb.Multiplexer.GetServer(endpoints[0]);
+                var keys = server.Keys(pattern: pattern + "*");
+                List<Task> tasks = [];
+                foreach (var key in keys)
+                {
+                    tasks.Add(_cacheDb.KeyDeleteAsync(key));
+                }
+
+                await Task.WhenAll(tasks);
+            }
+            catch (Exception e)
             {
-                tasks.Add(_cacheDb.KeyDeleteAsync(key));
+                _logger.LogError(e, "Error when remove data from cache by pattern: {Pattern}", pattern);
             }
+        }
 
-            await Task.WhenAll(tasks);
+        public async Task RemoveDataByPatterns(List<string> patterns)
+        {
+            try
+            {
+                if (patterns == null || patterns.Count == 0)
+                {
+                    return;
+                }
+
+                var endpoints = _cacheDb.Multiplexer.GetEndPoints();
+                var server = _cacheDb.Multiplexer.GetServer(endpoints[0]);
+
+                List<Task> tasks = [];
+                foreach (var pattern in patterns)
+                {
+                    var keys = server.Keys(pattern: pattern + "*");
+                    foreach (var key in keys)
+                    {
+                        tasks.Add(_cacheDb.KeyDeleteAsync(key));
+                    }
+                }
+
+                await Task.WhenAll(tasks);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error when remove data from cache by patterns: {Patterns}", patterns);
+            }
         }
 
         public bool SetData<T>(string key, T value, DateTimeOffset timeEnd)

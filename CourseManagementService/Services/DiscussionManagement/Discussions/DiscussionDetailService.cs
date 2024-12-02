@@ -63,7 +63,7 @@ namespace CourseManagementService.Services.DiscussionManagement.Discussions
         public Task<bool> CanAccessDiscussion(Guid discussionId, int userId);
 
         /// <summary>
-        /// Get teacher id of course
+        /// Get teacher id of course by discussion id
         /// <para>Created at: 2024/11/30</para>
         /// <para>Created by: TaiPV</para>
         /// </summary>
@@ -198,6 +198,8 @@ namespace CourseManagementService.Services.DiscussionManagement.Discussions
                 var responseInfo = new ResponseInfo();
                 responseInfo.Data.Add("discussion", discussionDto);
 
+                await ClearCacheData(courseInfo.CourseId, currentUser.UserId, courseInfo.TeacherId);
+
                 LogInfo("End", methodName);
                 return responseInfo;
             }
@@ -237,6 +239,9 @@ namespace CourseManagementService.Services.DiscussionManagement.Discussions
                 var discussionDto = _mapper.Map<DiscussionCreateDto>(discussionEntity);
                 var responseInfo = new ResponseInfo();
                 responseInfo.Data.Add("discussion", discussionDto);
+
+                var teacherIdInCourse = await GetTeacherIdOfCourse(id);
+                await ClearCacheData(discussionEntity.CourseId, currentUser.UserId, teacherIdInCourse);
 
                 LogInfo("End", methodName);
                 return responseInfo;
@@ -290,6 +295,9 @@ namespace CourseManagementService.Services.DiscussionManagement.Discussions
 
                 var responseInfo = new ResponseInfo();
                 responseInfo.Data.Add("discussionId", id);
+
+                var teacherIdInCourse = await GetTeacherIdOfCourse(id);
+                await ClearCacheData(discussionEntity.CourseId, currentUser.UserId, teacherIdInCourse);
 
                 LogInfo("End", methodName);
                 return responseInfo;
@@ -404,6 +412,9 @@ namespace CourseManagementService.Services.DiscussionManagement.Discussions
                     IsBestAnswer = markBestAnswerRequest.IsTurnOn
                 });
 
+                var teacherIdInCourse = await GetTeacherIdOfCourse(markBestAnswerRequest.DiscussionId);
+                await ClearCacheData(discussionEntity.CourseId, currentUser.UserId, teacherIdInCourse);
+
                 LogInfo("End", methodName);
                 return responseInfo;
             }
@@ -412,6 +423,16 @@ namespace CourseManagementService.Services.DiscussionManagement.Discussions
                 LogError(e, methodName);
                 throw;
             }
+        }
+
+        private async Task ClearCacheData(Guid courseId, int userId, int teacherId)
+        {
+            List<string> cachedKeys = [
+                $"DiscussionInCourse:{courseId}:{userId}_CreatedByMe",
+                $"DiscussionInCourse:{courseId}:{teacherId}_ForTeacher"
+            ];
+
+            await _cacheService.RemoveDataByPatterns(cachedKeys);
         }
     }
 }
