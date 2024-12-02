@@ -69,5 +69,45 @@ namespace CourseManagementService.GrpcServices
                 throw;
             }
         }
+
+        public override async Task<GetInfoCourseByIdsResponse> GetInfoCourseByIds(GetInfoCourseByIdsRequest request, ServerCallContext context)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                _logger.LogInformation("[GrpcCourseService] [{Method}] Start", methodName);
+                var responseInfo = new GetInfoCourseByIdsResponse();
+
+                var courseIds = request.RevenueCourses.Select(x => x.RelatedInfo.CourseId).Distinct().ToList();
+                
+                var courses = await _context.Courses
+                    .Where(c => courseIds.Contains(c.Id.ToString()))
+                    .Select(c => new
+                    {
+                        c.Id,
+                        c.Name
+                    })
+                    .ToListAsync();
+
+                foreach(var earning in request.RevenueCourses)
+                {
+                    var course = courses.FirstOrDefault(c => c.Id.ToString() == earning.RelatedInfo.CourseId);
+                    if (course != null)
+                    {
+                        earning.CourseName = course.Name;
+                    }
+                }
+                responseInfo.RevenueCourses.AddRange(request.RevenueCourses);
+                responseInfo.IsSuccess = true;
+                responseInfo.Message = "Enroll course successfully";
+                _logger.LogInformation("[GrpcCourseService] [{Method}] End", methodName);
+                return responseInfo;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[GrpcCourseService] [{Method}] Error", methodName);
+                throw;
+            }
+        }
     }
 }
