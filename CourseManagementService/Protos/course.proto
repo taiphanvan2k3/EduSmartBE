@@ -4,6 +4,7 @@ import "google/protobuf/timestamp.proto";
 
 service Course {
     rpc EnrollCourse(CourseEnrollmentRequest) returns (CourseEnrollmentResponse);
+    rpc GetInfoCourseByIds(GetInfoCourseByIdsRequest) returns (GetInfoCourseByIdsResponse);
 }
 
 message CourseEnrollmentRequest {
@@ -16,4 +17,26 @@ message CourseEnrollmentResponse {
     string enrollmentId = 1;
     string message = 2;
     bool isSuccess = 3;
+}
+
+message GetInfoCourseByIdsRequest {
+    repeated RevenueCourseGrpc revenueCourses = 1;
+}
+
+message GetInfoCourseByIdsResponse {
+    repeated RevenueCourseGrpc revenueCourses = 1;
+    string message = 2;
+    bool isSuccess = 3;
+}
+
+message RevenueCourseGrpc {
+    double amount = 1;
+    string currency = 2;
+    string courseName = 3;
+    RelatedInfoGrpc relatedInfo = 4;
+}
+
+message RelatedInfoGrpc {
+    string courseId = 1;
+    int32 teacherId = 2;
 }
