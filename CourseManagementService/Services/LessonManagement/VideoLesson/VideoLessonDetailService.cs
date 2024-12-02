@@ -137,7 +137,7 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson
                 }
 
                 videoLesson.VideoURLWithSAS = _videoService.GetVideoURLWithSAS(videoLesson.BaseBlobURL);
-                (LessonInfoBase previousLesson, LessonInfoBase nextLesson) = await _lessonBaseDetailService.GetPreviousAndNextLessonId(
+                (LessonInfoBase previousLesson, LessonInfoBase nextLesson) = await _lessonBaseDetailService.GetPreviousAndNextLessonId(courseId,
                      videoLesson.ChapterOrder, videoLesson.LessonOrder);
 
                 videoLesson.PreviousLesson = previousLesson;

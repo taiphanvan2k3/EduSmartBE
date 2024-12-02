@@ -108,7 +108,7 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
         /// <para>Created by: TaiPV</para>
         /// </summary>
         /// <returns></returns>
-        public Task<(LessonInfoBase, LessonInfoBase)> GetPreviousAndNextLessonId(int currentChapterOrder, int currentLessonOrder);
+        public Task<(LessonInfoBase, LessonInfoBase)> GetPreviousAndNextLessonId(Guid courseId, int currentChapterOrder, int currentLessonOrder);
 
         /// <summary>
         /// Get the lesson id that the user should continue learning
@@ -433,7 +433,7 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
             }
         }
 
-        public async Task<(LessonInfoBase, LessonInfoBase)> GetPreviousAndNextLessonId(int currentChapterOrder, int currentLessonOrder)
+        public async Task<(LessonInfoBase, LessonInfoBase)> GetPreviousAndNextLessonId(Guid courseId, int currentChapterOrder, int currentLessonOrder)
         {
             var methodName = GetActualAsyncMethodName();
 
@@ -444,7 +444,7 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
 
                 int currentCompositeOrder = currentChapterOrder * 1000 + currentLessonOrder;
                 var previousLesson = await _context.Lessons
-                    .Where(l => l.Chapter.IsPublished && l.IsPublished)
+                    .Where(l => l.Chapter.CourseId == courseId && l.Chapter.IsPublished && l.IsPublished)
                     .Where(l => l.Chapter.Order * 1000 + l.Order < currentCompositeOrder)
                     .OrderByDescending(l => l.Chapter.Order * 1000 + l.Order)
                     .Select(l => new LessonInfoBase()
@@ -459,7 +459,7 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
                     .FirstOrDefaultAsync();
 
                 var nextLesson = await _context.Lessons
-                    .Where(l => l.Chapter.IsPublished && l.IsPublished)
+                    .Where(l => l.Chapter.CourseId == courseId && l.Chapter.IsPublished && l.IsPublished)
                     .Where(l => l.Chapter.Order * 1000 + l.Order > currentCompositeOrder)
                     .OrderBy(l => l.Chapter.Order * 1000 + l.Order)
                     .Select(l => new LessonInfoBase()
