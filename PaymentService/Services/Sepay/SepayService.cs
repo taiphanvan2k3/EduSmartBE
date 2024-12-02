@@ -111,6 +111,62 @@ namespace PaymentService.Services.Sepay
             }
         }
 
+        public async void SaveWithdrawalTransaction(SepayWithdrawlRequest sepayWithdrawlRequest)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                _logger.LogInformation("[SepayService] [{Method}] Start", methodName);
+                var withdrawalRequest = await _context.WithdrawalRequests
+                    .FirstOrDefaultAsync(x => x.Id == Guid.Parse(sepayWithdrawlRequest.Content));
+                if (withdrawalRequest == null)
+                {
+                    throw new Exception("Withdrawal request not found");
+                }
+                else
+                {
+                    withdrawalRequest.Status = RequestStatus.Approved;
+                    withdrawalRequest.ApprovedAt = DateTime.Now;
+                    _context.WithdrawalRequests.Update(withdrawalRequest);
+
+                    var teacherEarning = await _context.TeacherEarnings
+                        .FirstOrDefaultAsync(x => x.UserId == withdrawalRequest.UserId);
+                    
+                    if (teacherEarning != null)
+                    {
+                        teacherEarning.CurrentBalance -= withdrawalRequest.Amount;
+                        teacherEarning.TotalWithdrawn += withdrawalRequest.Amount;
+                        _context.TeacherEarnings.Update(teacherEarning);
+                    }
+
+                    var currencyType = Enum.Parse<CurrencyType>(CurrencyType.VND.ToString());
+                    var coursePaymentTransaction = new TblPaymentTransaction
+                    {
+                        Id = Guid.NewGuid(),
+                        Code = sepayWithdrawlRequest.Code,
+                        UserId = withdrawalRequest.UserId,
+                        Amount = withdrawalRequest.Amount,
+                        Currency = currencyType,
+                        PaymentMethod = PaymentMethod.Sepay,
+                        TransactionType = TransactionType.DrawingRequest,
+                        OrderStatus = OrderStatus.SUCCESS,
+                        RelatedInformation = sepayWithdrawlRequest.Content,
+                        CompletedAt = DateTimeOffset.Parse(sepayWithdrawlRequest.TransactionDate),
+                        CreatedAt = DateTimeOffset.Now,
+                    };
+                    await _context.PaymentTransactions.AddAsync(coursePaymentTransaction);
+                    await _context.SaveChangesAsync();
+                }
+                _logger.LogInformation("[SepayService] [{Method}] End", methodName);
+
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[SepayService] [{Method}] Error", methodName);
+                throw;
+            }
+        }
+
         private async Task<ResponseInfo> HandleTransactionInByType(SepayRequest sepayRequest, TblPaymentTransaction paymentTransaction)
         {
             var responseInfo = new ResponseInfo();
@@ -144,52 +200,6 @@ namespace PaymentService.Services.Sepay
         private async Task NotifyClient(string userId, string transactionType, ResponseInfo response)
         {
             await _hubContext.Clients.User(userId).SendAsync($"{transactionType}Completed", response);
-        }
-
-        public void SaveWithdrawalTransaction(SepayWithdrawlRequest sepayWithdrawlRequest)
-        {
-            var methodName = GetActualAsyncMethodName();
-            try
-            {
-                _logger.LogInformation("[SepayService] [{Method}] Start", methodName);
-                var withdrawalRequest = _context.WithdrawalRequests
-                    .FirstOrDefault(x => x.Id == Guid.Parse(sepayWithdrawlRequest.Content));
-                if (withdrawalRequest == null)
-                {
-                    throw new Exception("Withdrawal request not found");
-                }
-                else
-                {
-                    withdrawalRequest.Status = RequestStatus.Approved;
-                    withdrawalRequest.ApprovedAt = DateTime.Now;
-                    _context.WithdrawalRequests.Update(withdrawalRequest);
-
-                    var currencyType = Enum.Parse<CurrencyType>(CurrencyType.VND.ToString());
-                    var coursePaymentTransaction = new TblPaymentTransaction
-                    {
-                        Id = Guid.NewGuid(),
-                        Code = sepayWithdrawlRequest.Code,
-                        UserId = withdrawalRequest.UserId,
-                        Amount = withdrawalRequest.Amount,
-                        Currency = currencyType,
-                        PaymentMethod = PaymentMethod.Sepay,
-                        TransactionType = TransactionType.DrawingRequest,
-                        OrderStatus = OrderStatus.SUCCESS,
-                        RelatedInformation = sepayWithdrawlRequest.Content,
-                        CompletedAt = DateTimeOffset.Parse(sepayWithdrawlRequest.TransactionDate),
-                        CreatedAt = DateTimeOffset.Now,
-                    };
-                    _context.PaymentTransactions.Add(coursePaymentTransaction);
-                    _context.SaveChanges();
-                }
-                _logger.LogInformation("[SepayService] [{Method}] End", methodName);
-
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "[SepayService] [{Method}] Error", methodName);
-                throw;
-            }
         }
     }
 }
