@@ -317,7 +317,7 @@ namespace CourseManagementService.Services.DiscussionManagement.Discussions
                     .FirstOrDefaultAsync();
 
                 if (canAccess == null) return false;
-                return canAccess.TeacherId == userId || (canAccess.CreatedBy == userId && canAccess.IsEnrolled);
+                return canAccess.TeacherId == userId || canAccess.IsEnrolled;
             }
             catch (Exception e)
             {
