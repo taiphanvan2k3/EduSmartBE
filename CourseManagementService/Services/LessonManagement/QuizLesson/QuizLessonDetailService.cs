@@ -92,7 +92,7 @@ namespace CourseManagementService.Services.LessonManagement.QuizLesson
                     return responseInfo;
                 }
 
-                (LessonInfoBase previousLesson, LessonInfoBase nextLesson) = await _lessonBaseDetailService.GetPreviousAndNextLessonId(
+                (LessonInfoBase previousLesson, LessonInfoBase nextLesson) = await _lessonBaseDetailService.GetPreviousAndNextLessonId(courseId,
                     lessonDto.ChapterOrder, lessonDto.LessonOrder);
 
                 lessonDto.PreviousLesson = previousLesson;
