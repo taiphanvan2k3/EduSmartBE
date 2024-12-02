@@ -61,7 +61,7 @@ namespace CourseManagementService.Controllers.LessonManagement
         {
             try
             {
-                var discussions = await _listOfDiscussionsService.GetDiscussions(lessonId, searchCondition);
+                var discussions = await _listOfDiscussionsService.GetDiscussionsInLesson(lessonId, searchCondition);
                 return Ok(discussions);
             }
             catch (Exception e)

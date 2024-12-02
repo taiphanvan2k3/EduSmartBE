@@ -223,6 +223,7 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
                     return responseInfo;
                 }
 
+                responseInfo.Data.Add("isTeacher", course.TeacherId == userId);
                 return responseInfo;
             }
             catch (Exception e)

@@ -1,6 +1,7 @@
 using AutoMapper;
 using CourseManagementService.Common;
 using CourseManagementService.Common.Schemas;
+using CourseManagementService.Services.Cache;
 using CourseManagementService.Services.DiscussionManagement.Comments.Schemas;
 using CourseManagementService.Services.DiscussionManagement.Discussions;
 using CourseManagementService.Services.Grpc.UserService;
@@ -60,6 +61,8 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
             ?? throw new ArgumentNullException(nameof(IDiscussionDetailService));
         private readonly IGrpcUserService _grpcUserService = serviceProvider.GetService<IGrpcUserService>()
             ?? throw new ArgumentNullException(nameof(IGrpcUserService));
+        private readonly ICacheService _cacheService = serviceProvider.GetService<ICacheService>()
+            ?? throw new ArgumentNullException(nameof(ICacheService));
 
         public async Task<ResponseInfo> GetReactions(Guid commentId)
         {
@@ -129,6 +132,19 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                 LogInfo("Start", methodName);
                 var currentUser = GetCurrentUser();
 
+                var discussionInfo = await _context.Discussions
+                    .Where(x => x.Id == commentCreateDto.DiscussionId)
+                    .Select(x => new
+                    {
+                        x.CourseId
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (discussionInfo == null)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "Discussion not found");
+                }
+
                 if (!await _discussionDetailService.CanAccessDiscussion(commentCreateDto.DiscussionId, currentUser.UserId))
                 {
                     return CreateEarlyResponseInfo(StatusCodes.Status403Forbidden, "You do not have permission to access this discussion");
@@ -182,6 +198,8 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
 
                 var responseInfo = new ResponseInfo();
                 responseInfo.Data.Add("comment", commentDto);
+
+                await _cacheService.RemoveDataByPattern($"DiscussionInCourse:{discussionInfo.CourseId}:{currentUser.UserId}_ReplyByMe");
 
                 LogInfo("End", methodName);
                 return responseInfo;
