@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace CourseManagementService.Services.RatingManagement.Schemas
 {
@@ -6,6 +7,7 @@ namespace CourseManagementService.Services.RatingManagement.Schemas
     {
         public bool IsLike { get; set; }
 
+        [SwaggerIgnore]
         public Guid LessonId { get; set; }
 
         public string Comment { get; set; }
