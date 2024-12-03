@@ -114,7 +114,7 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                     .ToPaginatedListAsync(paramsSearch.CurrentPage, paramsSearch.PageSize);
 
                 var createdByIds = comments.Items.Select(c => c.CreatedBy.Id).Distinct().ToList();
-                var mentionedUserIds = comments.Items.Where(c => c.MentionedUser.Id != 0)
+                var mentionedUserIds = comments.Items.Where(c => c.MentionedUser != null)
                     .Select(c => c.MentionedUser.Id).Distinct().ToList();
                 var userInfosData = await _grpcUserService.GetListOfUsers([.. createdByIds, .. mentionedUserIds]);
 
@@ -124,7 +124,7 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                     comment.CreatedBy = userInfosData.FirstOrDefault(u => u.Id == comment.CreatedBy.Id);
                     comment.CreatedBy.RoleInCourse = roleInCourse;
 
-                    if (comment.MentionedUser.Id != 0)
+                    if (comment.MentionedUser != null)
                     {
                         comment.MentionedUser = userInfosData.FirstOrDefault(u => u.Id == comment.MentionedUser.Id);
                     }
