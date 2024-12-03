@@ -12,7 +12,7 @@ namespace CourseManagementService.Services.Cache
                 return withRole ? $"User_WithRole:{userId}" : $"User:{userId}";
             }
 
-            public static int ExpireTimeInMinutes => 60;
+            public static int ExpireTimeInMinutes => 60 * 24 * 7;
         }
 
         public static class PopularCourses

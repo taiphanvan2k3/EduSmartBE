@@ -53,6 +53,13 @@ namespace CourseManagementService.Controllers.LessonManagement
             }
         }
 
+        /// <summary>
+        /// Get the list of discussions in a lesson
+        /// <para>Created at: 2024/11/29</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="lessonId">Id of lesson</param>
+        /// <param name="searchCondition">Search condition</param>
         [Authorize]
         [HttpGet("{lessonId}/discussions")]
         [ProducesResponseType(typeof(PaginatedList<DiscussionInfo>), StatusCodes.Status200OK)]
