@@ -20,7 +20,7 @@ namespace CourseManagementService.Services.ChapterManagement
         /// </summary>
         /// <param name="chapterId">Id of chapter</param>
         /// <returns></returns>
-        public Task<bool> IsExistingChapter(Guid chapterId);
+        public Task<ResponseInfo> IsExistingChapter(Guid chapterId);
 
         /// <summary>
         /// Get course id that the chapter belongs to
@@ -89,17 +89,29 @@ namespace CourseManagementService.Services.ChapterManagement
         private readonly ILessonBaseDetailService _lessonBaseDetailService = serviceProvider.GetRequiredService<ILessonBaseDetailService>()
             ?? throw new InvalidDataException(ServiceInjectionError(nameof(ILessonBaseDetailService)));
 
-        public async Task<bool> IsExistingChapter(Guid chapterId)
+        public async Task<ResponseInfo> IsExistingChapter(Guid chapterId)
         {
             var method = GetActualAsyncMethodName();
             try
             {
                 LogInfo("Start", method);
-                var isExist = await _context.Chapters
-                    .AnyAsync(c => c.Id == chapterId);
+                var chapterInfo = await _context.Chapters
+                    .Where(c => c.Id == chapterId)
+                    .Select(c => new
+                    {
+                        c.CourseId
+                    })
+                    .FirstOrDefaultAsync();
 
-                LogInfo("End", method);
-                return isExist;
+                if (chapterInfo == null)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "Chapter not found");
+                }
+
+                var responseInfo = new ResponseInfo();
+                responseInfo.Data.Add("courseId", chapterInfo.CourseId);
+
+                return responseInfo;
             }
             catch (Exception e)
             {
@@ -218,7 +230,7 @@ namespace CourseManagementService.Services.ChapterManagement
 
                 try
                 {
-                    await _cacheService.RemoveDataByPattern(CacheManager.CourseDetail.PrefixKey);
+                    await _cacheService.RemoveDataByPattern(CacheManager.CourseDetail.GetPrefixKey(chapterDetailCreate.CourseId));
                 }
                 catch (Exception e)
                 {
@@ -271,7 +283,7 @@ namespace CourseManagementService.Services.ChapterManagement
 
                 try
                 {
-                    await _cacheService.RemoveDataByPattern(CacheManager.CourseDetail.PrefixKey);
+                    await _cacheService.RemoveDataByPattern(CacheManager.CourseDetail.GetPrefixKey(chapter.CourseId));
                 }
                 catch (Exception e)
                 {
@@ -365,7 +377,7 @@ namespace CourseManagementService.Services.ChapterManagement
 
                 try
                 {
-                    await _cacheService.RemoveDataByPattern(CacheManager.CourseDetail.PrefixKey);
+                    await _cacheService.RemoveDataByPattern(CacheManager.CourseDetail.GetPrefixKey(chapter.CourseId));
                 }
                 catch (Exception e)
                 {

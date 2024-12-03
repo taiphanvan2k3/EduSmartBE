@@ -50,6 +50,13 @@ namespace CourseManagementService.Services.Cache
         Task RemoveDataByPattern(string pattern);
 
         /// <summary>
+        /// Remove data from cache by pattern (using lua script)
+        /// </summary>
+        /// <param name="pattern"></param>
+        /// <returns></returns>
+        Task RemoveDataByPatternUsingLuaScript(string pattern);
+
+        /// <summary>
         /// Remove data from cache by patterns
         /// </summary>
         /// <param name="patterns"></param>
@@ -130,6 +137,30 @@ namespace CourseManagementService.Services.Cache
             catch (Exception e)
             {
                 _logger.LogError(e, "Error when remove data from cache by pattern: {Pattern}", pattern);
+            }
+        }
+
+        public async Task RemoveDataByPatternUsingLuaScript(string pattern)
+        {
+            try
+            {
+                if (_cacheDb == null) return;
+
+                var endpoints = _cacheDb.Multiplexer.GetEndPoints();
+                var server = _cacheDb.Multiplexer.GetServer(endpoints[0]);
+                var keys = server.Keys(pattern: pattern + "*").ToArray();
+
+                // Gửi duy nhất 1 lệnh tới Redis Server thay vì gửi nhiều lệnh nhỏ như hàm RemoveDataByPattern
+                var script = @"
+                    for i, key in ipairs(KEYS) do
+                        redis.call('DEL', key)
+                    end";
+
+                await _cacheDb.ScriptEvaluateAsync(script, keys);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error when remove data from cache by pattern using lua script: {Pattern}", pattern);
             }
         }
 

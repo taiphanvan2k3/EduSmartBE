@@ -1,5 +1,6 @@
 using CourseManagementService.Common;
 using CourseManagementService.Enumerations;
+using CourseManagementService.Services.Cache;
 using CourseManagementService.Services.LessonManagement.LessonBase.Schemas;
 using Microsoft.EntityFrameworkCore;
 
@@ -116,11 +117,21 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
         /// <para>Created by: TaiPV</para>
         /// </summary>
         public Task<ContinueLessonInfo> GetContinueLessonInfo(Guid courseId);
+
+        /// <summary>
+        /// Clear the course detail cache when teacher updates the course
+        /// <para>Created at: 2024/12/03</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        public Task ClearCourseDetailCache(Guid courseId);
     }
 
     public class LessonBaseDetailService(IServiceProvider serviceProvider, ILogger<LessonBaseDetailService> logger)
         : BaseService(serviceProvider, logger), ILessonBaseDetailService
     {
+        private readonly ICacheService _cacheService = serviceProvider.GetService<ICacheService>()
+            ?? throw new InvalidDataException(ServiceInjectionError(nameof(ICacheService)));
+
         public async Task<bool> IsExistLesson(Guid lessonId)
         {
             var method = GetActualAsyncMethodName();
@@ -552,6 +563,22 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
                     },
                     TimeSpent = 0
                 };
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+        }
+
+        public async Task ClearCourseDetailCache(Guid courseId)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                await _cacheService.RemoveDataByPatternUsingLuaScript(CacheManager.CourseDetail.GetPrefixKey(courseId));
+                LogInfo("End", methodName);
             }
             catch (Exception e)
             {
