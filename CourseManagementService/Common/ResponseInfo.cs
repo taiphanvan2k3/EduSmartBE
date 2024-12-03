@@ -25,5 +25,21 @@ namespace CourseManagementService.Common
             Message = "Success";
             Data = [];
         }
+
+        public ResponseInfo(string resource, dynamic data, int statusCode = StatusCodes.Status200OK)
+        {
+            StatusCode = statusCode;
+            Message = statusCode switch
+            {
+                StatusCodes.Status200OK => "Success",
+                StatusCodes.Status201Created => "Created",
+                _ => "Error"
+            };
+
+            Data = new Dictionary<string, dynamic>
+            {
+                { resource, data }
+            };
+        }
     }
 }
