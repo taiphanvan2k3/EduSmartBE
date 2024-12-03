@@ -116,11 +116,10 @@ namespace CourseManagementService.Services.LessonManagement.QuizLesson
                 LogInfo("Start", methodName);
                 var responseInfo = new ResponseInfo();
 
-                if (!await _chapterDetailService.IsExistingChapter(quizLessonCreateDto.ChapterId))
+                var isExistChapterResponse = await _chapterDetailService.IsExistingChapter(quizLessonCreateDto.ChapterId);
+                if (!isExistChapterResponse.IsSuccess)
                 {
-                    responseInfo.StatusCode = StatusCodes.Status404NotFound;
-                    responseInfo.Message = "Chapter not found";
-                    return responseInfo;
+                    return isExistChapterResponse;
                 }
 
                 var currentUser = GetCurrentUser();
@@ -168,6 +167,7 @@ namespace CourseManagementService.Services.LessonManagement.QuizLesson
                 var lessonDto = _mapper.Map<QuizLessonDetail>(lessonEntity);
                 responseInfo.Data.Add("lesson", lessonDto);
 
+                await _lessonBaseDetailService.ClearCourseDetailCache(courseId: isExistChapterResponse.Data["courseId"]);
                 LogInfo("End", methodName);
                 return responseInfo;
             }
@@ -193,11 +193,10 @@ namespace CourseManagementService.Services.LessonManagement.QuizLesson
                     return responseInfo;
                 }
 
-                if (!await _chapterDetailService.IsExistingChapter(quizLessonUpdateDto.ChapterId))
+                var isExistChapterResponse = await _chapterDetailService.IsExistingChapter(quizLessonUpdateDto.ChapterId);
+                if (!isExistChapterResponse.IsSuccess)
                 {
-                    responseInfo.StatusCode = StatusCodes.Status404NotFound;
-                    responseInfo.Message = "Chapter not found";
-                    return responseInfo;
+                    return isExistChapterResponse;
                 }
 
                 var currentUser = GetCurrentUser();
@@ -281,6 +280,7 @@ namespace CourseManagementService.Services.LessonManagement.QuizLesson
                 LogInfo("End", methodName);
 
                 responseInfo.Data.Add("lesson", _mapper.Map<QuizLessonDetail>(lessonEntity));
+                await _lessonBaseDetailService.ClearCourseDetailCache(courseId: isExistChapterResponse.Data["courseId"]);
                 return responseInfo;
             }
             catch (Exception e)
