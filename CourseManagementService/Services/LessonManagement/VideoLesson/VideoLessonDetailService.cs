@@ -163,11 +163,10 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson
                 LogInfo("Start", methodName);
                 var responseInfo = new ResponseInfo();
 
-                if (!await _chapterDetailService.IsExistingChapter(videoLessonInfo.ChapterId))
+                var isExistChapterResponse = await _chapterDetailService.IsExistingChapter(videoLessonInfo.ChapterId);
+                if (!isExistChapterResponse.IsSuccess)
                 {
-                    responseInfo.StatusCode = StatusCodes.Status404NotFound;
-                    responseInfo.Message = "Chapter not found";
-                    return responseInfo;
+                    return isExistChapterResponse;
                 }
 
                 int videoLessonOrder = await _context.Lessons
@@ -211,14 +210,20 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson
                 {
                     await StartUploadImageToCloudinaryJob(videoLessonInfo.Thumbnail, videoLessonEntity.Id);
                 }
+
                 await StartUploadVideoJob(videoLessonInfo.Video, videoLessonEntity.Id);
-                LogInfo("End", methodName);
+                await _lessonBaseDetailService.ClearCourseDetailCache(courseId: isExistChapterResponse.Data["courseId"]);
+
                 return responseInfo;
             }
             catch (Exception e)
             {
                 LogError(e, methodName);
                 throw;
+            }
+            finally
+            {
+                LogInfo("End", methodName);
             }
         }
 

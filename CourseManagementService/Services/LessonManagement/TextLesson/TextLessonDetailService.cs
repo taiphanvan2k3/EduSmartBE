@@ -114,9 +114,11 @@ namespace CourseManagementService.Services.LessonManagement.TextLesson
             try
             {
                 LogInfo("Start", methodName);
-                if (!await _chapterDetailService.IsExistingChapter(textLessonCreateDto.ChapterId))
+
+                var isExistChapterResponse = await _chapterDetailService.IsExistingChapter(textLessonCreateDto.ChapterId);
+                if (!isExistChapterResponse.IsSuccess)
                 {
-                    return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "Chapter not found");
+                    return isExistChapterResponse;
                 }
 
                 var currentUser = GetCurrentUser();
@@ -144,13 +146,17 @@ namespace CourseManagementService.Services.LessonManagement.TextLesson
 
                 responseInfo.Data.Add("lesson", lessonDto);
 
-                LogInfo("End", methodName);
+                await _lessonBaseDetailService.ClearCourseDetailCache(courseId: isExistChapterResponse.Data["courseId"]);
                 return responseInfo;
             }
             catch (Exception e)
             {
                 LogError(e, methodName);
                 throw;
+            }
+            finally
+            {
+                LogInfo("End", methodName);
             }
         }
 
@@ -161,9 +167,10 @@ namespace CourseManagementService.Services.LessonManagement.TextLesson
             try
             {
                 LogInfo("Start", methodName);
-                if (!await _chapterDetailService.IsExistingChapter(textLessonUpdateDto.ChapterId))
+                var isExistChapterResponse = await _chapterDetailService.IsExistingChapter(textLessonUpdateDto.ChapterId);
+                if (!isExistChapterResponse.IsSuccess)
                 {
-                    return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "Chapter not found");
+                    return isExistChapterResponse;
                 }
 
                 var currentUser = GetCurrentUser();

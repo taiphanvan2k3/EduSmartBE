@@ -456,7 +456,7 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                 ClearOwnedCoursesCache(_appStateService.UserInfo.UserId);
 
                 // Clear cache for public course detail API
-                await _cacheService.RemoveDataByPattern(CacheManager.CourseDetail.PrefixKey);
+                await _cacheService.RemoveDataByPattern(CacheManager.CourseDetail.GetPrefixKey(courseId: id));
 
                 var courseDto = _mapper.Map<CourseDto>(course);
                 courseDto.Tags = course.Tags.Select(x => new LookupDto
