@@ -181,10 +181,22 @@ namespace CourseManagementService.Services.RatingManagement
                 LogInfo("Start", methodName);
                 var currentUser = GetCurrentUser();
 
-                var lessonPermission = await _lessonBaseDetailService.CheckLessonPermission(searchCondition.LessonId, currentUser.UserId);
-                if (!lessonPermission.IsSuccess)
+                var courseInfo = await _context.Lessons
+                    .Where(l => l.Id == searchCondition.LessonId)
+                    .Select(l => new
+                    {
+                        l.Chapter.Course.TeacherId
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (courseInfo == null)
                 {
-                    return lessonPermission;
+                    return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "Lesson not found");
+                }
+
+                if (courseInfo.TeacherId != currentUser.UserId)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status403Forbidden, "You do not have permission to access this resource");
                 }
 
                 var lessonRatings = await _context.LessonRatings
