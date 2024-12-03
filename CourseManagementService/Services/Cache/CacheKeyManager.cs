@@ -79,6 +79,7 @@ namespace CourseManagementService.Services.Cache
         public static class CourseDetail
         {
             public static string PrefixKey => "CourseDetail";
+            public static string GetPrefixKey(Guid courseId) => $"{PrefixKey}_{courseId}";
             public static string Key(Guid courseId, int userId) => $"CourseDetail_{courseId}_{userId}";
             public static int ExpireTimeInMinutes => 30;
         }
