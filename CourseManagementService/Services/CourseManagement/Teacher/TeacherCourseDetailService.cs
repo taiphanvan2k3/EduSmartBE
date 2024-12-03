@@ -102,6 +102,14 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
         /// <param name="id">Id of the course</param>
         /// <returns></returns>
         public Task<ResponseInfo> DeleteCourse(Guid id);
+
+        /// <summary>
+        /// Get teacher id of a course
+        /// <para>Author: TaiPV</para>
+        /// <para>Created at: 2024/12/03</para>
+        /// </summary>
+        /// <param name="courseId">Id of the course</param>
+        public Task<int> GetTeacherIdOfCourse(Guid courseId);
     }
 
     public class TeacherCourseDetailService(IServiceProvider serviceProvider, ILogger<TeacherCourseDetailService> logger)
@@ -665,6 +673,36 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
             catch (Exception e)
             {
                 _logger.LogError(e, "[{ServiceName}] {MethodName} Error", _serviceName, methodName);
+                throw;
+            }
+        }
+
+        public async Task<int> GetTeacherIdOfCourse(Guid courseId)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var cachedTeacherId = _cacheService.GetData<int>(CacheManager.TeacherIdOfCourse.KeyFromCourseId(courseId));
+                if (cachedTeacherId != 0)
+                {
+                    return cachedTeacherId;
+                }
+
+                var teacherId = await _context.Courses
+                    .Where(d => d.Id == courseId)
+                    .Select(d => d.TeacherId)
+                    .FirstOrDefaultAsync();
+
+                _cacheService.SetData(CacheManager.TeacherIdOfCourse.KeyFromCourseId(courseId), teacherId,
+                    DateTimeOffset.Now.AddMinutes(CacheManager.TeacherIdOfCourse.ExpireTimeInMinutes));
+
+                LogInfo("End", methodName);
+                return teacherId;
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
                 throw;
             }
         }

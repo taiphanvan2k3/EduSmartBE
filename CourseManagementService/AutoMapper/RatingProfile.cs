@@ -27,6 +27,11 @@ namespace CourseManagementService.AutoMapper
         private void CreateMapForLessonRating()
         {
             CreateMap<LessonRatingCreateDto, TblLessonRating>();
+            CreateMap<TblLessonRating, LessonRatingDetail>()
+                .ForMember(dest => dest.User, opt => opt.MapFrom(src => new UserDetail()
+                {
+                    Id = (int)src.StudentId
+                }));
         }
     }
 }

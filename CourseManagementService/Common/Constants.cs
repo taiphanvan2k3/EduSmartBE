@@ -19,5 +19,12 @@ namespace CourseManagementService.Common
         public static readonly string DEFAULT_COURSE_THUMBNAIL = "https://res.cloudinary.com/da1aqhx1g/image/upload/f_auto,q_auto/v1/default-assets/x9tju6lpmexbed2k9rlz";
 
         public static readonly string IN_PROGRESS_THUMBNAIL = "https://res.cloudinary.com/da1aqhx1g/image/upload/f_auto,q_auto/v1/default-assets/rklr1cd3da0mkulzjq6b";
+
+        public static class RoleInCourse
+        {
+            public const string TEACHER = "Teacher";
+
+            public const string STUDENT = "Student";
+        }
     }
 }
