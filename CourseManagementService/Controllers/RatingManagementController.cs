@@ -34,16 +34,19 @@ namespace CourseManagementService.Controllers
         }
 
         /// <summary>
-        /// Get list of ratings in each lesson of a course (Only teacher can access this API)
+        /// [Teacher Only] Get a list of chapters with their rated lessons in a course
         /// <para>Created at: 2024/12/03</para>
         /// <para>Created by: TaiPV</para>
         /// </summary>
         /// <param name="courseId">Id of the course</param>
         /// <remarks>
-        /// NOTE: 
+        /// NOTE:
         /// 
-        ///     This API is only used for the teacher role
-        ///     
+        /// This API retrieves a list of chapters in a course that have received ratings, 
+        /// along with the lessons within those chapters that are rated.
+        /// 
+        /// Access is restricted to users with the "Teacher" role.
+        /// 
         /// </remarks> 
         [Filters.Auth(Roles = "Teacher")]
         [HttpGet("courses/{courseId}/overall-lesson-ratings")]
@@ -140,7 +143,7 @@ namespace CourseManagementService.Controllers
         }
 
         /// <summary>
-        /// Teacher uses this API to get overall rating of a lesson
+        /// [Teacher Only] Teacher uses this API to get overall rating of a lesson such as like count, dislike count
         /// <para>Created at: 2024/12/03</para>
         /// <para>Created by: TaiPV</para>
         /// </summary>
@@ -160,7 +163,7 @@ namespace CourseManagementService.Controllers
         }
 
         /// <summary>
-        /// Teacher uses this API to get detailed rating of a lesson
+        /// [Teacher Only] Teacher uses this API to get detailed ratings of a lesson
         /// <para>Created at: 2024/12/03</para>
         /// <para>Created by: TaiPV</para>
         /// </summary>
