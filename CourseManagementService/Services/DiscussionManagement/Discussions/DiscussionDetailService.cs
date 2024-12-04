@@ -409,7 +409,8 @@ namespace CourseManagementService.Services.DiscussionManagement.Discussions
                 {
                     DiscussionId = discussionEntity.Id,
                     CommentId = commentEntity.Id,
-                    IsBestAnswer = markBestAnswerRequest.IsTurnOn
+                    IsBestAnswer = markBestAnswerRequest.IsTurnOn,
+                    ParentCommentId = commentEntity.ParentId
                 });
 
                 var teacherIdInCourse = await GetTeacherIdOfCourse(markBestAnswerRequest.DiscussionId);

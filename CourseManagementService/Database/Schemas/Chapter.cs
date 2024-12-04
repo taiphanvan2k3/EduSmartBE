@@ -19,5 +19,7 @@ namespace CourseManagementService.Database.Schemas
         public virtual Course Course { get; set; }
 
         public virtual ICollection<Lesson> Lessons { get; set; }
+
+        public virtual ICollection<Note> Notes { get; set; }
     }
 }
