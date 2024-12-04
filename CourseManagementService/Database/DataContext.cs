@@ -41,6 +41,8 @@ namespace CourseManagementService.Database
         public DbSet<DiscussionType> DiscussionTypes { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Reaction> Reactions { get; set; }
+        public DbSet<Note> Notes { get; set; }
+        public DbSet<Bookmark> Bookmarks { get; set; }
 
         public override int SaveChanges()
         {

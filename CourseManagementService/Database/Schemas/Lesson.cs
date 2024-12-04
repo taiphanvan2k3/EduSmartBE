@@ -50,5 +50,9 @@ namespace CourseManagementService.Database.Schemas
         public virtual ICollection<LessonTracking> LessonTrackings { get; set; }
 
         public virtual ICollection<Discussion> Discussions { get; set; }
+
+        public virtual ICollection<Note> Notes { get; set; }
+
+        public virtual ICollection<Bookmark> Bookmarks { get; set; }
     }
 }
