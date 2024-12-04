@@ -167,7 +167,7 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                     CreatedBy = currentUser.UserId,
                     DiscussionId = commentCreateDto.DiscussionId,
                     ParentId = commentCreateDto.ParentId,
-                    MentionedUserId = parentComment?.CreatedBy != currentUser.UserId ? parentComment?.CreatedBy : null,
+                    MentionedUserId = commentCreateDto.MentionedUserId,
                     RoleOfUser = currentUser.UserId == teacherIdOfCourse ? "Teacher" : "Student"
                 };
 
