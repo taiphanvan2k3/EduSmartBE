@@ -267,14 +267,21 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                 LogInfo("Start", methodName);
                 var currentUser = GetCurrentUser();
 
-                var commentEntity = await _context.Comments.AnyAsync(x => x.Id == commentId);
-                if (!commentEntity)
+                var commentEntity = await _context.Comments
+                    .Where(x => x.Id == commentId)
+                    .Select(x => new
+                    {
+                        x.ParentId
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (commentEntity == null)
                 {
                     return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "Comment not found");
                 }
 
-                var reactionEntity = await _context.Reactions.FirstOrDefaultAsync(x => x.CommentId == commentId
-                    && x.UserId == currentUser.UserId);
+                var reactionEntity = await _context.Reactions
+                    .FirstOrDefaultAsync(x => x.CommentId == commentId && x.UserId == currentUser.UserId);
                 if (reactionRequestDto.IsTurnOn)
                 {
                     if (reactionEntity == null)
@@ -312,7 +319,8 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                 {
                     commentId,
                     Type = reactionRequestDto.Type.ToString(),
-                    reactionRequestDto.IsTurnOn
+                    reactionRequestDto.IsTurnOn,
+                    commentEntity.ParentId
                 });
 
                 LogInfo("End", methodName);
