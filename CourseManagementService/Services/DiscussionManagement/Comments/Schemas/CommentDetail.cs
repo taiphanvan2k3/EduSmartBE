@@ -27,6 +27,10 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments.Schemas
         public int ReplyCount { get; set; }
 
         public ReactionsInfo Reactions { get; set; }
+
+        public bool HasReacted { get; set; }
+
+        public string ReactionType { get; set; }
     }
 
     public class ReactionsInfo
