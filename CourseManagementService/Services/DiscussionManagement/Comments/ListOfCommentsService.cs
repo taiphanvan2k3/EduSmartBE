@@ -78,6 +78,12 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                         ReplyCount = c.Replies.Count,
                         HasReacted = c.Reactions.Any(r => r.UserId == currentUser.UserId),
                         ReactionType = c.Reactions.Where(r => r.UserId == currentUser.UserId).Select(r => r.Type).FirstOrDefault(),
+                        IsApproved = c.IsApproved,
+                        DiscussionId = c.DiscussionId,
+                        ParentId = c.ParentId,
+                        CreatedAt = c.CreatedAt,
+                        IsDelFlag = c.IsDelFlag,
+                        UpdatedAt = c.UpdatedAt
                     })
                     .ToPaginatedListAsync(paramsSearch.CurrentPage, paramsSearch.PageSize);
 
@@ -151,6 +157,12 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                         ReplyCount = c.Replies.Count,
                         HasReacted = c.Reactions.Any(r => r.UserId == currentUser.UserId),
                         ReactionType = c.Reactions.Where(r => r.UserId == currentUser.UserId).Select(r => r.Type).FirstOrDefault(),
+                        IsApproved = c.IsApproved,
+                        DiscussionId = c.DiscussionId,
+                        ParentId = c.ParentId,
+                        CreatedAt = c.CreatedAt,
+                        IsDelFlag = c.IsDelFlag,
+                        UpdatedAt = c.UpdatedAt
                     })
                     .ToPaginatedListAsync(paramsSearch.CurrentPage, paramsSearch.PageSize);
 
