@@ -1,5 +1,4 @@
 using AutoMapper;
-using AutoMapper.QueryableExtensions;
 using CourseManagementService.Common;
 using CourseManagementService.Common.Schemas;
 using CourseManagementService.Extensions;
@@ -58,7 +57,28 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                         && c.ParentId == null
                         && (!c.IsDelFlag || c.CreatedBy == currentUser.UserId))
                     .OrderByDescending(c => c.CreatedAt)
-                    .ProjectTo<CommentDetail>(_mapper.ConfigurationProvider)
+                    .Select(c => new CommentDetail
+                    {
+                        Id = c.Id,
+                        Content = c.Content,
+                        CreatedBy = new UserDetail
+                        {
+                            Id = c.CreatedBy,
+                            RoleInCourse = c.RoleOfUser
+                        },
+                        MentionedUser = c.MentionedUserId.HasValue ? new UserDetail
+                        {
+                            Id = c.MentionedUserId.Value
+                        } : null,
+                        Reactions = new ReactionsInfo
+                        {
+                            Count = c.Reactions.Count,
+                            Types = c.Reactions.Select(r => r.Type).Distinct().ToList()
+                        },
+                        ReplyCount = c.Replies.Count,
+                        HasReacted = c.Reactions.Any(r => r.UserId == currentUser.UserId),
+                        ReactionType = c.Reactions.Where(r => r.UserId == currentUser.UserId).Select(r => r.Type).FirstOrDefault(),
+                    })
                     .ToPaginatedListAsync(paramsSearch.CurrentPage, paramsSearch.PageSize);
 
                 var createdByIds = comments.Items.Select(c => c.CreatedBy.Id).Distinct().ToList();
@@ -110,7 +130,28 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                     .Where(c => c.ParentId == commentId
                         && (!c.IsDelFlag || c.CreatedBy == currentUser.UserId))
                     .OrderBy(c => c.CreatedAt)
-                    .ProjectTo<CommentDetail>(_mapper.ConfigurationProvider)
+                    .Select(c => new CommentDetail
+                    {
+                        Id = c.Id,
+                        Content = c.Content,
+                        CreatedBy = new UserDetail
+                        {
+                            Id = c.CreatedBy,
+                            RoleInCourse = c.RoleOfUser
+                        },
+                        MentionedUser = c.MentionedUserId.HasValue ? new UserDetail
+                        {
+                            Id = c.MentionedUserId.Value
+                        } : null,
+                        Reactions = new ReactionsInfo
+                        {
+                            Count = c.Reactions.Count,
+                            Types = c.Reactions.Select(r => r.Type).Distinct().ToList()
+                        },
+                        ReplyCount = c.Replies.Count,
+                        HasReacted = c.Reactions.Any(r => r.UserId == currentUser.UserId),
+                        ReactionType = c.Reactions.Where(r => r.UserId == currentUser.UserId).Select(r => r.Type).FirstOrDefault(),
+                    })
                     .ToPaginatedListAsync(paramsSearch.CurrentPage, paramsSearch.PageSize);
 
                 var createdByIds = comments.Items.Select(c => c.CreatedBy.Id).Distinct().ToList();
