@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using CourseManagementService.Database;
 using CourseManagementService.Enumerations;
 using CourseManagementService.Services.Cache;
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Microsoft.EntityFrameworkCore;
 using TblCourseEnrollment = CourseManagementService.Database.Schemas.CourseEnrollment;
@@ -100,6 +101,38 @@ namespace CourseManagementService.GrpcServices
                 responseInfo.RevenueCourses.AddRange(request.RevenueCourses);
                 responseInfo.IsSuccess = true;
                 responseInfo.Message = "Enroll course successfully";
+                _logger.LogInformation("[GrpcCourseService] [{Method}] End", methodName);
+                return responseInfo;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[GrpcCourseService] [{Method}] Error", methodName);
+                throw;
+            }
+        }
+
+        public override async Task<MonthlyDataCourseResponse> GetMonthlyDiscussions(Empty request, ServerCallContext context)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                _logger.LogInformation("[GrpcCourseService] [{Method}] Start", methodName);
+                var responseInfo = new MonthlyDataCourseResponse();
+
+                var monthlyDiscussions = await _context.Discussions
+                    .Where(d => d.CreatedAt.Year == DateTime.Now.Year)
+                    .GroupBy(d => d.CreatedAt.Month)
+                    .Select(d => new MonthlyDataCourse
+                    {
+                        Month = d.Key,
+                        Amount = d.Count()
+                    })
+                    .ToListAsync();
+
+                responseInfo.MonthlyDataCourse.AddRange(monthlyDiscussions);
+                responseInfo.IsSuccess = true;
+                responseInfo.Message = "Get monthly discussions successfully";
+
                 _logger.LogInformation("[GrpcCourseService] [{Method}] End", methodName);
                 return responseInfo;
             }

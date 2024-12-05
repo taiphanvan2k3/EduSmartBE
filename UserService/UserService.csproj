@@ -43,5 +43,7 @@
     <!-- gRPC Protobuf files -->
     <Protobuf Include="Protos/user.proto" GrpcServices="Server" />
     <Protobuf Include="Protos/auth.proto" GrpcServices="Client" />
+    <Protobuf Include="Protos/course.proto" GrpcServices="Client" />
+    <Protobuf Include="Protos/payment.proto" GrpcServices="Client" />
   </ItemGroup>
 </Project>

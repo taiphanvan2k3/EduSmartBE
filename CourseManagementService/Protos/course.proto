@@ -1,10 +1,12 @@
 syntax = "proto3";
 option csharp_namespace = "CourseManagementService.GrpcServices";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
 
 service Course {
     rpc EnrollCourse(CourseEnrollmentRequest) returns (CourseEnrollmentResponse);
     rpc GetInfoCourseByIds(GetInfoCourseByIdsRequest) returns (GetInfoCourseByIdsResponse);
+    rpc GetMonthlyDiscussions(google.protobuf.Empty) returns (MonthlyDataCourseResponse);
 }
 
 message CourseEnrollmentRequest {
@@ -39,4 +41,15 @@ message RevenueCourseGrpc {
 message RelatedInfoGrpc {
     string courseId = 1;
     int32 teacherId = 2;
+}
+
+message MonthlyDataCourseResponse {
+    repeated MonthlyDataCourse monthlyDataCourse = 1;
+    string message = 2;
+    bool isSuccess = 3;
+}
+
+message MonthlyDataCourse {
+    int32 month = 1;
+    int64 amount = 2;
 }
