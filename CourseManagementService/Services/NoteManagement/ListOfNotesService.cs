@@ -10,6 +10,11 @@ namespace CourseManagementService.Services.NoteManagement
 {
     public interface IListOfNotesService
     {
+        /// <summary>
+        /// Get notes of a course, chapter or lesson
+        /// <para>Created at: 2024/12/04</para>
+        /// <para>Created by: TaiPV</para> 
+        /// </summary>
         public Task<ResponseInfo> GetMyNotes(NoteSearchCondition noteSearchCondition);
     }
 
