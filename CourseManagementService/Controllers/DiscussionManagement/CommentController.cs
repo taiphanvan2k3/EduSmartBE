@@ -90,6 +90,19 @@ namespace CourseManagementService.Controllers.DiscussionManagement
         }
 
         /// <summary>
+        /// Restore a comment
+        /// <para>Created at: 2024/12/05</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="id">Id of comment</param>
+        [HttpPut("{id}/restore")]
+        public async Task<IActionResult> RestoreCommentAsync(Guid id)
+        {
+            var responseInfo = await _commentDetailService.RestoreComment(id);
+            return HandleResponseInfo(responseInfo, resourceName: "comment");
+        }
+
+        /// <summary>
         /// Delete a comment
         /// <para>Created at: 2024/11/30</para>
         /// <para>Created by: TaiPV</para>
