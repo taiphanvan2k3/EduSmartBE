@@ -1,6 +1,7 @@
 using CourseManagementService.Common;
 using CourseManagementService.Common.Helpers;
 using CourseManagementService.Services.AppState.Schemas;
+using CourseManagementService.Services.BookmarkManagement;
 using CourseManagementService.Services.Cache;
 using CourseManagementService.Services.CategoryManagement.Schemas;
 using CourseManagementService.Services.ChapterManagement;
@@ -70,6 +71,8 @@ namespace CourseManagementService.Services.CourseManagement.Public
             ?? throw new ArgumentNullException(ServiceInjectionError("IVideoService"));
         private readonly IStudentCourseDetailService _studentCourseDetailService = serviceProvider.GetService<IStudentCourseDetailService>()
             ?? throw new ArgumentNullException(ServiceInjectionError("IStudentCourseDetailService"));
+        private readonly IBookmarkService _bookmarkService = serviceProvider.GetService<IBookmarkService>()
+            ?? throw new ArgumentNullException(ServiceInjectionError("IBookmarkService"));
 
         public Task<bool> CanAccessCourseMaterial(Guid courseId)
         {
@@ -107,6 +110,7 @@ namespace CourseManagementService.Services.CourseManagement.Public
                     if (courseDetail.Course.IsRegistered)
                     {
                         courseDetail.LearnedLessons = await _lessonBaseDetailService.GetLearnedLessons(courseId, currentUser.UserId);
+                        courseDetail.BookmarkedLessonIds = await _bookmarkService.GetBookmarkedLessonIds(courseId);
                     }
                     return courseDetail;
                 }
@@ -186,6 +190,7 @@ namespace CourseManagementService.Services.CourseManagement.Public
                 if (courseDetail.Course.IsRegistered)
                 {
                     courseDetail.LearnedLessons = await _lessonBaseDetailService.GetLearnedLessons(courseId, currentUser.UserId);
+                    courseDetail.BookmarkedLessonIds = await _bookmarkService.GetBookmarkedLessonIds(courseId);
                 }
                 courseDetail.Course.FirstLesson = await _lessonBaseDetailService.GetFirstLessonInfo(courseId);
 
