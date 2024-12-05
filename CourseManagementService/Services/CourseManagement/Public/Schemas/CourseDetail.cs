@@ -18,5 +18,8 @@ namespace CourseManagementService.Services.CourseManagement.Public.Schemas
 
         [JsonProperty(Order = 101)]
         public List<LessonTrackingDetail> LearnedLessons { get; set; } = [];
+
+        [JsonProperty(Order = 102)]
+        public List<Guid> BookmarkedLessonIds { get; set; }
     }
 }

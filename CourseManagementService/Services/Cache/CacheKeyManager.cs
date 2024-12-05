@@ -119,5 +119,11 @@ namespace CourseManagementService.Services.Cache
             public static int ExpireTimeInMinutesForStudent => 60;
             public static int ExpireTimeInMinutesForTeacher => 10;
         }
+
+        public static class Bookmark
+        {
+            public static string Key(Guid courseId, int userId) => $"BookmarkedLesson:{courseId}:{userId}";
+            public static int ExpireTimeInMinutes => 60 * 24 * 7;
+        }
     }
 }

@@ -14,6 +14,16 @@ namespace CourseManagementService.Database.Configurations
                 .WithMany(lesson => lesson.Bookmarks)
                 .HasForeignKey(bookmark => bookmark.LessonId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(bookmark => bookmark.Course)
+                .WithMany(course => course.Bookmarks)
+                .HasForeignKey(bookmark => bookmark.CourseId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasIndex(bookmark => new { bookmark.UserId, bookmark.LessonId })
+                .IsUnique();
+
+            builder.HasIndex(bookmark => new { bookmark.UserId, bookmark.CourseId });
         }
     }
 }
