@@ -70,6 +70,8 @@ namespace UserService.Services.Users
         /// </summary>
         /// <returns></returns>
         public Task<ResponseInfo> GetUserDetail(int userId);
+
+        public Task<DashboardDto> GetYearlyDataForDashboard();
     }
 
     public class UserService(IServiceProvider serviceProvider,
@@ -84,6 +86,12 @@ namespace UserService.Services.Users
 
         private readonly IGrpcAuthService _grpcAuthService = serviceProvider.GetRequiredService<IGrpcAuthService>()
             ?? throw new InvalidOperationException("Cannot get IGrpcAuthService");
+
+        private readonly IGrpcCourseService _grpcCourseService = serviceProvider.GetRequiredService<IGrpcCourseService>()
+            ?? throw new InvalidOperationException("Cannot get IGrpcCourseService");
+        
+        private readonly IGrpcPaymentService _grpcPaymentService = serviceProvider.GetRequiredService<IGrpcPaymentService>()
+            ?? throw new InvalidOperationException("Cannot get IGrpcPaymentService");
 
         public async Task<ResponseInfo> AddUser(UserDto user)
         {
@@ -318,6 +326,44 @@ namespace UserService.Services.Users
                 response.Data.Add("userInfo", userInfo);
                 _logger.LogInformation("[UserService] [{Method}] End", methodName);
                 return response;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[UserService] [{Method}] Error", methodName);
+                throw;
+            }
+        }
+
+        public async Task<DashboardDto> GetYearlyDataForDashboard()
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                _logger.LogInformation("[UserService] [{Method}] Start", methodName);
+
+                var monthlyNewUsers = await _context.Users
+                    .Where(u => u.CreatedAt.Year == DateTime.Now.Year)
+                    .GroupBy(u => u.CreatedAt.Month)
+                    .Select(g => new MonthlyData
+                    {
+                        Month = g.Key,
+                        Amount = g.Count()
+                    })
+                    .ToListAsync();
+
+                var monthlyDiscussions = await _grpcCourseService.GetMonthlyDiscussions();
+                var monthlyPaymentInfo = await _grpcPaymentService.GetMonthlyPaymentInfo();
+                var dashboardInfo = new DashboardDto
+                {
+                    MonthlyNewUsers = monthlyNewUsers,
+                    MonthlyDiscussions = monthlyDiscussions.Data["listOfMonthlyDiscussions"],
+                    MonthlyDrawingRequests = monthlyPaymentInfo.Data["monthlyDrawingRequests"],
+                    MonthlyPurchaseCourses = monthlyPaymentInfo.Data["monthlyPurchaseCourses"],
+                    MonthlyRevenues = monthlyPaymentInfo.Data["monthlyRevenues"],
+                    MonthlyProfits = monthlyPaymentInfo.Data["monthlyProfits"]
+                };
+                _logger.LogInformation("[UserService] [{Method}] End", methodName);
+                return dashboardInfo;
             }
             catch (Exception e)
             {

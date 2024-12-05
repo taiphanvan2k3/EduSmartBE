@@ -1,0 +1,18 @@
+syntax = "proto3";
+option csharp_namespace = "UserService.GrpcServices";
+import "google/protobuf/empty.proto";
+
+service Course {
+    rpc GetMonthlyDiscussions(google.protobuf.Empty) returns (MonthlyDataCourseResponse);
+}
+
+message MonthlyDataCourseResponse {
+    repeated MonthlyDataCourse monthlyDataCourse = 1;
+    string message = 2;
+    bool isSuccess = 3;
+}
+
+message MonthlyDataCourse {
+    int32 month = 1;
+    int64 amount = 2;
+}
