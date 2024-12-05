@@ -352,17 +352,22 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                 commentEntity.IsDelFlag = true;
                 await _context.SaveChangesAsync();
 
-                var commentDto = _mapper.Map<CommentDetail>(commentEntity);
-                var responseInfo = new ResponseInfo();
-                responseInfo.Data.Add("commentId", commentDto.Id);
-
-                LogInfo("End", methodName);
-                return responseInfo;
+                return new ResponseInfo(resource: "comment", new
+                {
+                    commentId,
+                    ParentCommentId = commentEntity.ParentId,
+                    commentEntity.DiscussionId,
+                    IsDelFlag = true,
+                });
             }
             catch (Exception e)
             {
                 LogError(e, methodName);
                 throw;
+            }
+            finally
+            {
+                LogInfo("End", methodName);
             }
         }
 
@@ -392,7 +397,8 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                 return new ResponseInfo(resource: "comment", new
                 {
                     commentId,
-                    commentEntity.ParentId,
+                    ParentCommentId = commentEntity.ParentId,
+                    commentEntity.DiscussionId,
                     IsDelFlag = false
                 });
             }
