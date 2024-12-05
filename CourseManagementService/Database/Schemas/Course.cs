@@ -52,5 +52,7 @@ namespace CourseManagementService.Database.Schemas
         public virtual ICollection<CourseRating> Ratings { get; set; }
 
         public virtual ICollection<Discussion> Discussions { get; set; }
+
+        public virtual ICollection<Bookmark> Bookmarks { get; set; }
     }
 }

@@ -8,8 +8,10 @@ namespace CourseManagementService.Database.Schemas
 
         public Guid LessonId { get; set; }
 
-        public DateTimeOffset CreatedAt { get; set; }
+        public Guid CourseId { get; set; }
 
         public virtual Lesson Lesson { get; set; }
+
+        public virtual Course Course { get; set; }
     }
 }
