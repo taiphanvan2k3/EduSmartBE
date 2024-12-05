@@ -1,4 +1,5 @@
 using AutoMapper;
+using Azure;
 using CourseManagementService.Common;
 using CourseManagementService.Common.Schemas;
 using CourseManagementService.Services.Cache;
@@ -45,11 +46,20 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
         public Task<ResponseInfo> UpdateCommentReaction(Guid commentId, ReactionRequestDto reactionRequestDto);
 
         /// <summary>
-        /// Delete a comment
+        /// Set a comment as deleted
+        /// <para>Created at: 2024/11/30</para>
+        /// <para>Created by: TaiPV</para>
         /// </summary>
         /// <param name="commentId"></param>
         /// <returns></returns>
         public Task<ResponseInfo> DeleteComment(Guid commentId);
+
+        /// <summary>
+        /// Restore a comment
+        /// <para>Created at: 2024/11/30</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        public Task<ResponseInfo> RestoreComment(Guid commentId);
     }
 
     public class CommentDetailService(IServiceProvider serviceProvider, ILogger<CommentDetailService> logger)
@@ -219,22 +229,13 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                 LogInfo("Start", methodName);
                 var currentUser = GetCurrentUser();
 
-                var commentEntity = await _context.Comments.FindAsync(commentUpdateDto.Id);
-                if (commentEntity == null)
+                var canModifyCommentResponse = await CanModifyComment(commentUpdateDto.Id, currentUser.UserId);
+                if (!canModifyCommentResponse.IsSuccess)
                 {
-                    return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "Comment not found");
+                    return canModifyCommentResponse;
                 }
 
-                if (!await _discussionDetailService.CanAccessDiscussion(commentEntity.DiscussionId, currentUser.UserId))
-                {
-                    return CreateEarlyResponseInfo(StatusCodes.Status403Forbidden, "You do not have permission to access this discussion");
-                }
-
-                if (commentEntity.CreatedBy != currentUser.UserId)
-                {
-                    return CreateEarlyResponseInfo(StatusCodes.Status403Forbidden, "You do not have permission to update this comment");
-                }
-
+                var commentEntity = canModifyCommentResponse.Data["comment"] as TblComment;
                 commentEntity.Content = commentUpdateDto.Content;
                 await _context.SaveChangesAsync();
 
@@ -341,22 +342,13 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                 LogInfo("Start", methodName);
                 var currentUser = GetCurrentUser();
 
-                var commentEntity = await _context.Comments.FindAsync(commentId);
-                if (commentEntity == null)
+                var canModifyCommentResponse = await CanModifyComment(commentId, currentUser.UserId);
+                if (!canModifyCommentResponse.IsSuccess)
                 {
-                    return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "Comment not found");
+                    return canModifyCommentResponse;
                 }
 
-                if (!await _discussionDetailService.CanAccessDiscussion(commentEntity.DiscussionId, currentUser.UserId))
-                {
-                    return CreateEarlyResponseInfo(StatusCodes.Status403Forbidden, "You do not have permission to access this discussion");
-                }
-
-                if (commentEntity.CreatedBy != currentUser.UserId)
-                {
-                    return CreateEarlyResponseInfo(StatusCodes.Status403Forbidden, "You do not have permission to update this comment");
-                }
-
+                var commentEntity = canModifyCommentResponse.Data["comment"] as TblComment;
                 commentEntity.IsDelFlag = true;
                 await _context.SaveChangesAsync();
 
@@ -372,6 +364,71 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                 LogError(e, methodName);
                 throw;
             }
+        }
+
+        public async Task<ResponseInfo> RestoreComment(Guid commentId)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                var currentUser = GetCurrentUser();
+
+                var canModifyCommentResponse = await CanModifyComment(commentId, currentUser.UserId);
+                if (!canModifyCommentResponse.IsSuccess)
+                {
+                    return canModifyCommentResponse;
+                }
+
+                var commentEntity = canModifyCommentResponse.Data["comment"] as TblComment;
+                if (!commentEntity.IsDelFlag)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status400BadRequest, "Cannot restore a comment that is not deleted");
+                }
+
+                commentEntity.IsDelFlag = false;
+
+                await _context.SaveChangesAsync();
+
+                return new ResponseInfo(resource: "comment", new
+                {
+                    commentId,
+                    commentEntity.ParentId,
+                    IsDelFlag = false
+                });
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+            finally
+            {
+                LogInfo("End", methodName);
+            }
+        }
+
+        private async Task<ResponseInfo> CanModifyComment(Guid commentId, int userId)
+        {
+            var commentEntity = await _context.Comments
+                .Where(x => x.Id == commentId && x.CreatedBy == userId)
+                .FirstOrDefaultAsync();
+
+            if (commentEntity == null)
+            {
+                return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "Comment not found");
+            }
+
+            if (!await _discussionDetailService.CanAccessDiscussion(commentEntity.DiscussionId, userId))
+            {
+                return CreateEarlyResponseInfo(StatusCodes.Status403Forbidden, "You do not have permission to access this discussion");
+            }
+
+            if (commentEntity.CreatedBy != userId)
+            {
+                return CreateEarlyResponseInfo(StatusCodes.Status403Forbidden, "You do not have permission to update this comment");
+            }
+
+            return new ResponseInfo(resource: "comment", commentEntity);
         }
     }
 }
