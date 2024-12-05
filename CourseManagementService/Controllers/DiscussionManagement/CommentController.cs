@@ -113,7 +113,7 @@ namespace CourseManagementService.Controllers.DiscussionManagement
         public async Task<IActionResult> DeleteCommentAsync(Guid id)
         {
             var responseInfo = await _commentDetailService.DeleteComment(id);
-            return HandleResponseInfo(responseInfo, resourceId: id.ToString());
+            return HandleResponseInfo(responseInfo, resourceName: "comment");
         }
     }
 }
