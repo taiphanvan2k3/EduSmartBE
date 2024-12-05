@@ -53,9 +53,7 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                 }
 
                 var comments = await _context.Comments
-                    .Where(c => c.DiscussionId == discussionId
-                        && c.ParentId == null
-                        && (!c.IsDelFlag || c.CreatedBy == currentUser.UserId))
+                    .Where(c => c.DiscussionId == discussionId && c.ParentId == null)
                     .OrderByDescending(c => c.CreatedAt)
                     .Select(c => new CommentDetail
                     {
@@ -133,8 +131,7 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                 }
 
                 PaginatedList<CommentDetail> comments = await _context.Comments
-                    .Where(c => c.ParentId == commentId
-                        && (!c.IsDelFlag || c.CreatedBy == currentUser.UserId))
+                    .Where(c => c.ParentId == commentId)
                     .OrderBy(c => c.CreatedAt)
                     .Select(c => new CommentDetail
                     {
