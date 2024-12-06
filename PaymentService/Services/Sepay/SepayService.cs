@@ -24,7 +24,7 @@ namespace PaymentService.Services.Sepay
         /// </summary>
         /// <param name="sepayWithdrawlRequest"></param>
         /// <returns></returns>
-        void SaveWithdrawalTransaction(SepayWithdrawlRequest sepayWithdrawlRequest);
+        Task SaveWithdrawalTransaction(SepayWithdrawlRequest sepayWithdrawlRequest);
 
     }
 
@@ -111,7 +111,7 @@ namespace PaymentService.Services.Sepay
             }
         }
 
-        public async void SaveWithdrawalTransaction(SepayWithdrawlRequest sepayWithdrawlRequest)
+        public async Task SaveWithdrawalTransaction(SepayWithdrawlRequest sepayWithdrawlRequest)
         {
             var methodName = GetActualAsyncMethodName();
             try
