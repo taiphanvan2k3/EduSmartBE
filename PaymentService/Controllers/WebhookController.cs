@@ -35,7 +35,7 @@ namespace PaymentService.Controllers
         }
 
         [HttpPost("sepay/receive")]
-        public IActionResult ReceiveWebhook([FromBody] SepayWithdrawlRequest request)
+        public async Task<IActionResult> ReceiveWebhook([FromBody] SepayWithdrawlRequest request)
         {
             try
             {
@@ -44,7 +44,7 @@ namespace PaymentService.Controllers
                     return BadRequest("Invalid request body");
                 }
 
-                _sepayService.SaveWithdrawalTransaction(request);
+                await _sepayService.SaveWithdrawalTransaction(request);
 
                 return Ok(new { message = "Webhook received and processed successfully" });
             }
