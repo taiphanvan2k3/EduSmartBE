@@ -109,7 +109,7 @@ namespace CourseManagementService.Services.CourseManagement.Public
                 {
                     if (courseDetail.Course.IsRegistered)
                     {
-                        courseDetail.LearnedLessons = await _lessonBaseDetailService.GetLearnedLessons(courseId, currentUser.UserId);
+                        courseDetail.UnlockedLessons = await _lessonBaseDetailService.GetUnlockedLessons(courseId, currentUser.UserId);
                         courseDetail.BookmarkedLessonIds = await _bookmarkService.GetBookmarkedLessonIds(courseId);
                     }
                     return courseDetail;
@@ -189,7 +189,7 @@ namespace CourseManagementService.Services.CourseManagement.Public
 
                 if (courseDetail.Course.IsRegistered)
                 {
-                    courseDetail.LearnedLessons = await _lessonBaseDetailService.GetLearnedLessons(courseId, currentUser.UserId);
+                    courseDetail.UnlockedLessons = await _lessonBaseDetailService.GetUnlockedLessons(courseId, currentUser.UserId);
                     courseDetail.BookmarkedLessonIds = await _bookmarkService.GetBookmarkedLessonIds(courseId);
                 }
                 courseDetail.Course.FirstLesson = await _lessonBaseDetailService.GetFirstLessonInfo(courseId);

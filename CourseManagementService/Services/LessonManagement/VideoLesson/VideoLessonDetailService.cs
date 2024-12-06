@@ -83,8 +83,8 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson
     {
         private readonly IMapper _mapper = serviceProvider.GetService<IMapper>()
             ?? throw new InvalidDataException(ServiceInjectionError(nameof(IMapper)));
-        private readonly MediaProducer _mediaProducer = serviceProvider.GetService<MediaProducer>()
-            ?? throw new InvalidDataException(ServiceInjectionError(nameof(MediaProducer)));
+        private readonly CommonProducer _commonProducer = serviceProvider.GetService<CommonProducer>()
+            ?? throw new InvalidDataException(ServiceInjectionError(nameof(CommonProducer)));
         private readonly IChapterDetailService _chapterDetailService = serviceProvider.GetService<IChapterDetailService>()
             ?? throw new InvalidDataException(ServiceInjectionError(nameof(IChapterDetailService)));
         private readonly ILessonBaseDetailService _lessonBaseDetailService = serviceProvider.GetService<ILessonBaseDetailService>()
@@ -463,7 +463,7 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson
                 }
             };
 
-            await _mediaProducer.EnqueueDataAsync(backgroundJobData);
+            await _commonProducer.EnqueueDataAsync(backgroundJobData);
         }
 
         private async Task StartUploadVideoJob(IFormFile file, Guid videoLessonId)
@@ -483,7 +483,7 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson
                     { "FilePath", filePath }
                 }
             };
-            await _mediaProducer.EnqueueDataAsync(backgroundJobData);
+            await _commonProducer.EnqueueDataAsync(backgroundJobData);
         }
 
         private async Task DeleteLessonResources(string thumbnailURL, string videoURL)

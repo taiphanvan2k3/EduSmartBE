@@ -7,5 +7,6 @@ namespace CourseManagementService.Common
         public const string DeleteCourseThumbnail = "DeleteCourseThumbnail";
         public const string UpdateLessonVideo = "UpdateVideoLesson";
         public const string UpdateLessonThumbnail = "UpdateLessonThumbnail";
+        public const string UnlockFirstLesson = "UnlockFirstLesson";
     }
 }
