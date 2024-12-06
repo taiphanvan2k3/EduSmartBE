@@ -47,6 +47,8 @@ namespace CourseManagementService.Database.Schemas
 
         public virtual ICollection<Chapter> Chapters { get; set; }
 
+        public virtual ICollection<LessonTracking> LessonTrackings { get; set; }
+
         public virtual ICollection<CourseEnrollment> Enrollments { get; set; }
 
         public virtual ICollection<CourseRating> Ratings { get; set; }

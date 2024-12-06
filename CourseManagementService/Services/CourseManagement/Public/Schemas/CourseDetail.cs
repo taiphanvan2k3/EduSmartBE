@@ -17,7 +17,7 @@ namespace CourseManagementService.Services.CourseManagement.Public.Schemas
         public List<ChapterDetail> Chapters { get; set; }
 
         [JsonProperty(Order = 101)]
-        public List<LessonTrackingDetail> LearnedLessons { get; set; } = [];
+        public List<LessonTrackingDetail> UnlockedLessons { get; set; } = [];
 
         [JsonProperty(Order = 102)]
         public List<Guid> BookmarkedLessonIds { get; set; }
