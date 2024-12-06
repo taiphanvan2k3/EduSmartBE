@@ -1,5 +1,6 @@
 using System.Threading.Channels;
 using CourseManagementService.Common;
+using CourseManagementService.Services.CourseManagement.Student;
 using CourseManagementService.Services.CourseManagement.Teacher;
 using CourseManagementService.Services.LessonManagement.VideoLesson;
 using CourseManagementService.Services.Medias;
@@ -7,7 +8,7 @@ using CourseManagementService.Services.Medias.Schemas;
 
 namespace CourseManagementService.BackgroundServices
 {
-    public class MediaProducer(Channel<BackgroundJobData> channel)
+    public class CommonProducer(Channel<BackgroundJobData> channel)
     {
         private readonly Channel<BackgroundJobData> _channel = channel;
 
@@ -17,7 +18,7 @@ namespace CourseManagementService.BackgroundServices
         }
     }
 
-    public class MediaBackgroundService(Channel<BackgroundJobData> channel, IServiceProvider serviceProvider) : BackgroundService
+    public class CommonBackgroundService(Channel<BackgroundJobData> channel, IServiceProvider serviceProvider) : BackgroundService
     {
         private readonly Channel<BackgroundJobData> _channel = channel;
         private readonly IServiceProvider _serviceProvider = serviceProvider;
@@ -48,6 +49,9 @@ namespace CourseManagementService.BackgroundServices
                     case BackgroundJobType.UpdateLessonThumbnail:
                         await UpdateLessonThumbnailAsync(scope.ServiceProvider.GetRequiredService<IVideoLessonDetailService>(),
                             data.Data);
+                        break;
+                    case BackgroundJobType.UnlockFirstLesson:
+                        await UnlockFirstLessonAsync(scope.ServiceProvider.GetRequiredService<IStudentCourseDetailService>(), data.Data);
                         break;
                     default:
                         throw new ArgumentException("Unsupported job type.");
@@ -165,6 +169,21 @@ namespace CourseManagementService.BackgroundServices
                 {
                     File.Delete(filePath);
                 }
+            }
+        }
+
+        private static async Task UnlockFirstLessonAsync(IStudentCourseDetailService studentCourseDetailService, Dictionary<string, dynamic> data)
+        {
+            try
+            {
+                var courseId = data["courseId"] as Guid? ?? Guid.Empty;
+                var userId = data["userId"] as int? ?? 0;
+
+                await studentCourseDetailService.UnlockFirstLesson(courseId, userId);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Unlock first lesson failed: " + e.InnerException?.Message ?? e.Message);
             }
         }
     }

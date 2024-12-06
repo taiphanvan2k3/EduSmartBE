@@ -10,9 +10,12 @@ using DiscussionSearchCondition = CourseManagementService.Services.DiscussionMan
 
 namespace CourseManagementService.Controllers.LessonManagement
 {
+    [Authorize]
     [Route("course-service/api/common-lessons", Order = 6)]
     [ApiController]
-    public class CommonLessonController(ILessonBaseDetailService lessonBaseDetailService, IListOfDiscussionsService listOfDiscussionsService) : ControllerBase
+    public class CommonLessonController(
+        ILessonBaseDetailService lessonBaseDetailService,
+        IListOfDiscussionsService listOfDiscussionsService) : BaseController
     {
         private readonly ILessonBaseDetailService _lessonBaseDetailService = lessonBaseDetailService
             ?? throw new ArgumentNullException(nameof(lessonBaseDetailService));
@@ -33,7 +36,6 @@ namespace CourseManagementService.Controllers.LessonManagement
         ///     Quiz = 3,
         ///     ProgrammingExercise = 4 
         /// </remarks> 
-        [Filters.Auth]
         [HttpGet("next-lesson")]
         [ProducesResponseType(typeof(ContinueLessonInfo), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -60,7 +62,6 @@ namespace CourseManagementService.Controllers.LessonManagement
         /// </summary>
         /// <param name="lessonId">Id of lesson</param>
         /// <param name="searchCondition">Search condition</param>
-        [Authorize]
         [HttpGet("{lessonId}/discussions")]
         [ProducesResponseType(typeof(PaginatedList<DiscussionInfo>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -75,6 +76,27 @@ namespace CourseManagementService.Controllers.LessonManagement
             {
                 return StatusCode(StatusCodes.Status401Unauthorized, ErrorResponseHelper.GetContentOfUnauthorizedResponse(e.Message));
             }
+        }
+
+        /// <summary>
+        /// Update learning progress of a lesson
+        /// <para>Created at: 2024/12/06</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="lessonId">Id of lesson</param>
+        /// <param name="request">Lesson progress update request</param>
+        /// <returns></returns>
+        [HttpPut("{lessonId}/learning-progress")]
+        public async Task<IActionResult> UpdateLearningProgress([FromRoute] Guid lessonId, [FromBody] LessonProgressUpdateRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return GetInvalidModelStateResponse();
+            }
+
+            request.LessonId = lessonId;
+            var responseInfo = await _lessonBaseDetailService.UpdateLessonProgress(request);
+            return HandleResponseInfo(responseInfo, resourceName: "lessonProgress");
         }
     }
 }

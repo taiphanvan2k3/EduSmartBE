@@ -1,4 +1,6 @@
 using System.Runtime.CompilerServices;
+using CourseManagementService.BackgroundServices;
+using CourseManagementService.Common;
 using CourseManagementService.Database;
 using CourseManagementService.Enumerations;
 using CourseManagementService.Services.Cache;
@@ -9,7 +11,8 @@ using TblCourseEnrollment = CourseManagementService.Database.Schemas.CourseEnrol
 
 namespace CourseManagementService.GrpcServices
 {
-    public class GrpcCourseService(DataContext context, ILogger<GrpcCourseService> logger, ICacheService cacheService)
+    public class GrpcCourseService(DataContext context, ILogger<GrpcCourseService> logger, ICacheService cacheService,
+        CommonProducer commonProducer)
         : Course.CourseBase
     {
         private readonly DataContext _context = context
@@ -18,6 +21,8 @@ namespace CourseManagementService.GrpcServices
             ?? throw new ArgumentNullException(nameof(logger));
         private readonly ICacheService _cacheService = cacheService
             ?? throw new ArgumentNullException(nameof(cacheService));
+        private readonly CommonProducer _commonProducer = commonProducer
+            ?? throw new ArgumentNullException(nameof(commonProducer));
 
         protected static string GetActualAsyncMethodName([CallerMemberName] string name = null) => name;
 
@@ -59,6 +64,8 @@ namespace CourseManagementService.GrpcServices
                     _cacheService.RemoveData(CacheManager.CourseDetail.Key(courseId, request.StudentId));
                     _cacheService.RemoveData(CacheManager.PopularCourses.Key(request.StudentId));
                     _cacheService.RemoveData(CacheManager.RecommendedCourses.Key(request.StudentId));
+
+                    await UnlockFirstLesson(courseId, request.StudentId);
                 }
 
                 _logger.LogInformation("[GrpcCourseService] [{Method}] End", methodName);
@@ -80,7 +87,7 @@ namespace CourseManagementService.GrpcServices
                 var responseInfo = new GetInfoCourseByIdsResponse();
 
                 var courseIds = request.RevenueCourses.Select(x => x.RelatedInfo.CourseId).Distinct().ToList();
-                
+
                 var courses = await _context.Courses
                     .Where(c => courseIds.Contains(c.Id.ToString()))
                     .Select(c => new
@@ -90,7 +97,7 @@ namespace CourseManagementService.GrpcServices
                     })
                     .ToListAsync();
 
-                foreach(var earning in request.RevenueCourses)
+                foreach (var earning in request.RevenueCourses)
                 {
                     var course = courses.FirstOrDefault(c => c.Id.ToString() == earning.RelatedInfo.CourseId);
                     if (course != null)
@@ -139,6 +146,28 @@ namespace CourseManagementService.GrpcServices
             catch (Exception e)
             {
                 _logger.LogError(e, "[GrpcCourseService] [{Method}] Error", methodName);
+                throw;
+            }
+        }
+
+        private async Task UnlockFirstLesson(Guid courseId, int userId)
+        {
+            try
+            {
+                _logger.LogInformation("[GrpcCourseService][UnlockFirstLesson] Start");
+                await _commonProducer.EnqueueDataAsync(new BackgroundJobData
+                {
+                    JobType = BackgroundJobType.UnlockFirstLesson,
+                    Data = new Dictionary<string, dynamic>
+                    {
+                        { "courseId", courseId },
+                        { "userId",userId },
+                    }
+                });
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[GrpcCourseService][UnlockFirstLesson] Error");
                 throw;
             }
         }

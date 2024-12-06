@@ -18,10 +18,12 @@ namespace CourseManagementService.Database.Schemas
         /// </summary>
         public Guid CourseId { get; set; }
 
+        public Course Course { get; set; }
+
         public long StudentId { get; set; }
 
-        [Comment("The time spent on the lesson in minutes")]
-        public long TimeSpent { get; set; }
+        [Comment("The time spent on the lesson in seconds")]
+        public int TimeSpent { get; set; }
 
         public bool IsCompleted { get; set; }
     }
