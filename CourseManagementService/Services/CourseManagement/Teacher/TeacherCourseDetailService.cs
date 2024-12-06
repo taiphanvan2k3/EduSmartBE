@@ -126,8 +126,8 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
             ?? throw new InvalidOperationException(ServiceInjectionError("IMapper"));
         private readonly IGrpcUserService _grpcUserService = serviceProvider.GetRequiredService<IGrpcUserService>()
             ?? throw new InvalidOperationException(ServiceInjectionError("IGrpcUserService"));
-        private readonly MediaProducer _mediaProducer = serviceProvider.GetRequiredService<MediaProducer>()
-            ?? throw new InvalidOperationException(ServiceInjectionError("MediaProducer"));
+        private readonly CommonProducer _commonProducer = serviceProvider.GetRequiredService<CommonProducer>()
+            ?? throw new InvalidOperationException(ServiceInjectionError("CommonProducer"));
         private readonly ICacheService _cacheService = serviceProvider.GetRequiredService<ICacheService>()
             ?? throw new InvalidOperationException(ServiceInjectionError("ICacheService"));
 
@@ -750,7 +750,7 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                 }
             };
 
-            await _mediaProducer.EnqueueDataAsync(backgroundJobData);
+            await _commonProducer.EnqueueDataAsync(backgroundJobData);
         }
 
         private async Task StartUploadPreviewVideoJob(IFormFile file, Guid courseId)
@@ -770,7 +770,7 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                     { "FilePath", filePath }
                 }
             };
-            await _mediaProducer.EnqueueDataAsync(backgroundJobData);
+            await _commonProducer.EnqueueDataAsync(backgroundJobData);
         }
 
         private async Task StartDeleteImageFromCloudinaryJob(string publicURL)
@@ -790,7 +790,7 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                 }
             };
 
-            await _mediaProducer.EnqueueDataAsync(backgroundJobData);
+            await _commonProducer.EnqueueDataAsync(backgroundJobData);
         }
 
         private async Task<ResponseInfo> CanModifyCourse(Guid courseId, int teacherId)

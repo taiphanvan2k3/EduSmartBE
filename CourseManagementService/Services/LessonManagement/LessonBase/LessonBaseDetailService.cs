@@ -3,6 +3,7 @@ using CourseManagementService.Enumerations;
 using CourseManagementService.Services.Cache;
 using CourseManagementService.Services.LessonManagement.LessonBase.Schemas;
 using Microsoft.EntityFrameworkCore;
+using TblLessonTracking = CourseManagementService.Database.Schemas.LessonTracking;
 
 namespace CourseManagementService.Services.LessonManagement.LessonBase
 {
@@ -84,7 +85,7 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
         /// <param name="courseId">Course id</param>
         /// <param name="userId">User id</param>
         /// <returns></returns>
-        public Task<List<LessonTrackingDetail>> GetLearnedLessons(Guid courseId, int userId);
+        public Task<List<LessonTrackingDetail>> GetUnlockedLessons(Guid courseId, int userId);
 
         /// <summary>
         /// Get the course id that the lesson belongs to
@@ -124,6 +125,13 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
         /// <para>Created by: TaiPV</para>
         /// </summary>
         public Task ClearCourseDetailCache(Guid courseId);
+
+        /// <summary>
+        /// Update the progress of the lesson that the user has learned
+        /// <para>Created at: 2024/12/05</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        public Task<ResponseInfo> UpdateLessonProgress(LessonProgressUpdateRequest request);
     }
 
     public class LessonBaseDetailService(IServiceProvider serviceProvider, ILogger<LessonBaseDetailService> logger)
@@ -375,20 +383,23 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
             }
         }
 
-        public async Task<List<LessonTrackingDetail>> GetLearnedLessons(Guid courseId, int userId)
+        public async Task<List<LessonTrackingDetail>> GetUnlockedLessons(Guid courseId, int userId)
         {
             var method = GetActualAsyncMethodName();
             try
             {
                 LogInfo("Start", method);
                 var lessonTrackingRecords = await _context.LessonTrackings
-                    .Where(lt => lt.Lesson.Chapter.CourseId == courseId && lt.StudentId == userId)
+                    .Where(lt => lt.CourseId == courseId && lt.StudentId == userId)
                     .OrderBy(lt => lt.CreatedAt)
                     .Select(lt => new LessonTrackingDetail()
                     {
                         LessonId = lt.LessonId,
+                        LessonOrder = lt.Lesson.Order,
+                        ChapterOrder = lt.Lesson.Chapter.Order,
                         TimeSpent = lt.TimeSpent,
-                        LastAccessed = lt.UpdatedAt ?? lt.CreatedAt
+                        LastAccessed = lt.UpdatedAt ?? lt.CreatedAt,
+                        IsCompleted = lt.IsCompleted
                     })
                     .ToListAsync();
 
@@ -516,14 +527,34 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
                         lt.Lesson.LessonType,
                         lt.TimeSpent,
                         LessonOrder = lt.Lesson.Order,
-                        ChapterOrder = lt.Lesson.Chapter.Order
+                        ChapterOrder = lt.Lesson.Chapter.Order,
+                        lt.IsCompleted
                     })
                     .FirstOrDefaultAsync();
 
                 if (lastLearnedLesson == null)
                 {
-                    // Điều này có thể xảy ra khi người dùng chưa học bài nào trong khoá học
-                    return null;
+                    LessonInfoBase firstLesson = await GetFirstLessonInfo(courseId);
+                    return new ContinueLessonInfo()
+                    {
+                        LessonId = firstLesson.Id,
+                        LessonType = firstLesson.LessonType,
+                        TimeSpent = 0
+                    };
+                }
+
+                if (lastLearnedLesson != null && !lastLearnedLesson.IsCompleted)
+                {
+                    return new ContinueLessonInfo()
+                    {
+                        LessonId = lastLearnedLesson.LessonId,
+                        LessonType = new LookupDto()
+                        {
+                            Id = ((int)lastLearnedLesson.LessonType).ToString(),
+                            Name = lastLearnedLesson.LessonType.ToString()
+                        },
+                        TimeSpent = lastLearnedLesson.TimeSpent
+                    };
                 }
 
                 // Lấy bài học tiếp theo có thể học
@@ -541,6 +572,7 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
 
                 if (nextLesson == null)
                 {
+                    // Là bài học cuối cùng
                     return new ContinueLessonInfo()
                     {
                         LessonId = lastLearnedLesson.LessonId,
@@ -571,6 +603,93 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
             }
         }
 
+        public async Task<ResponseInfo> UpdateLessonProgress(LessonProgressUpdateRequest lessonProgressUpdateRequest)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var currentUser = GetCurrentUser();
+
+                var permissionResponse = await CheckCanUpdateLessonProgress(lessonProgressUpdateRequest.LessonId, currentUser.UserId);
+                if (!permissionResponse.IsSuccess)
+                {
+                    return permissionResponse;
+                }
+
+                var lessonTrackingEntity = await _context.LessonTrackings
+                    .Where(lt => lt.LessonId == lessonProgressUpdateRequest.LessonId && lt.StudentId == currentUser.UserId)
+                    .FirstOrDefaultAsync();
+
+                var lessonDuration = permissionResponse.Data["Duration"] as long? ?? 1;
+                var courseId = permissionResponse.Data["CourseId"] as Guid? ?? Guid.Empty;
+                var lessonType = permissionResponse.Data["LessonType"];
+                var duration = permissionResponse.Data["Duration"] as long? ?? 0;
+
+                if (lessonType != LessonType.Quiz && lessonProgressUpdateRequest.TimeSpent > duration)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status400BadRequest, "Time spent is invalid");
+                }
+
+                if (lessonType != lessonProgressUpdateRequest.LessonType)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status400BadRequest, "Lesson type is invalid");
+                }
+
+                if (courseId == Guid.Empty)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status500InternalServerError, "CourseId is not found");
+                }
+
+                if (lessonTrackingEntity == null)
+                {
+                    lessonTrackingEntity = new TblLessonTracking()
+                    {
+                        LessonId = lessonProgressUpdateRequest.LessonId,
+                        CourseId = courseId,
+                        StudentId = currentUser.UserId,
+                        TimeSpent = lessonProgressUpdateRequest.TimeSpent,
+                        IsCompleted = lessonProgressUpdateRequest.LessonType != LessonType.Video
+                            || (lessonProgressUpdateRequest.TimeSpent * 1.0 / lessonDuration) >= 0.7
+                    };
+
+                    await _context.LessonTrackings.AddAsync(lessonTrackingEntity);
+                }
+                else if (lessonTrackingEntity.TimeSpent < lessonProgressUpdateRequest.TimeSpent)
+                {
+                    lessonTrackingEntity.TimeSpent = lessonProgressUpdateRequest.TimeSpent;
+                    lessonTrackingEntity.IsCompleted = lessonProgressUpdateRequest.LessonType != LessonType.Video
+                        || (lessonProgressUpdateRequest.TimeSpent * 1.0 / lessonDuration) >= 0.7;
+                }
+
+                var unlockedNextLessonId = default(Guid);
+                if (lessonTrackingEntity.IsCompleted)
+                {
+                    // Unlock the next lesson
+                    var lessonOrder = permissionResponse.Data["LessonOrder"] as int? ?? 1;
+                    var chapterOrder = permissionResponse.Data["ChapterOrder"] as int? ?? 1;
+                    unlockedNextLessonId = await UnlockNextLesson(courseId, currentUser.UserId, chapterOrder, lessonOrder);
+                }
+
+                await _context.SaveChangesAsync();
+                return new ResponseInfo(resource: "lessonProgress", new
+                {
+                    lessonProgressUpdateRequest.LessonId,
+                    lessonTrackingEntity.IsCompleted,
+                    unlockedNextLessonId
+                });
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+            finally
+            {
+                LogInfo("End", methodName);
+            }
+        }
+
         public async Task ClearCourseDetailCache(Guid courseId)
         {
             var methodName = GetActualAsyncMethodName();
@@ -585,6 +704,68 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
                 LogError(e, methodName);
                 throw;
             }
+        }
+
+        private async Task<ResponseInfo> CheckCanUpdateLessonProgress(Guid lessonId, int userId)
+        {
+            var lesson = await _context.Lessons
+                .Where(l => l.Id == lessonId)
+                .Select(l => new
+                {
+                    l.Chapter.Course.TeacherId,
+                    IsEnrolled = l.Chapter.Course
+                        .Enrollments.Any(e => e.StudentId == userId && !e.LeaveDate.HasValue),
+                    Duration = l.DurationInSeconds,
+                    l.Chapter.CourseId,
+                    ChapterOrder = l.Chapter.Order,
+                    LessonOrder = l.Order,
+                    l.LessonType
+                })
+                .FirstOrDefaultAsync();
+
+            if (lesson == null)
+            {
+                return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "Lesson not found");
+            }
+
+            if (lesson.TeacherId != userId && !lesson.IsEnrolled)
+            {
+                return CreateEarlyResponseInfo(StatusCodes.Status403Forbidden, "You are not allowed to access this resource");
+            }
+
+            var responseInfo = new ResponseInfo();
+            responseInfo.Data.Add("Duration", lesson.Duration);
+            responseInfo.Data.Add("CourseId", lesson.CourseId);
+            responseInfo.Data.Add("ChapterOrder", lesson.ChapterOrder);
+            responseInfo.Data.Add("LessonOrder", lesson.LessonOrder);
+            responseInfo.Data.Add("LessonType", lesson.LessonType);
+
+            return responseInfo;
+        }
+
+        private async Task<Guid> UnlockNextLesson(Guid courseId, int userId, int currentChapterOrder, int currentLessonOrder)
+        {
+            var currentCompositeOrder = currentChapterOrder * 1000 + currentLessonOrder;
+            var nextLessonId = await _context.Lessons
+                .Where(l => l.Chapter.IsPublished && l.IsPublished)
+                .Where(l => l.Chapter.CourseId == courseId && l.Chapter.Order * 1000 + l.Order > currentCompositeOrder)
+                .OrderBy(l => l.Chapter.Order * 1000 + l.Order)
+                .Select(l => l.Id)
+                .FirstOrDefaultAsync();
+
+            if (nextLessonId == default)
+            {
+                return default;
+            }
+
+            await _context.LessonTrackings.AddAsync(new TblLessonTracking()
+            {
+                LessonId = nextLessonId,
+                CourseId = courseId,
+                StudentId = userId
+            });
+
+            return nextLessonId;
         }
     }
 }

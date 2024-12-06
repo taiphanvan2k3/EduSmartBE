@@ -15,6 +15,8 @@ namespace CourseManagementService.Database.Schemas
         [MaxLength(200)]
         public string ThumbnailURL { get; set; }
 
+        public long StorageSize { get; set; }
+
         public UploadStatus UploadStatus { get; set; }
 
         public Guid LessonId { get; set; }
