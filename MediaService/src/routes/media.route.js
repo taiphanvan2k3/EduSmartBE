@@ -13,7 +13,7 @@ const MediaController = require("../controllers/media.controller");
 
 /**
  * @swagger
- * /media-service/api/:
+ * /media-service/api/media/:
  *   get:
  *     summary: |
  *       Get user's media storage info
@@ -38,7 +38,7 @@ router.get("/", verifyTokenAndAttachUser, MediaController.getMedia);
 
 /**
  * @swagger
- * /media-service/api/upload-file:
+ * /media-service/api/media/upload-file:
  *   post:
  *     summary: |
  *       Upload a file
