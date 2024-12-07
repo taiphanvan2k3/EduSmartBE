@@ -5,10 +5,19 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-const uploadCloudinary = async (fileBuffer, folderName) => {
+const uploadCloudinary = async (fileBuffer, folderName, resourceType = "auto", fileName = "") => {
+    const uploadOptions = {
+        folder: folderName,
+        resource_type: resourceType
+    };
+
+    if (resourceType === "raw") {
+        uploadOptions.public_id = fileName;
+    }
+
     return new Promise((resolve, reject) => {
         cloudinary.uploader
-            .upload_stream({ folder: folderName }, (error, result) => {
+            .upload_stream(uploadOptions, (error, result) => {
                 if (error) {
                     reject(error);
                 } else {
