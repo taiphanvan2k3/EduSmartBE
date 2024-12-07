@@ -24,11 +24,22 @@ namespace CourseManagementService.Services.CourseManagement.Public
 
         /// <summary>
         /// Get courses by category
+        /// <para>Created at: 2024/10/22</para>
+        /// <para>Created by: TaiPV</para>
         /// </summary>
-        /// <param name="categoryId">Category ID</param>
+        /// <param name="categoryId">Category Id</param>
         /// <param name="condition">Search condition</param>
         /// <returns></returns>
-        public Task<PaginatedList<CourseDetailWithTeacherDto>> GetCoursesByCategory(int categoryId, PublicCourseSearchCondition condition);
+        public Task<PaginatedList<CourseDetailWithTeacherDto>> GetCoursesByCategory(int categoryId, PublicCourseSearchWithoutCategoryCondition condition);
+
+        /// <summary>
+        /// Get courses by category
+        /// <para>Created at: 2024/10/22</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="condition">Search condition</param>
+        /// <returns></returns>
+        public Task<PaginatedList<CourseDetailWithTeacherDto>> GetCoursesByCategory(PublicCourseSearchCategoryCondition condition);
 
         /// <summary>
         /// Get popular courses
@@ -75,6 +86,7 @@ namespace CourseManagementService.Services.CourseManagement.Public
                 var listOfSearchItems = new ListOfSearchItems();
 
                 Task<List<CourseSearchItem>> coursesTask = _context.Courses
+                    .Where(c => !condition.CategoryId.HasValue || c.CategoryId == condition.CategoryId.Value)
                     .Where(c => EF.Functions.ILike(c.Name, $"%{condition.Keyword}%"))
                     .OrderByDescending(c => c.Enrollments.Count)
                     .ThenByDescending(c => c.UpdatedAt)
@@ -300,8 +312,35 @@ namespace CourseManagementService.Services.CourseManagement.Public
             }
         }
 
+        public Task<PaginatedList<CourseDetailWithTeacherDto>> GetCoursesByCategory(int categoryId, PublicCourseSearchWithoutCategoryCondition condition)
+        {
+            var method = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", method);
+                var searchConditionWithCategory = new PublicCourseSearchCategoryCondition()
+                {
+                    CategoryId = categoryId,
+                    Keyword = condition.Keyword,
+                    CurrentPage = condition.CurrentPage,
+                    PageSize = condition.PageSize,
+                    SortBy = condition.SortBy
+                };
 
-        public async Task<PaginatedList<CourseDetailWithTeacherDto>> GetCoursesByCategory(int categoryId, PublicCourseSearchCondition condition)
+                return GetCoursesByCategory(searchConditionWithCategory);
+            }
+            catch (Exception e)
+            {
+                LogError(e, method);
+                throw;
+            }
+            finally
+            {
+                LogInfo("End", method);
+            }
+        }
+
+        public async Task<PaginatedList<CourseDetailWithTeacherDto>> GetCoursesByCategory(PublicCourseSearchCategoryCondition condition)
         {
             var method = GetActualAsyncMethodName();
             try
@@ -309,7 +348,7 @@ namespace CourseManagementService.Services.CourseManagement.Public
                 LogInfo("Start", method);
 
                 var currentUser = GetCurrentUser();
-                var cacheKey = CacheManager.CourseSearchByCategory.Key(categoryId, currentUser?.UserId ?? 0, condition);
+                var cacheKey = CacheManager.CourseSearchByCategory.Key(condition.CategoryId ?? 0, currentUser?.UserId ?? 0, condition);
                 var cacheValue = _cacheService.GetData<PaginatedList<CourseDetailWithTeacherDto>>(cacheKey);
 
                 if (cacheValue != null)
@@ -318,7 +357,7 @@ namespace CourseManagementService.Services.CourseManagement.Public
                 }
 
                 PaginatedList<CourseDetailWithTeacherDto> courses = await _context.Courses
-                .Where(c => c.CategoryId == categoryId
+                .Where(c => (!condition.CategoryId.HasValue || c.CategoryId == condition.CategoryId)
                     && (string.IsNullOrEmpty(condition.Keyword)
                         || EF.Functions.ILike(c.Name, $"%{condition.Keyword}%")
                         || EF.Functions.ILike(c.Description, $"%{condition.Keyword}%")))
@@ -366,7 +405,9 @@ namespace CourseManagementService.Services.CourseManagement.Public
                     {
                         Id = c.TeacherId
                     },
-                    IsRegistered = currentUser != null && c.Enrollments.Any(x => x.StudentId == currentUser.UserId)
+                    IsRegistered = currentUser != null && (
+                        c.TeacherId == currentUser.UserId || c.Enrollments.Any(x => x.StudentId == currentUser.UserId)
+                    )
                 })
                 .ToPaginatedListAsync(condition.CurrentPage, condition.PageSize);
 
