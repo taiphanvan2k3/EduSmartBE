@@ -7,6 +7,8 @@ namespace CourseManagementService.Services.CourseManagement.Public.Schemas
     {
         public string Keyword { get; set; } = string.Empty;
 
+        public int? CategoryId { get; set; }
+
         public SearchCondition()
         {
             CurrentPage = 1;

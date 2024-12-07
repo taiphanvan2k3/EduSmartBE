@@ -68,7 +68,7 @@ namespace CourseManagementService.Services.Cache
 
         public static class CourseSearchByCategory
         {
-            public static string Key(int categoryId, int userId, PublicCourseSearchCondition singleSort)
+            public static string Key(int categoryId, int userId, PublicCourseSearchWithoutCategoryCondition singleSort)
             {
                 var tailPart = $"{userId}_{singleSort.Keyword}_{singleSort.CurrentPage}_{singleSort.PageSize}_{singleSort.SortBy}_{singleSort.SortDirection}";
                 return $"CourseSearchByCategory_{categoryId}_{Utils.ConvertStringToBase64(tailPart)}";
