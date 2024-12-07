@@ -42,7 +42,7 @@ namespace CourseManagementService.Controllers
         }
 
         /// <summary>
-        /// [Public API] Get list of courses by category
+        /// [Public API] [API for Mobile] Get list of courses by category
         /// <para>Created at: 2024/10/23</para>
         /// <para>Created by: TaiPV</para>
         /// </summary>
@@ -68,12 +68,16 @@ namespace CourseManagementService.Controllers
         /// </remarks>
         /// <param name="id">Category id</param>
         /// <param name="condition">Search condition</param>
-        /// <returns></returns>
+        /// <remarks>
+        /// NOTE:
+        /// 
+        ///     - Mobile should use this API to get list of courses by category
+        /// </remarks>
         [AllowAnonymous]
         [Authorize]
         [HttpGet("{id}/courses")]
         [ProducesResponseType(typeof(PaginatedList<CourseDetailWithTeacherDto>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetCoursesByCategory([FromRoute] int id, [FromQuery] PublicCourseSearchCondition condition)
+        public async Task<IActionResult> GetCoursesByCategory([FromRoute] int id, [FromQuery] PublicCourseSearchWithoutCategoryCondition condition)
         {
             try
             {
