@@ -30,7 +30,7 @@ namespace CourseManagementService.Controllers.CourseManagement
             ?? throw new ArgumentNullException(nameof(listOfTagService));
 
         /// <summary>
-        /// [Public API] Get list of courses by keyword
+        /// [Public API] Get list of courses by keyword. Using API in the search bar
         /// <para>Created at: 2024/10/22</para>
         /// <para>Created by: TaiPV</para>  
         /// </summary>
@@ -55,6 +55,35 @@ namespace CourseManagementService.Controllers.CourseManagement
                 return BadRequest(ErrorResponseHelper.GetContentOfBadRequestResponse(
                     ModelState.Values.SelectMany(x => x.Errors)
                         .Select(x => x.ErrorMessage).ToList()));
+            }
+        }
+
+        /// <summary>
+        /// [Public API] [API for Web] Get list of courses by category (category id may be null)
+        /// <para>Created at: 2024/12/07</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="condition"></param>
+        /// <remarks>
+        /// NOTE:
+        /// 
+        ///     - Web FE should use this API to get list of courses by category
+        /// </remarks>
+        [AllowAnonymous]
+        [Authorize]
+        [HttpGet("search-by-category")]
+        [ProducesResponseType(typeof(PaginatedList<CourseDetailWithTeacherDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetCoursesByCategory([FromQuery] PublicCourseSearchCategoryCondition condition)
+        {
+            try
+            {
+                var courses = await _listOfPublicCourseService.GetCoursesByCategory(condition);
+                return Ok(courses);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ErrorResponseHelper.GetContentOfInternalServerResponse(e));
             }
         }
 
