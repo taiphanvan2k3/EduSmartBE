@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Reflection.Metadata;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +17,8 @@ namespace PaymentService.Services.TeacherEarnings
         Task<List<RevenueCourse>> GetListOfRevenueAllCoursesOfTeacherAsync(int currencyType);
 
         Task<decimal> GetTotalWithdrawalAmountOfTeacherAsync();
+
+        Task<List<RevenueInMonth>> GetRevenueInYearAsync(int year, int currencyType);
     }
 
     public class TeacherEarningService(IServiceProvider serviceProvider,
@@ -90,12 +93,12 @@ namespace PaymentService.Services.TeacherEarnings
                         Currency = x.Currency,
                         RelatedInfo = JsonConvert.DeserializeObject<RelatedInfo>(x.RelatedInformation)
                     })
-                    .GroupBy(x => x.RelatedInfo)
+                    .GroupBy(x => x.RelatedInfo.CourseId)
                     .Select(g => new RevenueCourse
                     {
                         Amount = g.Sum(x => x.Amount),
                         Currency = g.FirstOrDefault().Currency,
-                        RelatedInfo = g.Key,
+                        RelatedInfo = g.FirstOrDefault().RelatedInfo
                     })
                     .ToList();
 
@@ -127,6 +130,57 @@ namespace PaymentService.Services.TeacherEarnings
 
                 _logger.LogInformation("[TeacherEarningService] [{Method}] End", methodName);
                 return Task.FromResult(totalWithdrawalAmount);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[TeacherEarningService] [{Method}] Error", methodName);
+                throw;
+            }
+        }
+
+        public async Task<List<RevenueInMonth>> GetRevenueInYearAsync(int year, int currencyType)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                _logger.LogInformation("[TeacherEarningService] [{Method}] Start", methodName);
+                var currentUser = GetCurrentUser();
+                var userId = currentUser?.UserId ?? 0;
+
+                var currencyTypeEnum = Enum.Parse<CurrencyType>(currencyType.ToString());
+                var transactions = await _context.PaymentTransactions
+                    .Where(x => x.TransactionType == TransactionType.BuyCourse
+                        && x.OrderStatus == OrderStatus.SUCCESS
+                        && x.RelatedInformation.Contains($"\"teacherId\":{userId}")
+                        && x.CreatedAt.Year == year)
+                    .Select(x => new
+                    {
+                        Amount = x.Currency == currencyTypeEnum
+                            ? x.Amount
+                            : (currencyTypeEnum == CurrencyType.VND
+                                ? x.Amount * Constants.EXCHANGE_RATE_USD_TO_VND
+                                : x.Amount / Constants.EXCHANGE_RATE_USD_TO_VND),
+                        Month = x.CreatedAt.Month
+                    })
+                    .ToListAsync();
+
+                var revenueByMonth = new List<RevenueInMonth>();
+
+                for (int month = 1; month <= 12; month++)
+                {
+                    var monthName = new DateTime(year, month, 1).ToString("MMMM", CultureInfo.InvariantCulture);
+                    var monthlyRevenue = new RevenueInMonth
+                    {
+                        Month = monthName,
+                        Currency = currencyTypeEnum,
+                        Amount = transactions.Where(x => x.Month == month).Sum(x => x.Amount)
+                    };
+
+                    revenueByMonth.Add(monthlyRevenue);
+                }
+
+                _logger.LogInformation("[TeacherEarningService] [{Method}] End", methodName);
+                return revenueByMonth;
             }
             catch (Exception e)
             {
