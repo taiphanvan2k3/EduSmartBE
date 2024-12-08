@@ -7,12 +7,17 @@ service Payment {
     rpc CreateCoursePaymentTransaction(CoursePaymentTransactionRequest) returns (CoursePaymentTransactionResponse);
     rpc GetExchangeRate(google.protobuf.Empty) returns (ExchangeRate);
     rpc GetMonthlyPaymentInfo(google.protobuf.Empty) returns (MonthlyDataPaymentResponse);
+    rpc GetCurrentStoringAmount(UserInfo) returns (StorageInfoResponse);
 }
 
 enum Currency {
     UNKNOWN = 0;
     USD = 1;
     VND = 2;
+}
+
+message UserInfo {
+    int32 id = 1;
 }
 
 message ExchangeRate {
@@ -55,4 +60,11 @@ message MonthlyDataPaymentResponse {
 message MonthlyDataPayment {
     int32 month = 1;
     int64 amount = 2;
+}
+
+message StorageInfoResponse {
+    int64 maximumStorage = 1;
+    int64 usedStorage = 2;
+    string message = 3;
+    bool isSuccess = 4;
 }

@@ -5,6 +5,7 @@ using CourseManagementService.Common;
 using CourseManagementService.Common.Helpers;
 using CourseManagementService.Enumerations;
 using CourseManagementService.Services.ChapterManagement;
+using CourseManagementService.Services.Grpc.PaymentService;
 using CourseManagementService.Services.LessonManagement.LessonBase;
 using CourseManagementService.Services.LessonManagement.LessonBase.Schemas;
 using CourseManagementService.Services.LessonManagement.VideoLesson.Schemas;
@@ -93,6 +94,8 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson
             ?? throw new InvalidDataException(ServiceInjectionError(nameof(IPhotoService)));
         private readonly IVideoService _videoService = serviceProvider.GetService<IVideoService>()
             ?? throw new InvalidDataException(ServiceInjectionError(nameof(IVideoService)));
+        private readonly IGrpcPaymentService _grpcPaymentService = serviceProvider.GetService<IGrpcPaymentService>()
+            ?? throw new InvalidDataException(ServiceInjectionError(nameof(IGrpcPaymentService)));
 
         public async Task<ResponseInfo> GetVideoLessonById(Guid lessonId)
         {
@@ -206,8 +209,10 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson
                 var videoLessonDetail = _mapper.Map<VideoLessonDetail>(videoLessonEntity);
                 responseInfo.Data.Add("Lesson", videoLessonDetail);
 
+                long totalStorageAmount = videoLessonInfo.Video.Length;
                 if (videoLessonInfo.Thumbnail != null)
                 {
+                    totalStorageAmount += videoLessonInfo.Thumbnail.Length;
                     await StartUploadImageToCloudinaryJob(videoLessonInfo.Thumbnail, videoLessonEntity.Id);
                 }
 

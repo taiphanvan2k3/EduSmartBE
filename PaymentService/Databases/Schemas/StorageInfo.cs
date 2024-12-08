@@ -11,5 +11,7 @@ namespace PaymentService.Databases.Schemas
         public long UsedStorage { get; set; }
 
         public virtual ICollection<ExtendStorage> ExtendStorages { get; set; } = [];
+
+        public virtual ICollection<UploadHistory> UploadHistories { get; set; } = [];
     }
 }

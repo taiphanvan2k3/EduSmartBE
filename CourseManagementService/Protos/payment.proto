@@ -6,12 +6,17 @@ service Payment {
     rpc GetAdminBankAccount(google.protobuf.Empty) returns (BankAccountResponse);
     rpc CreateCoursePaymentTransaction(CoursePaymentTransactionRequest) returns (CoursePaymentTransactionResponse);
     rpc GetExchangeRate(google.protobuf.Empty) returns (ExchangeRate);
+    rpc GetCurrentStoringAmount(UserInfo) returns (StorageInfoResponse);
 }
 
 enum Currency {
     UNKNOWN = 0;
     USD = 1;
     VND = 2;
+}
+
+message UserInfo {
+    int32 id = 1;
 }
 
 message ExchangeRate {
@@ -40,4 +45,11 @@ message CoursePaymentTransactionResponse {
     string transactionId = 1;
     bool isSuccess = 2;
     ExchangeRate ExchangeRate = 3;
+}
+
+message StorageInfoResponse {
+    int64 maximumStorage = 1;
+    int64 usedStorage = 2;
+    string message = 3;
+    bool isSuccess = 4;
 }

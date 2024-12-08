@@ -5,13 +5,33 @@ using CourseManagementService.Services.Grpc.UserService;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Net.Client;
 using CurrencyEnumGrpc = CourseManagementService.GrpcServices.Currency;
+using UserInfoGrpc = CourseManagementService.GrpcServices.UserInfo;
 
 namespace CourseManagementService.Services.Grpc.PaymentService
 {
     public interface IGrpcPaymentService
     {
+        /// <summary>
+        /// Get admin bank account information
+        /// <para>Created at: 2024/11/19</para>
+        /// <para>Created by: TaiPV</para> 
+        /// </summary>
         public Task<ResponseInfo> GetAdminBankAccountAsync();
+
+        /// <summary>
+        /// Create course payment transaction (Handle after user paid for course)
+        /// <para>Created at: 2024/11/19</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
         public Task<ResponseInfo> CreateCoursePaymentTransactionAsync(PaymentTransactionData data);
+
+        /// <summary>
+        /// Get current storage information
+        /// <para>Created at: 2024/12/08</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <returns></returns>
+        public Task<ResponseInfo> GetCurrentStorageInfo(int userId);
     }
 
     public class GrpcPaymentService : BaseService, IGrpcPaymentService
@@ -96,6 +116,41 @@ namespace CourseManagementService.Services.Grpc.PaymentService
                 else
                 {
                     responseInfo.StatusCode = StatusCodes.Status500InternalServerError;
+                }
+
+                LogInfo("End", methodName);
+                return responseInfo;
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+        }
+
+        public async Task<ResponseInfo> GetCurrentStorageInfo(int userId)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var responseInfo = new ResponseInfo();
+
+                var client = new Payment.PaymentClient(_channel);
+                var storageInfoResponse = await client.GetCurrentStoringAmountAsync(new UserInfoGrpc { Id = userId });
+
+                if (storageInfoResponse.IsSuccess)
+                {
+                    responseInfo.Data.Add("storageInfo", new StorageInfo
+                    {
+                        MaximumStorage = storageInfoResponse.MaximumStorage,
+                        UsedStorage = storageInfoResponse.UsedStorage
+                    });
+                }
+                else
+                {
+                    responseInfo.StatusCode = StatusCodes.Status500InternalServerError;
+                    responseInfo.Message = storageInfoResponse.Message;
                 }
 
                 LogInfo("End", methodName);

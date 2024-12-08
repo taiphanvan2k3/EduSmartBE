@@ -32,6 +32,8 @@ namespace PaymentService.Databases
         public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
         public DbSet<TeacherEarning> TeacherEarnings { get; set; }
         public DbSet<WithdrawalRequest> WithdrawalRequests { get; set; }
+        public DbSet<StorageInfo> StorageInfos { get; set; }
+        public DbSet<UploadHistory> UploadHistories { get; set; }
 
         public override int SaveChanges()
         {
