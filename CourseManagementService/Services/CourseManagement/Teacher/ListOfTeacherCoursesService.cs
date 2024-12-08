@@ -34,7 +34,7 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
             {
                 _logger.LogInformation("[{ServiceName}] {MethodName} Start", _serviceName, methodName);
 
-                var cacheKey = CacheManager.OwnedCourses.Key(_appStateService.UserInfo.UserId);
+                var cacheKey = CacheManager.OwnedCourses.Key(_appStateService.UserInfo.UserId, searchCondition.CurrentPage, searchCondition.PageSize);
                 var cachedCourses = _cacheService.GetData<PaginatedList<CourseDto>>(cacheKey);
                 if (cachedCourses != null)
                 {
@@ -88,7 +88,10 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                         TotalStudents = x.Enrollments.Count,
                         TotalLessons = x.Chapters.Sum(c => c.Lessons.Count),
                         TotalSecondsByChapter = x.Chapters.Select(c => c.Lessons.Sum(l => l.DurationInSeconds)).ToList(),
-                        CreatedAt = x.CreatedAt
+                        IsPublished = x.IsPublished,
+                        IsRegistered = true,
+                        CreatedAt = x.CreatedAt,
+                        UpdatedAt = x.UpdatedAt,
                     })
                     .ToPaginatedListAsync(currentPage: searchCondition.CurrentPage, pageSize: searchCondition.PageSize);
 
