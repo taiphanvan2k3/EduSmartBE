@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using PaymentService.Commons;
 using PaymentService.Commons.Helpers;
-using PaymentService.Enumerations;
 using PaymentService.Services.TeacherEarnings;
+using PaymentService.Services.TeacherEarnings.Schemas;
 
 namespace PaymentService.Controllers
 {
@@ -108,6 +108,39 @@ namespace PaymentService.Controllers
             }
         }
 
-        
+        /// <summary>
+        /// Get list of revenue of all courses of teacher in a year
+        /// <para>Created at: 8/12/2024</para>
+        /// <para>Created by QuyMTX</para>
+        /// </summary>
+        /// <param name="year"></param>
+        /// <param name="currencyType"></param>
+        /// <returns></returns>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     2024
+        ///     1 - VND
+        ///     2 - USD
+        ///
+        /// </remarks>
+        /// <response code="200">Revenue of all courses of teacher in a year</response>
+        /// <response code="400">Bad request</response>
+        /// <response code="500">Internal server error</response>
+        [HttpGet("me/revenue-in-year")]
+        [Filters.Auth(Roles = "Teacher")]
+        [ProducesResponseType(typeof(List<RevenueInMonth>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetRevenueInYear(int year, int currencyType)
+        {
+            try
+            {
+                var response = await _teacherEarningService.GetRevenueInYearAsync(year, currencyType);
+                return Ok(response);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ErrorResponseHelper.GetContentOfInternalServerResponse(e));
+            }
+        }
     }
 }
