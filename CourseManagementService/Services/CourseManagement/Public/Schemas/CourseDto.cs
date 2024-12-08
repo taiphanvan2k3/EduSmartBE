@@ -63,5 +63,7 @@ namespace CourseManagementService.Services.CourseManagement.Public.Schemas
         public List<LookupDto> Tags { get; set; }
 
         public DateTimeOffset CreatedAt { get; set; }
+
+        public DateTimeOffset? UpdatedAt { get; set; }
     }
 }
