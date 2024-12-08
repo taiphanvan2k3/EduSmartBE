@@ -90,6 +90,22 @@ namespace PaymentService.Databases
                     .HasConversion<string>();
             });
 
+            modelBuilder.Entity<UploadHistory>(entity =>
+            {
+                entity.ToTable("UploadHistories");
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.FileType)
+                    .HasConversion<string>();
+                entity.Property(e => e.MediaStorageProvider)
+                    .HasConversion<string>();
+
+                entity.HasOne(e => e.StorageInfo)
+                    .WithMany(si => si.UploadHistories)
+                    .HasForeignKey(e => e.StorageInfoId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
             return modelBuilder;
         }
 
