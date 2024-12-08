@@ -17,10 +17,10 @@ namespace CourseManagementService.Migrations
                 nullable: false,
                 defaultValue: 0L);
 
-            migrationBuilder.AlterColumn<long>(
+            migrationBuilder.AlterColumn<int>(
                 name: "TimeSpent",
                 table: "LessonTrackings",
-                type: "bigint",
+                type: "integer",
                 nullable: false,
                 comment: "The time spent on the lesson in seconds",
                 oldClrType: typeof(long),
@@ -53,8 +53,8 @@ namespace CourseManagementService.Migrations
                 type: "bigint",
                 nullable: false,
                 comment: "The time spent on the lesson in minutes",
-                oldClrType: typeof(long),
-                oldType: "bigint",
+                oldClrType: typeof(int),
+                oldType: "integer",
                 oldComment: "The time spent on the lesson in seconds");
         }
     }

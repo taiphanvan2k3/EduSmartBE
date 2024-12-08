@@ -13,7 +13,6 @@ namespace PaymentService.GrpcServices
     {
         private readonly DataContext _context = context
             ?? throw new ArgumentNullException(nameof(context));
-
         private readonly ILogger<GrpcPaymentService> _logger = logger
             ?? throw new ArgumentNullException(nameof(logger));
 
@@ -186,6 +185,46 @@ namespace PaymentService.GrpcServices
                 response.MonthlyProfits.AddRange(monthlyProfits);
                 response.IsSuccess = true;
                 response.Message = "Get monthly payment info successfully";
+
+                _logger.LogInformation("[GrpcPaymentService] [{Method}] End", methodName);
+                return response;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[GrpcPaymentService] [{Method}] Error", methodName);
+                throw;
+            }
+        }
+
+        public override async Task<StorageInfoResponse> GetCurrentStoringAmount(UserInfo userInfo, ServerCallContext context)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                _logger.LogInformation("[GrpcPaymentService] [{Method}] Start", methodName);
+
+                var storageInfo = await _context.StorageInfos
+                    .Where(x => x.UserId == userInfo.Id)
+                    .Select(x => new
+                    {
+                        x.MaximumStorage,
+                        x.UsedStorage
+                    })
+                    .FirstOrDefaultAsync();
+
+                var response = new StorageInfoResponse();
+                if (storageInfo == null)
+                {
+                    response.IsSuccess = true;
+                    response.MaximumStorage = Constants.FREE_MAXIMUM_STORAGE_AMOUNT;
+                    response.UsedStorage = 0;
+                }
+                else
+                {
+                    response.IsSuccess = true;
+                    response.MaximumStorage = storageInfo.MaximumStorage;
+                    response.UsedStorage = storageInfo.UsedStorage;
+                }
 
                 _logger.LogInformation("[GrpcPaymentService] [{Method}] End", methodName);
                 return response;

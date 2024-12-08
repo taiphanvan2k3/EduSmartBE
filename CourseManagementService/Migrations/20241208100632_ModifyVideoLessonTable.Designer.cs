@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CourseManagementService.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20241205162127_ModifyVideoLessonTable")]
+    [Migration("20241208100632_ModifyVideoLessonTable")]
     partial class ModifyVideoLessonTable
     {
         /// <inheritdoc />
@@ -617,8 +617,8 @@ namespace CourseManagementService.Migrations
                     b.Property<long>("StudentId")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("TimeSpent")
-                        .HasColumnType("bigint")
+                    b.Property<int>("TimeSpent")
+                        .HasColumnType("integer")
                         .HasComment("The time spent on the lesson in seconds");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
