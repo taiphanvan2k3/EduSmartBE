@@ -835,8 +835,8 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
 
         private void ClearOwnedCoursesCache(int userId)
         {
-            var cacheKey = CacheManager.OwnedCourses.Key(userId);
-            _cacheService.RemoveData(cacheKey);
+            var prefixOwnedCoursesCacheKey = CacheManager.OwnedCourses.PrefixKey(userId);
+            _cacheService.RemoveDataByPatternUsingLuaScript(prefixOwnedCoursesCacheKey);
         }
     }
 }

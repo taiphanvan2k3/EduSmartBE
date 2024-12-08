@@ -32,7 +32,8 @@ namespace CourseManagementService.Services.Cache
         /// </summary>
         public static class OwnedCourses
         {
-            public static string Key(int userId) => $"OwnedCourses_{userId}";
+            public static string PrefixKey(int userId) => $"OwnedCourses:{userId}";
+            public static string Key(int userId, int currentPage, int pageSize) => $"OwnedCourses:{userId}:Paging_{currentPage}_{pageSize}";
             public static int ExpireTimeInMinutes => 12 * 60;
         }
 
