@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using PaymentService.Commons;
 using TblStorageInfo = PaymentService.Databases.Schemas.StorageInfo;
 
@@ -23,6 +24,12 @@ namespace PaymentService.Services.StorageInfos
             {
                 LogInfo("Start", methodName);
                 var responseInfo = new ResponseInfo();
+
+                var isExist = await _context.StorageInfos.AnyAsync(x => x.UserId == userId);
+                if (isExist)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status400BadRequest, "Storage info is already exist");
+                }
 
                 var storageInfoEntity = new TblStorageInfo()
                 {
