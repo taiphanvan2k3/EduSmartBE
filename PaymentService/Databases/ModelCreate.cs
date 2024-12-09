@@ -95,15 +95,24 @@ namespace PaymentService.Databases
                 entity.ToTable("UploadHistories");
                 entity.HasKey(e => e.Id);
 
+                entity.Property(e => e.UploadDate)
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                    .ValueGeneratedOnAdd()
+                    .IsRequired();
+
                 entity.Property(e => e.FileType)
                     .HasConversion<string>();
                 entity.Property(e => e.MediaStorageProvider)
+                    .HasConversion<string>();
+                entity.Property(e => e.ResourceType)
                     .HasConversion<string>();
 
                 entity.HasOne(e => e.StorageInfo)
                     .WithMany(si => si.UploadHistories)
                     .HasForeignKey(e => e.StorageInfoId)
                     .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => new { e.ResourceType, e.ResourceId });
             });
 
             return modelBuilder;
