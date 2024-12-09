@@ -54,10 +54,10 @@ namespace UserService.AsyncDataServices
                 }
 
                 _channel = _connection.CreateModel();
-                _channel.ExchangeDeclare(exchange: "trigger", type: ExchangeType.Fanout);
+                _channel.ExchangeDeclare(exchange: "main_exchange", type: ExchangeType.Topic);
 
                 _queueName = _channel.QueueDeclare().QueueName;
-                _channel.QueueBind(queue: _queueName, exchange: "trigger", routingKey: "");
+                _channel.QueueBind(queue: _queueName, exchange: "main_exchange", routingKey: "UserService.*");
 
                 _channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
 

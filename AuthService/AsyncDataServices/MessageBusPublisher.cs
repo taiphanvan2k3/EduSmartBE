@@ -56,7 +56,8 @@ namespace AuthService.AsyncDataServices
 
                 _channel = _connection.CreateModel();
 
-                _channel.ExchangeDeclare("trigger", ExchangeType.Fanout);
+                // Khai báo cách gửi message, sẽ sử dụng Topic để tránh bị message đi đến sai chỗ
+                _channel.ExchangeDeclare("main_exchange", ExchangeType.Topic);
                 _connection.ConnectionShutdown += RabbitMQ_ConnectionShutdown;
 
                 Console.WriteLine("--> Connected to MessageBus");
@@ -93,7 +94,7 @@ namespace AuthService.AsyncDataServices
             if (_connection.IsOpen)
             {
                 Console.WriteLine("--> RabbitMQ Connection Open, sending message...");
-                SendMessage(payload);
+                SendMessage(eventType, payload);
             }
             else
             {
@@ -101,12 +102,13 @@ namespace AuthService.AsyncDataServices
             }
         }
 
-        private void SendMessage(string message)
+        private void SendMessage(string routingKey, string message)
         {
             var body = Encoding.UTF8.GetBytes(message);
 
-            _channel.BasicPublish(exchange: "trigger",
-                routingKey: "",
+            // Dùng thêm exchange, routingKey để đến đúng chỗ subscriber
+            _channel.BasicPublish(exchange: "main_exchange",
+                routingKey: routingKey,
                 basicProperties: null,
                 body: body);
             Console.WriteLine($"--> We have sent {message}");
