@@ -7,6 +7,8 @@ using PaymentService.Commons;
 using PaymentService.GrpcServices;
 using PaymentService.Hubs;
 using Microsoft.AspNetCore.SignalR;
+using PaymentService.AsyncDataServices;
+using PaymentService.EventProcessing;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.UseCustomLog(Constants.SERVICE_NAME);
@@ -19,6 +21,10 @@ builder.Services.AddHttpContextAccessor(); // Add IHttpContextAccessor for getti
 builder.Services.AddDataContext(builder.Configuration);
 builder.Services.AddScoped<IDbInitializer, DbInitializer>();
 builder.Services.AddCustomAuthentication(builder.Configuration);
+
+// Add RabbitMQ
+builder.Services.AddSingleton<IEventProcessor, EventProcessor>();
+builder.Services.AddHostedService<MessageBusSubscriber>();
 
 // Setting to use IUrlHelper in services
 builder.Services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
