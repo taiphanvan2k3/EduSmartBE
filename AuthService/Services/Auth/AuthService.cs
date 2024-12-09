@@ -253,6 +253,10 @@ namespace AuthService.Services.Auth
                     UserId = userInfo.Id,
                     LastLogin = DateTimeOffset.Now
                 });
+                _messageBusPublisher.PublishMessage(EventTypes.StorageInfoCreated, new
+                {
+                    UserId = userInfo.Id
+                });
 
                 _logger.LogInformation("[AuthService][{MethodName}] End", methodName);
                 return responseInfo;
@@ -343,6 +347,10 @@ namespace AuthService.Services.Auth
                 {
                     UserId = userInfo.Id,
                     LastLogin = DateTimeOffset.Now
+                });
+                _messageBusPublisher.PublishMessage(EventTypes.StorageInfoCreated, new
+                {
+                    UserId = userInfo.Id
                 });
 
                 _logger.LogInformation("[AuthService][{MethodName}] End", methodName);
@@ -443,6 +451,10 @@ namespace AuthService.Services.Auth
                 {
                     UserId = user.Id,
                     IsActive = true
+                });
+                _messageBusPublisher.PublishMessage(EventTypes.StorageInfoCreated, new
+                {
+                    UserId = user.Id
                 });
 
                 user.IsActive = true;
