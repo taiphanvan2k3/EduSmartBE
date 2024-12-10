@@ -1,10 +1,9 @@
 const swaggerJSDoc = require("swagger-jsdoc");
 const swaggerUI = require("swagger-ui-express");
 const path = require("path");
-const IP = process.env.IP || "localhost";
 
 const serverUrl =
-    IP === "localhost"
+    process.env.NODE_ENV === "development"
         ? {
               url: `http://localhost:${process.env.PORT}`,
               description: "Local server"
