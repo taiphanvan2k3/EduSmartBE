@@ -1,4 +1,6 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using PaymentService.Commons.Helpers;
 using PaymentService.Databases.Schemas;
 
 namespace PaymentService.Databases
@@ -113,6 +115,49 @@ namespace PaymentService.Databases
                     .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasIndex(e => new { e.ResourceType, e.ResourceId });
+            });
+
+            modelBuilder.Entity<CourseAchievementTemplate>(entity =>
+            {
+                entity.ToTable("CourseAchievementTemplates");
+                entity.HasKey(e => e.Id);
+
+                entity.HasIndex(c => new { c.CourseId, c.AchievementTemplateId })
+                    .IsUnique();
+
+                entity.HasOne(c => c.AchievementTemplate)
+                    .WithMany(at => at.CourseAchievementTemplates)
+                    .HasForeignKey(c => c.AchievementTemplateId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // Dùng Json để lưu trữ TextStyleInfo
+                entity.Property(c => c.CourseNameTextStyle)
+                    .HasColumnType("jsonb")
+                    .HasConversion(
+                        v => JsonSerializerUtils.Serialize(v),
+                        v => JsonSerializerUtils.Deserialize<TextStyleInfo>(v)
+                    );
+
+                entity.Property(c => c.StudentNameTextStyle)
+                    .HasColumnType("jsonb")
+                    .HasConversion(
+                        v => JsonSerializerUtils.Serialize(v),
+                        v => JsonSerializerUtils.Deserialize<TextStyleInfo>(v)
+                    );
+
+                entity.Property(c => c.DateTextStyle)
+                    .HasColumnType("jsonb")
+                    .HasConversion(
+                        v => JsonSerializerUtils.Serialize(v),
+                        v => JsonSerializerUtils.Deserialize<TextStyleInfo>(v)
+                    );
+
+                entity.Property(c => c.TeacherTextStyle)
+                    .HasColumnType("jsonb")
+                    .HasConversion(
+                        v => JsonSerializerUtils.Serialize(v),
+                        v => JsonSerializerUtils.Deserialize<TextStyleInfo>(v)
+                    );
             });
 
             return modelBuilder;

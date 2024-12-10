@@ -1,8 +1,5 @@
 const createError = require("http-errors");
-const {
-    uploadCloudinary,
-    deleteCloudinary
-} = require("../helpers/init_cloudinary");
+const { uploadCloudinary } = require("../helpers/init_cloudinary");
 const MediaService = require("../services/media.service");
 
 module.exports = {
@@ -45,18 +42,27 @@ module.exports = {
 
             let resourceType = "auto"; // Default resource type
             let format = null;
-            
-            if (file.mimetype === "application/pdf" ||
-                 file.mimetype === "application/msword" ||
-                 file.mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-                 file.mimetype === "application/vnd.ms-excel" ||
-                 file.mimetype === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
-                 file.mimetype === "text/plain") {
+
+            if (
+                file.mimetype === "application/pdf" ||
+                file.mimetype === "application/msword" ||
+                file.mimetype ===
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+                file.mimetype === "application/vnd.ms-excel" ||
+                file.mimetype ===
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+                file.mimetype === "text/plain"
+            ) {
                 resourceType = "raw";
             }
 
             // Proceed with file upload to Cloudinary
-            const result = await uploadCloudinary(file.buffer, "files", resourceType, file.originalname);
+            const result = await uploadCloudinary(
+                file.buffer,
+                "files",
+                resourceType,
+                file.originalname
+            );
             const fileUrl = result.secure_url;
             const filePublicId = result.public_id;
 
