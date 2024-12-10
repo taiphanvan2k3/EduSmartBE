@@ -34,6 +34,8 @@ namespace PaymentService.Databases
         public DbSet<WithdrawalRequest> WithdrawalRequests { get; set; }
         public DbSet<StorageInfo> StorageInfos { get; set; }
         public DbSet<UploadHistory> UploadHistories { get; set; }
+        public DbSet<AchievementTemplate> AchievementTemplates { get; set; }
+        public DbSet<CourseAchievementTemplate> CourseAchievementTemplates { get; set; }
 
         public override int SaveChanges()
         {

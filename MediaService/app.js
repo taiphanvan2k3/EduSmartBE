@@ -58,5 +58,5 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 7154;
 
 app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server started on port ${PORT}...`);
+    console.log(`Server started on port http://localhost:${PORT}/media-service/swagger/`);
 });
