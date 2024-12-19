@@ -13,7 +13,7 @@ const MediaController = require("../controllers/media.controller");
 
 /**
  * @swagger
- * /media-service/api/media/:
+ * /media-service/api/media:
  *   get:
  *     summary: |
  *       Get user's media storage info

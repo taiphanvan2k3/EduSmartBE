@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const AchievementController = require("../controllers/achievement.controller");
+const TemplateController = require("../controllers/achievement-template.controller");
 
 /**
  * @swagger
@@ -32,7 +32,7 @@ const AchievementController = require("../controllers/achievement.controller");
  *     security:
  *       - BearerAuth: []
  */
-router.get("/templates", AchievementController.getAchievements);
+router.get("/templates", TemplateController.getAchievementTemplates);
 
 /**
  * @swagger

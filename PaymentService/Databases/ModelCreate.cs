@@ -152,7 +152,7 @@ namespace PaymentService.Databases
                         v => JsonSerializerUtils.Deserialize<TextStyleInfo>(v)
                     );
 
-                entity.Property(c => c.TeacherTextStyle)
+                entity.Property(c => c.TeacherNameTextStyle)
                     .HasColumnType("jsonb")
                     .HasConversion(
                         v => JsonSerializerUtils.Serialize(v),
