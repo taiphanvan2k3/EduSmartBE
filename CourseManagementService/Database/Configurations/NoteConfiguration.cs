@@ -10,9 +10,6 @@ namespace CourseManagementService.Database.Configurations
         {
             builder.ToTable("Notes");
 
-            builder.Property(note => note.Comment)
-                .HasMaxLength(300);
-
             builder.Property(note => note.LessonType)
                 .HasConversion<string>()
                 .HasMaxLength(50);

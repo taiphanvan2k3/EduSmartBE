@@ -1,3 +1,5 @@
+using CourseManagementService.Services.ChapterManagement.Schemas;
+
 namespace CourseManagementService.Services.NoteManagement.Schemas
 {
     public class NoteDetail
@@ -13,6 +15,10 @@ namespace CourseManagementService.Services.NoteManagement.Schemas
         public int TimeMilestone { get; set; }
 
         public string LessonType { get; set; }
+
+        public string LessonName { get; set; }
+
+        public SimpleChapterInfo ChapterInfo { get; set; }
 
         public DateTimeOffset CreatedAt { get; set; }
 
