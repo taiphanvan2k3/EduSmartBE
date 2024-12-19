@@ -1,5 +1,5 @@
 const createError = require("http-errors");
-const { uploadCloudinary } = require("../helpers/init_cloudinary");
+const { uploadCloudinary } = require("../helpers/init-cloudinary");
 const MediaService = require("../services/media.service");
 
 module.exports = {
