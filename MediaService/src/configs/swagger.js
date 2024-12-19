@@ -3,14 +3,14 @@ const swaggerUI = require("swagger-ui-express");
 const path = require("path");
 
 const serverUrl =
-    process.env.NODE_ENV === "development"
+    process.env.NODE_ENV === "production"
         ? {
-              url: `http://localhost:${process.env.PORT}`,
-              description: "Local server"
-          }
-        : {
               url: "https://edusmart.info.vn/",
               description: "Production"
+          }
+        : {
+              url: `http://localhost:${process.env.PORT}`,
+              description: "Local server"
           };
 
 const options = {

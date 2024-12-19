@@ -14,7 +14,9 @@ namespace PaymentService.Databases.Schemas
 
         public TextStyleInfo DateTextStyle { get; set; }
 
-        public TextStyleInfo TeacherTextStyle { get; set; }
+        public TextStyleInfo TeacherNameTextStyle { get; set; }
+
+        public bool IsDefault { get; set; }
 
         public virtual AchievementTemplate AchievementTemplate { get; set; }
     }
