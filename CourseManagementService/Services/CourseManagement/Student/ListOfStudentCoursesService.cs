@@ -24,10 +24,8 @@ namespace CourseManagementService.Services.CourseManagement.Student
         /// <para>Created by: TaiPV</para>
         /// </summary>
         /// <param name="userId">Id of student to view</param>
-        /// <param name="isGetAll">True to get all courses, false to get only public courses</param>
         /// <returns></returns>
-        public Task<ResponseInfo> GetCoursesByUserId(int userId, bool isGetAll = false);
-
+        public Task<ResponseInfo> GetCourseProgressOfOtherUser(int userId);
 
         /// <summary>
         /// Update the visibility status of all courses (private/friends/public)
@@ -54,49 +52,17 @@ namespace CourseManagementService.Services.CourseManagement.Student
                 LogInfo("Start", method);
 
                 var currentUser = GetCurrentUser();
-                var responseInfo = await GetCoursesByUserId(currentUser.UserId, isGetAll: true);
-
-                LogInfo("End", method);
-                return responseInfo;
-            }
-            catch (Exception e)
-            {
-                LogError(e, method);
-                throw;
-            }
-        }
-
-        public async Task<ResponseInfo> GetCoursesByUserId(int userId, bool isGetAll = false)
-        {
-            var method = GetActualAsyncMethodName();
-            try
-            {
-                LogInfo("Start", method);
-                var responseInfo = new ResponseInfo();
-
-                if (!await _grpcUserService.CheckUserExist(userId))
-                {
-                    return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "Student not found");
-                }
-
-                var currentUser = GetCurrentUser();
-                isGetAll = isGetAll || currentUser.UserId == userId;
-
-                var cacheKey = isGetAll
-                    ? CacheManager.EnrolledCourses.Key(userId)
-                    : CacheManager.CourseProgressOfOtherUser.Key(userId);
+                var cacheKey = CacheManager.EnrolledCourses.Key(currentUser.UserId);
 
                 var cachedData = _cacheService.GetData<List<EnrolledCourseInfo>>(cacheKey);
-
                 if (cachedData != null)
                 {
-                    responseInfo.Data.Add("courses", cachedData);
-                    return responseInfo;
+                    return CreateResponseInfo("courses", cachedData);
                 }
 
                 var visibilityEnumType = typeof(CourseProgressVisibility);
-                var courses = await _context.CourseEnrollments
-                    .Where(x => x.StudentId == userId && (isGetAll || x.VisibilityStatus == CourseProgressVisibility.Public))
+                var enrolledCourses = await _context.CourseEnrollments
+                    .Where(x => x.StudentId == currentUser.UserId)
                     .Select(x => new EnrolledCourseInfo()
                     {
                         Id = x.CourseId,
@@ -117,12 +83,108 @@ namespace CourseManagementService.Services.CourseManagement.Student
                     })
                     .ToListAsync();
 
-                if (courses.Count > 0)
+                if (enrolledCourses.Count > 0)
                 {
-                    await FillTeachersInfo(courses);
+                    await FillTeachersInfo(enrolledCourses);
 
-                    var courseIds = courses.Select(x => x.Id).ToList();
-                    var courseIdsDict = courses.ToDictionary(x => x.Id, x => x);
+                    var courseIds = enrolledCourses.Select(x => x.Id).ToList();
+                    var courseIdsDict = enrolledCourses.ToDictionary(x => x.Id, x => x);
+
+                    var lessonTrackings = await _context.LessonTrackings
+                        .Where(x => x.StudentId == currentUser.UserId && courseIds.Contains(x.CourseId))
+                        .GroupBy(x => x.CourseId)
+                        .Select(x => new
+                        {
+                            CourseId = x.Key,
+                            CompletedLessonCount = x.Count(l => l.IsCompleted),
+                            TimeSpent = x.Sum(x => x.TimeSpent)
+                        })
+                        .ToListAsync();
+
+                    foreach (var lessonTracking in lessonTrackings)
+                    {
+                        if (courseIdsDict.TryGetValue(lessonTracking.CourseId, out var course))
+                        {
+                            course.CompletedLessons = lessonTracking.CompletedLessonCount;
+                            course.TimeSpent = lessonTracking.TimeSpent;
+                        }
+                    }
+                }
+
+                _cacheService.SetData(cacheKey, enrolledCourses, DateTimeOffset.Now.AddMinutes(
+                    CacheManager.EnrolledCourses.ExpireTimeInMinutes));
+                return CreateResponseInfo("courses", enrolledCourses);
+            }
+            catch (Exception e)
+            {
+                LogError(e, method);
+                throw;
+            }
+            finally
+            {
+                LogInfo("End", method);
+            }
+        }
+
+        public async Task<ResponseInfo> GetCourseProgressOfOtherUser(int userId)
+        {
+            var method = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", method);
+                var responseInfo = new ResponseInfo();
+
+                if (!await _grpcUserService.CheckUserExist(userId))
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "Student not found");
+                }
+
+                var cacheKey = CacheManager.CourseProgressOfOtherUser.Key(userId);
+                var cachedData = _cacheService.GetData<ListOfEnrolledCourses>(cacheKey);
+
+                if (cachedData != null)
+                {
+                    responseInfo.Data.Add("courseProgress", cachedData);
+                    return responseInfo;
+                }
+
+                var visibilityEnumType = typeof(CourseProgressVisibility);
+                var listOfEnrolledCourses = new ListOfEnrolledCourses();
+
+                // Get user profile and list of courses belong to this user
+                var userProfileTask = _grpcUserService.GetUserInfoWithRole(userId);
+                var coursesTask = _context.CourseEnrollments
+                    .Where(x => x.StudentId == userId && x.VisibilityStatus == CourseProgressVisibility.Public)
+                    .Select(x => new EnrolledCourseInfo()
+                    {
+                        Id = x.CourseId,
+                        Name = x.Course.Name,
+                        ThumbnailURL = x.Course.ThumbnailURL,
+                        Description = x.Course.Description,
+                        TotalStudents = x.Course.Enrollments.Count,
+                        VisibilityStatus = new LookupDto()
+                        {
+                            Id = ((int)Enum.Parse(visibilityEnumType, x.VisibilityStatus.ToString())).ToString(),
+                            Name = Utils.GetEnumName(x.VisibilityStatus)
+                        },
+                        TotalLessons = x.Course.Chapters.Sum(ch => ch.Lessons.Count),
+                        Teacher = new TeacherDetail()
+                        {
+                            Id = x.Course.TeacherId
+                        }
+                    })
+                    .ToListAsync();
+
+                await Task.WhenAll(userProfileTask, coursesTask);
+                listOfEnrolledCourses.UserInfo = userProfileTask.Result;
+                listOfEnrolledCourses.Courses = coursesTask.Result;
+
+                if (listOfEnrolledCourses.Courses.Count > 0)
+                {
+                    await FillTeachersInfo(listOfEnrolledCourses.Courses);
+
+                    var courseIds = listOfEnrolledCourses.Courses.Select(x => x.Id).ToList();
+                    var courseIdsDict = listOfEnrolledCourses.Courses.ToDictionary(x => x.Id, x => x);
 
                     var lessonTrackings = await _context.LessonTrackings
                         .Where(x => x.StudentId == userId && courseIds.Contains(x.CourseId))
@@ -145,17 +207,20 @@ namespace CourseManagementService.Services.CourseManagement.Student
                     }
                 }
 
-                _cacheService.SetData(cacheKey, courses, DateTimeOffset.Now.AddMinutes(
+                _cacheService.SetData(cacheKey, listOfEnrolledCourses, DateTimeOffset.Now.AddMinutes(
                     CacheManager.CourseProgressOfOtherUser.ExpireTimeInMinutes));
 
-                LogInfo("End", method);
-                responseInfo.Data.Add("courses", courses);
+                responseInfo.Data.Add("courseProgress", listOfEnrolledCourses);
                 return responseInfo;
             }
             catch (Exception e)
             {
                 LogError(e, method);
                 throw;
+            }
+            finally
+            {
+                LogInfo("End", method);
             }
         }
 

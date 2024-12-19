@@ -1,5 +1,4 @@
 using CourseManagementService.Common;
-using CourseManagementService.Enumerations;
 using CourseManagementService.Services.CourseManagement.Public.Schemas;
 using CourseManagementService.Services.CourseManagement.Teacher.Schemas;
 
