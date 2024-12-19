@@ -101,7 +101,7 @@ namespace CourseManagementService.Services.Grpc.UserService
             try
             {
                 LogInfo("Start", methodName);
-                var cachedUser = _cacheService.GetData<UserDetail>(CacheManager.User.Key(userId));
+                var cachedUser = _cacheService.GetData<UserDetail>(CacheManager.User.Key(userId, withRole: true));
                 if (cachedUser != null)
                 {
                     return cachedUser;

@@ -90,7 +90,7 @@ namespace CourseManagementService.Services.Cache
         /// </summary>
         public static class CourseProgressOfOtherUser
         {
-            public static string Key(int userId) => $"CourseProgressOfOtherUser_{userId}";
+            public static string Key(int userId) => $"CourseProgressOfOtherUser:{userId}";
             public static int ExpireTimeInMinutes => 15;
         }
 
@@ -99,7 +99,7 @@ namespace CourseManagementService.Services.Cache
         /// </summary>
         public static class EnrolledCourses
         {
-            public static string Key(int userId) => $"EnrolledCourses_{userId}";
+            public static string Key(int userId) => $"EnrolledCourses:{userId}";
             public static int ExpireTimeInMinutes => 15;
         }
 
