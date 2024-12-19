@@ -139,6 +139,7 @@ namespace CourseManagementService.Services.CourseManagement.Student
                     return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "Student not found");
                 }
 
+                var currentUser = GetCurrentUser();
                 var cacheKey = CacheManager.CourseProgressOfOtherUser.Key(userId);
                 var cachedData = _cacheService.GetData<ListOfEnrolledCourses>(cacheKey);
 
@@ -154,7 +155,8 @@ namespace CourseManagementService.Services.CourseManagement.Student
                 // Get user profile and list of courses belong to this user
                 var userProfileTask = _grpcUserService.GetUserInfoWithRole(userId);
                 var coursesTask = _context.CourseEnrollments
-                    .Where(x => x.StudentId == userId && x.VisibilityStatus == CourseProgressVisibility.Public)
+                    .Where(x => x.StudentId == userId && (x.StudentId == currentUser.UserId 
+                        || x.VisibilityStatus == CourseProgressVisibility.Public))
                     .Select(x => new EnrolledCourseInfo()
                     {
                         Id = x.CourseId,
