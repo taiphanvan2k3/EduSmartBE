@@ -41,8 +41,8 @@ namespace CourseManagementService.Controllers.CourseManagement
         [ProducesResponseType(typeof(List<ErrorResponse>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetCoursesByUserId([FromRoute] int userId)
         {
-            var responseInfo = await _listOfStudentCoursesService.GetCoursesByUserId(userId);
-            return HandleResponseInfo(responseInfo, resourceName: "courses");
+            var responseInfo = await _listOfStudentCoursesService.GetCourseProgressOfOtherUser(userId);
+            return HandleResponseInfo(responseInfo, resourceName: "courseProgress");
         }
 
         /// <summary>
