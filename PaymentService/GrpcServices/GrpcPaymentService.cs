@@ -3,6 +3,7 @@ using Grpc.Core;
 using Microsoft.EntityFrameworkCore;
 using PaymentService.Commons;
 using PaymentService.Databases;
+using PaymentService.Databases.Schemas;
 using PaymentService.Enumerations;
 using System.Runtime.CompilerServices;
 using TblPaymentTransaction = PaymentService.Databases.Schemas.PaymentTransaction;
@@ -92,12 +93,19 @@ namespace PaymentService.GrpcServices
                     Id = Guid.NewGuid(),
                     Code = request.Code,
                     UserId = request.UserId,
+                    CreatorInfo = new CreatorInfo()
+                    {
+                        Username = request.Username,
+                        FullName = request.FullName,
+                        Email = request.Email
+                    },
                     Amount = (decimal)request.Amount,
                     Currency = currencyType,
                     PaymentMethod = PaymentMethod.Sepay,
                     TransactionType = TransactionType.BuyCourse,
                     OrderStatus = OrderStatus.New,
-                    RelatedInformation = request.RelatedInfo
+                    RelatedInformation = request.RelatedInfo,
+                    ReceiverId = request.ReceiverId
                 };
 
                 // Cancel các transaction cũ đối với khi mua cùng 1 course

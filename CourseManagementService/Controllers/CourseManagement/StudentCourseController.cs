@@ -37,7 +37,7 @@ namespace CourseManagementService.Controllers.CourseManagement
         /// <para>Created by: TaiPV</para>
         /// </summary>
         [HttpGet("{userId}/courses")]
-        [ProducesResponseType(typeof(List<EnrolledCourseInfo>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ListOfEnrolledCourses), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ErrorResponse>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetCoursesByUserId([FromRoute] int userId)
         {

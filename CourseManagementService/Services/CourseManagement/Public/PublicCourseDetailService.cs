@@ -1,5 +1,6 @@
 using CourseManagementService.Common;
 using CourseManagementService.Common.Helpers;
+using CourseManagementService.Common.Schemas;
 using CourseManagementService.Services.AppState.Schemas;
 using CourseManagementService.Services.BookmarkManagement;
 using CourseManagementService.Services.Cache;
@@ -275,6 +276,7 @@ namespace CourseManagementService.Services.CourseManagement.Public
                 });
 
                 var transactionCode = $"SEP{Utils.GenerateRandomString(9)}";
+                var currentUserInfo = await _grpcUserService.GetUserInfoWithRole(currentUser.UserId);
 
                 // Get bank account and create transaction through gRPC
                 var getBankAccountTask = _grpcPaymentService.GetAdminBankAccountAsync();
@@ -282,7 +284,14 @@ namespace CourseManagementService.Services.CourseManagement.Public
                 {
                     Amount = (double)course.Price,
                     RelatedInfo = relatedInfo,
-                    UserId = currentUser.UserId,
+                    CreatedBy = new UserDetail()
+                    {
+                        Id = currentUser.UserId,
+                        Username = currentUser.UserName,
+                        FullName = currentUserInfo.FullName,
+                        Email = currentUserInfo.Email
+                    },
+                    ReceiverId = course.TeacherId,
                     TransactionCode = transactionCode,
                     CurrencyCode = course.CurrencyCode
                 });

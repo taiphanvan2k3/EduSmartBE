@@ -105,5 +105,13 @@ namespace PaymentService.Services
                 Message = message
             };
         }
+
+        protected static ResponseInfo CreateResponseInfo<T>(string resource, T data)
+        {
+            var responseInfo = new ResponseInfo();
+            responseInfo.Data.Add(resource, data);
+
+            return responseInfo;
+        }
     }
 }

@@ -16,5 +16,13 @@ namespace PaymentService.Commons
             Message = "Success";
             Data = [];
         }
+
+        public bool IsSuccess
+        {
+            get
+            {
+                return StatusCode == StatusCodes.Status200OK || StatusCode == StatusCodes.Status201Created;
+            }
+        }
     }
 }
