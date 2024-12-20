@@ -37,9 +37,13 @@ message BankAccountResponse {
 message CoursePaymentTransactionRequest {
     string code = 1;
     int32 userId = 2;
-    double amount = 3;
-    Currency currency = 4;
-    string relatedInfo = 5;
+    string username = 3;
+    string fullName = 4;
+    string email = 5;
+    double amount = 6;
+    int32 receiverId = 7;
+    Currency currency = 8;
+    string relatedInfo = 9;
 }
 
 message CoursePaymentTransactionResponse {

@@ -12,6 +12,10 @@ namespace PaymentService.Databases.Schemas
 
         public int UserId { get; set; }
 
+        public CreatorInfo CreatorInfo { get; set; }
+
+        public int ReceiverId { get; set; }
+
         public decimal Amount { get; set; }
 
         public CurrencyType Currency { get; set; }
@@ -32,5 +36,14 @@ namespace PaymentService.Databases.Schemas
         // Thông tin liên quan đến giao dịch
         // Lưu dạng JSON vào cột này
         public string RelatedInformation { get; set; }
+    }
+
+    public class CreatorInfo
+    {
+        public string Username { get; set; }
+
+        public string FullName { get; set; }
+
+        public string Email { get; set; }
     }
 }

@@ -85,6 +85,13 @@ namespace CourseManagementService.Services.Cache
             public static int ExpireTimeInMinutes => 30;
         }
 
+        public static class SimpleCourseInfo
+        {
+            public static string Key(Guid courseId) => $"SimpleCourseInfo:{courseId}";
+            public static string Key(string courseId) => $"SimpleCourseInfo:{courseId}";
+            public static int ExpireTimeInMinutes => 12 * 60;
+        }
+
         /// <summary>
         /// Người dùng khác xem tiến độ học tập của 1 học viên khác
         /// </summary>
