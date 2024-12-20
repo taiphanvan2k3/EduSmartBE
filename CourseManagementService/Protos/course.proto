@@ -4,9 +4,25 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
 
 service Course {
+    rpc GetCoursesByIds(GetCoursesByIdsRequest) returns (GetCoursesByIdsResponse);
     rpc EnrollCourse(CourseEnrollmentRequest) returns (CourseEnrollmentResponse);
     rpc GetInfoCourseByIds(GetInfoCourseByIdsRequest) returns (GetInfoCourseByIdsResponse);
     rpc GetMonthlyDiscussions(google.protobuf.Empty) returns (MonthlyDataCourseResponse);
+}
+
+message SimpleCourseInfo {
+    string id = 1;
+    string name = 2;
+}
+
+message GetCoursesByIdsRequest {
+    repeated string courseIds = 1;
+}
+
+message GetCoursesByIdsResponse {
+    repeated SimpleCourseInfo courses = 1;
+    string message = 2;
+    bool isSuccess = 3;
 }
 
 message CourseEnrollmentRequest {
