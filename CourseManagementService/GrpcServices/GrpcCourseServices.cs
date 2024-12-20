@@ -26,6 +26,70 @@ namespace CourseManagementService.GrpcServices
 
         protected static string GetActualAsyncMethodName([CallerMemberName] string name = null) => name;
 
+        public override async Task<GetCoursesByIdsResponse> GetCoursesByIds(GetCoursesByIdsRequest request, ServerCallContext context)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                _logger.LogInformation("[GrpcCourseService] [{Method}] Start", methodName);
+                List<SimpleCourseInfo> courses = [];
+                List<Guid> notCachedCourseIds = [];
+
+                var courseIds = request.CourseIds.Select(Guid.Parse).Distinct().ToList();
+                var cacheKeys = courseIds.Select(CacheManager.SimpleCourseInfo.Key).ToList();
+
+                var cachedCourses = await _cacheService.GetMultipleDataAsync<SimpleCourseInfo>(cacheKeys);
+                for (var idx = 0; idx < courseIds.Count; idx++)
+                {
+                    if (cachedCourses[idx] == null)
+                    {
+                        notCachedCourseIds.Add(courseIds[idx]);
+                    }
+                    else
+                    {
+                        courses.Add(cachedCourses[idx]);
+                    }
+                }
+
+                if (notCachedCourseIds.Count > 0)
+                {
+                    var notCacheCourses = await _context.Courses
+                        .Where(c => notCachedCourseIds.Contains(c.Id))
+                        .Select(c => new SimpleCourseInfo()
+                        {
+                            Id = c.Id.ToString(),
+                            Name = c.Name
+                        })
+                        .ToListAsync();
+
+                    courses.AddRange(notCacheCourses);
+
+                    foreach (var course in notCacheCourses)
+                    {
+                        _cacheService.SetData(CacheManager.SimpleCourseInfo.Key(course.Id), course,
+                            DateTimeOffset.Now.AddMinutes(CacheManager.SimpleCourseInfo.ExpireTimeInMinutes));
+                    }
+                }
+
+                var responseInfo = new GetCoursesByIdsResponse
+                {
+                    IsSuccess = true
+                };
+                responseInfo.Courses.AddRange(courses);
+
+                return responseInfo;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[GrpcCourseService] [{Method}] Error", methodName);
+                return new GetCoursesByIdsResponse
+                {
+                    IsSuccess = false,
+                    Message = e.InnerException?.Message ?? e.Message
+                };
+            }
+        }
+
         public override async Task<CourseEnrollmentResponse> EnrollCourse(CourseEnrollmentRequest request, ServerCallContext context)
         {
             var methodName = GetActualAsyncMethodName();

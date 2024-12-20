@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PaymentService.Commons;
 using PaymentService.Commons.Helpers;
+using PaymentService.Commons.Schemas;
 using PaymentService.Services.TeacherEarnings;
 using PaymentService.Services.TeacherEarnings.Schemas;
 
@@ -8,14 +9,14 @@ namespace PaymentService.Controllers
 {
     [Route("payment-service/api/teacher-earnings")]
     [ApiController]
-    public class TeacherEarningController(ITeacherEarningService teacherEarningService) : ControllerBase
+    public class TeacherEarningController(ITeacherEarningService teacherEarningService) : BaseController
     {
         private readonly ITeacherEarningService _teacherEarningService = teacherEarningService
             ?? throw new ArgumentNullException(nameof(teacherEarningService));
 
         /// <summary>
         /// Get revenue of all courses of teacher
-        /// <para>Created at: 2/12/2024</para>
+        /// <para>Created at: 2024/12/02</para>
         /// <para>Created by ManhTD</para>
         /// </summary>
         /// <param name="currencyType"></param>
@@ -48,7 +49,7 @@ namespace PaymentService.Controllers
 
         /// <summary>
         /// Get list of revenue of all courses of teacher
-        /// <para>Created at: 2/12/2024</para>
+        /// <para>Created at: 2024/12/02</para>
         /// <para>Created by ManhTD</para>
         /// </summary>
         /// <param name="currencyType"></param>
@@ -80,7 +81,7 @@ namespace PaymentService.Controllers
 
         /// <summary>
         /// Get total withdrawal amount of teacher
-        /// <para>Created at: 2/12/2024</para>
+        /// <para>Created at: 2024/12/02</para>
         /// <para>Created by ManhTD</para>
         /// </summary>
         /// <returns></returns>
@@ -110,8 +111,8 @@ namespace PaymentService.Controllers
 
         /// <summary>
         /// Get list of revenue of all courses of teacher in a year
-        /// <para>Created at: 8/12/2024</para>
-        /// <para>Created by QuyMTX</para>
+        /// <para>Created at: 2024/12/08</para>
+        /// <para>Created by: QuyMTX</para>
         /// </summary>
         /// <param name="year"></param>
         /// <param name="currencyType"></param>
@@ -140,6 +141,31 @@ namespace PaymentService.Controllers
             catch (Exception e)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, ErrorResponseHelper.GetContentOfInternalServerResponse(e));
+            }
+        }
+
+        /// <summary>
+        /// Get total withdrawal amount of teacher
+        /// <para>Created at: 2024/12/20</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("me/course-payment-history")]
+        [Filters.Auth(Roles = "Teacher")]
+        [ProducesResponseType(typeof(PaginatedList<CoursePaymentHistory>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetCoursePaymentHistory([FromQuery] ParamsSearch paramsSearch)
+        {
+            var responseInfo = await _teacherEarningService.GetCoursePaymentHistoryAsync(paramsSearch);
+            if (responseInfo.IsSuccess)
+            {
+                var enrollmentHistories = responseInfo.Data["enrollmentHistories"] as PaginatedList<CoursePaymentHistory>;
+                return Ok(enrollmentHistories);
+            }
+            else
+            {
+                return StatusCode(responseInfo.StatusCode,
+                    ErrorResponseHelper.GetContentOfAnyError(responseInfo.StatusCode,
+                        responseInfo.Error, responseInfo.Message));
             }
         }
     }

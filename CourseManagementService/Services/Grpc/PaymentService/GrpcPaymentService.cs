@@ -94,10 +94,14 @@ namespace CourseManagementService.Services.Grpc.PaymentService
                 var request = new CoursePaymentTransactionRequest
                 {
                     Code = data.TransactionCode,
-                    UserId = data.UserId,
+                    UserId = data.CreatedBy.Id,
+                    Username = data.CreatedBy.Username,
+                    FullName = data.CreatedBy.FullName,
+                    Email = data.CreatedBy.Email,
                     Amount = data.Amount,
                     RelatedInfo = data.RelatedInfo,
-                    Currency = ConvertStringToCurrencyEnum(data.CurrencyCode)
+                    Currency = ConvertStringToCurrencyEnum(data.CurrencyCode),
+                    ReceiverId = data.ReceiverId,
                 };
 
                 if (request.Currency == CurrencyEnumGrpc.Unknown)

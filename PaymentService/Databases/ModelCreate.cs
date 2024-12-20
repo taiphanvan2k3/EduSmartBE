@@ -39,6 +39,8 @@ namespace PaymentService.Databases
                 entity.ToTable("PaymentTransactions");
                 entity.HasKey(e => e.Id);
 
+                entity.HasIndex(e => e.ReceiverId);
+
                 entity.Property(e => e.OrderStatus)
                     .HasConversion<string>();
                 entity.Property(e => e.PaymentMethod)
@@ -47,6 +49,11 @@ namespace PaymentService.Databases
                     .HasConversion<string>();
                 entity.Property(e => e.Currency)
                     .HasConversion<string>();
+                entity.Property(e => e.CreatorInfo)
+                    .HasConversion(
+                        v => JsonSerializerUtils.Serialize(v),
+                        v => JsonSerializerUtils.Deserialize<CreatorInfo>(v)
+                    );
             });
 
             modelBuilder.Entity<TeacherEarning>(entity =>
