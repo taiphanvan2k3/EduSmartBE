@@ -13,6 +13,54 @@ const templateController = require("../controllers/achievement-template.controll
 
 /**
  * @swagger
+ * /media-service/api/achievements/my-achievement-in-course/{courseId}:
+ *   get:
+ *     summary: |
+ *       Get all achievements that teacher can choose to give to students
+ *       Created At: 2024/12/09
+ *       Created by: TaiPV
+ *     tags:
+ *       - Achievements
+ *     parameters:
+ *       - name: courseId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Achievement template URL with creation time
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 statusCode:
+ *                   type: integer
+ *                   example: 200
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     achievementURL:
+ *                       type: object
+ *                       properties:
+ *                         AchievementURL:
+ *                           type: string
+ *                         CreatedAt:
+ *                           type: string
+ *                           format: date-time
+ *     security:
+ *       - BearerAuth: []
+ */
+router.get(
+    "/my-achievement-in-course/:courseId",
+    verifyTokenAndAttachUser,
+    templateController.getAchievementInCourse
+);
+
+/**
+ * @swagger
  * /media-service/api/achievements/templates:
  *   get:
  *     summary: |
@@ -33,7 +81,11 @@ const templateController = require("../controllers/achievement-template.controll
  *     security:
  *       - BearerAuth: []
  */
-router.get("/templates", templateController.getAchievementTemplates);
+router.get(
+    "/templates",
+    verifyTokenAndAttachUser,
+    templateController.getAchievementTemplates
+);
 
 /**
  * @swagger

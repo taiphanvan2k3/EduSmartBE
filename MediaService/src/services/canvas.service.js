@@ -1,7 +1,7 @@
 const { logInfo, logError } = require("./logger.service");
 const { createCanvas, loadImage } = require("canvas");
 const { uploadCloudinary } = require("../helpers/init-cloudinary");
-const fs = require("fs");
+const { formatDateTime } = require("../helpers/utils");
 const path = require("path");
 
 class TextStyle {
@@ -62,7 +62,7 @@ async function createAchievement(
         const nameTextWidth = ctx.measureText(studentName).width;
         const namePosition = {
             x: (image.width - nameTextWidth) / 2, // Căn giữa tên sinh viên
-            y: 380 // Tọa độ y
+            y: 395 // Tọa độ y
         };
         ctx.fillText(studentName, namePosition.x, namePosition.y);
 
@@ -86,8 +86,10 @@ async function createAchievement(
         ctx.fillStyle = dateTextStyle.color;
         ctx.fillText("Date", 255, 600);
 
+        const date = new Date();
+        const dateString = formatDateTime(date);
         setTextStyle(ctx, dateTextStyle);
-        ctx.fillText("21/12/2024", 227, 648);
+        ctx.fillText(dateString, 227, 648);
 
         // ====== Teacher Name ======
         ctx.font = `bold 30px "Dancing Script"`;
@@ -107,7 +109,6 @@ async function createAchievement(
 
         const buffer = canvas.toBuffer("image/jpeg");
 
-        const date = new Date();
         const uploadResult = await uploadCloudinary(
             buffer,
             "student-achievements",

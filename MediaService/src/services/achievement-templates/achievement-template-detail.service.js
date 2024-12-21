@@ -92,7 +92,7 @@ const createTemplateForCourse = async (courseTemplateRequest) => {
         ];
 
         const { rows } = await pool.query(query, values);
-        return createResponseInfo("Id", rows[0].Id);
+        return createResponseInfo("id", rows[0].Id);
     } catch (error) {
         logError(caller, error);
         throw error;
@@ -214,10 +214,25 @@ const deleteCourseTemplate = async (courseTemplateId) => {
     }
 };
 
+/**
+ * Generate achievement for student who completed the course
+ * @author TaiPV
+ * @createdDate 2024/12/21
+ * @param {Guid} courseId
+ * @param {number} studentId
+ */
 const generateAchievement = async (courseId, studentId) => {
     const caller = "generateAchievement";
     try {
         logInfo(caller, "Start");
+        if (await checkIsExportedAchievement(courseId, studentId)) {
+            return createEarlyErrorResponse(
+                400,
+                "Bad Request",
+                "Achievement has already been exported"
+            );
+        }
+
         const grpcResponse = await checkStudentCompletedCourse(
             courseId,
             studentId
@@ -266,10 +281,98 @@ const generateAchievement = async (courseId, studentId) => {
     }
 };
 
+const checkIsExportedAchievement = async (courseId, studentId) => {
+    const caller = "checkIsExportedAchievement";
+    try {
+        logInfo(caller, "Start");
+        const query = `
+            SELECT 1 FROM "StudentAchievements"
+            WHERE "CourseId" = $1 AND "StudentId" = $2
+        `;
+
+        const { rows } = await pool.query(query, [courseId, studentId]);
+        return rows.length > 0;
+    } catch (error) {
+        logError(caller, error);
+    }
+};
+
+/**
+ * Save the achievement that student has exported to the database
+ * @param {Guid} courseId
+ * @param {number} studentId
+ * @param {string} achievementURL
+ */
+const saveExportedStudentAchievement = async (
+    courseId,
+    studentId,
+    achievementURL
+) => {
+    const caller = "saveExportedStudentAchievement";
+    try {
+        logInfo(caller, "Start");
+
+        const query = `
+            INSERT INTO "StudentAchievements" (
+                "Id",
+                "CourseId",
+                "StudentId",
+                "AchievementURL"
+            )
+            VALUES ($1, $2, $3, $4)
+        `;
+
+        const values = [uuidv4(), courseId, studentId, achievementURL];
+        await pool.query(query, values);
+    } catch (error) {
+        logError(caller, error);
+    } finally {
+        logInfo(caller, "End");
+    }
+};
+
+/**
+ * Get the exported achievement of a student in a course
+ * @author TaiPV
+ * @createdDate 2024/12/22
+ * @param {Guid} courseId
+ * @param {number} studentId
+ */
+const getExportedAchievement = async (courseId, studentId) => {
+    const caller = "getExportedAchievement";
+    try {
+        logInfo(caller, "Start");
+
+        const query = `
+            SELECT "AchievementURL", "CreatedAt"
+            FROM "StudentAchievements"
+            WHERE "CourseId" = $1 AND "StudentId" = $2
+        `;
+
+        const { rows } = await pool.query(query, [courseId, studentId]);
+        if (rows.length == 0) {
+            return createEarlyErrorResponse(
+                404,
+                "Not Found",
+                "Achievement not found"
+            );
+        }
+
+        return createResponseInfo("achievement", {
+            achievementURL: rows[0].AchievementURL,
+            createdAt: rows[0].CreatedAt
+        });
+    } catch (error) {
+        logError(caller, error);
+    } finally {
+        logInfo(caller, "End");
+    }
+};
+
 /**
  * Check if the request is valid for creating a course template
  * @author TaiPV
- * @createdDate 2024/12/15
+ * @createdDate 2024/12/22
  * @param {Guid} courseId
  * @param {number} templateId - Range from 1 to 6
  * @param {boolean} isDefault - True if the template is default
@@ -312,6 +415,13 @@ const isValidCourseTemplateRequest = async (
     return errorMessage;
 };
 
+/**
+ * Get the default template of the course
+ * @author TaiPV
+ * @createdDate 2024/12/22
+ * @param {Guid} courseId
+ * @returns
+ */
 const getDefaultTemplateOfCourse = async (courseId) => {
     const caller = "getDefaultTemplateForCourse";
     try {
@@ -338,5 +448,7 @@ module.exports = {
     createTemplateForCourse,
     updateTemplateForCourse,
     deleteCourseTemplate,
-    generateAchievement
+    generateAchievement,
+    saveExportedStudentAchievement,
+    getExportedAchievement
 };

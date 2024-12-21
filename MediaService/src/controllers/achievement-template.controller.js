@@ -7,8 +7,11 @@ const {
     createTemplateForCourse,
     updateTemplateForCourse,
     deleteCourseTemplate,
-    generateAchievement
+    generateAchievement,
+    saveExportedStudentAchievement,
+    getExportedAchievement
 } = require("../services/achievement-templates/achievement-template-detail.service");
+const { handleResponseInfo } = require("../helpers/response-info-helper");
 
 module.exports = {
     getAchievementTemplates: async (req, res, next) => {
@@ -51,6 +54,33 @@ module.exports = {
             next(error);
         }
     },
+    getAchievementInCourse: async (req, res, next) => {
+        try {
+            const currentUser = req.user;
+            const { courseId } = req.params;
+
+            if (!currentUser) {
+                return res.status(401).json({ message: "Unauthorized user" });
+            }
+
+            if (!courseId) {
+                return res
+                    .status(400)
+                    .json({ message: "Invalid request query" });
+            }
+
+            const exportedAchievementInCourse = await getExportedAchievement(
+                courseId,
+                currentUser.userId
+            );
+
+            return res.json(
+                handleResponseInfo("achievement", exportedAchievementInCourse)
+            );
+        } catch (error) {
+            next(error);
+        }
+    },
     createCourseTemplate: async (req, res, next) => {
         try {
             const {
@@ -74,7 +104,7 @@ module.exports = {
             }
 
             const responseInfo = await createTemplateForCourse(req.body);
-            res.json(responseInfo);
+            return res.json(handleResponseInfo("id", responseInfo));
         } catch (error) {
             next(error);
         }
@@ -105,7 +135,7 @@ module.exports = {
                 req.body
             );
 
-            res.json(courseTemplate);
+            res.json(handleResponseInfo("courseTemplate", courseTemplate));
         } catch (error) {
             next(error);
         }
@@ -114,7 +144,7 @@ module.exports = {
         try {
             const courseTemplateId = req.params.id;
             const responseInfo = await deleteCourseTemplate(courseTemplateId);
-            res.json(responseInfo);
+            res.json(handleResponseInfo("id", responseInfo));
         } catch (error) {
             next(error);
         }
@@ -139,7 +169,18 @@ module.exports = {
                 currentUser.userId
             );
 
-            res.json(responseInfo);
+            res.json(handleResponseInfo("achievementURL", responseInfo));
+
+            if (responseInfo.statusCode === 200) {
+                setImmediate(async () => {
+                    // Do something after sending response
+                    await saveExportedStudentAchievement(
+                        courseId,
+                        currentUser.userId,
+                        responseInfo.data.achievementURL
+                    );
+                });
+            }
         } catch (error) {
             next(error);
         }
