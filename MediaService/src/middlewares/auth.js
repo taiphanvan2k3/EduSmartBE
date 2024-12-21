@@ -33,9 +33,9 @@ function verifyTokenAndAttachUser(req, res, next) {
         next(); // Proceed to the next middleware or route handler
     } catch (error) {
         return res.status(403).json({
-            statusCode: 403,
-            error: "Forbidden",
-            message: "Invalid token"
+            statusCode: 401,
+            error: "Unauthorized",
+            message: "You need to be authenticated to access this resource."
         });
     }
 }
