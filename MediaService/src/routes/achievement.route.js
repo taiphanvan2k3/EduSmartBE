@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
+const { verifyTokenAndAttachUser } = require("../middlewares/auth");
 
-const TemplateController = require("../controllers/achievement-template.controller");
+const templateController = require("../controllers/achievement-template.controller");
 
 /**
  * @swagger
@@ -32,7 +33,47 @@ const TemplateController = require("../controllers/achievement-template.controll
  *     security:
  *       - BearerAuth: []
  */
-router.get("/templates", TemplateController.getAchievementTemplates);
+router.get("/templates", templateController.getAchievementTemplates);
+
+/**
+ * @swagger
+ * /media-service/api/achievements:
+ *   post:
+ *     summary: |
+ *       Generate a new achievement for a student
+ *       Created At: 2024/12/21
+ *       Created by: TaiPV
+ *     tags:
+ *       - Achievements
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               courseId:
+ *                type: string
+ *                format: uuid
+ *     responses:
+ *       200:
+ *         description: Response info
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   format: uuid
+ *     security:
+ *       - BearerAuth: []
+ */
+router.post(
+    "/",
+    verifyTokenAndAttachUser,
+    templateController.generateAchievement
+);
 
 /**
  * @swagger

@@ -8,6 +8,7 @@ service Course {
     rpc EnrollCourse(CourseEnrollmentRequest) returns (CourseEnrollmentResponse);
     rpc GetInfoCourseByIds(GetInfoCourseByIdsRequest) returns (GetInfoCourseByIdsResponse);
     rpc GetMonthlyDiscussions(google.protobuf.Empty) returns (MonthlyDataCourseResponse);
+    rpc CheckStudentCompletedCourse(CheckStudentCompletedCourseRequest) returns (CheckStudentCompletedCourseResponse);
 }
 
 message SimpleCourseInfo {
@@ -68,4 +69,18 @@ message MonthlyDataCourseResponse {
 message MonthlyDataCourse {
     int32 month = 1;
     int64 amount = 2;
+}
+
+message CheckStudentCompletedCourseRequest {
+    int32 studentId = 1;
+    string courseId = 2;
+}
+
+message CheckStudentCompletedCourseResponse {
+    bool isCompleted = 1;
+    string studentName = 2;
+    string courseName = 3;
+    string teacherName = 4;
+    string message = 5;
+    bool isSuccess = 6;
 }
