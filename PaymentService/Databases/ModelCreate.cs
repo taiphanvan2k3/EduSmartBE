@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using PaymentService.Commons.Helpers;
 using PaymentService.Databases.Schemas;
@@ -165,6 +164,19 @@ namespace PaymentService.Databases
                         v => JsonSerializerUtils.Serialize(v),
                         v => JsonSerializerUtils.Deserialize<TextStyleInfo>(v)
                     );
+            });
+
+            modelBuilder.Entity<StudentAchievement>(entity =>
+            {
+                entity.ToTable("StudentAchievements");
+                entity.HasKey(e => e.Id);
+
+                entity.HasIndex(e => new { e.StudentId, e.CourseId })
+                    .IsUnique();
+
+                entity.Property(e => e.AchievementURL)
+                    .HasMaxLength(500)
+                    .IsRequired();
             });
 
             return modelBuilder;

@@ -1,3 +1,4 @@
+const { logInfo, logError } = require("../services/logger.service");
 const cloudinary = require("cloudinary").v2;
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -5,7 +6,13 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-const uploadCloudinary = async (fileBuffer, folderName, resourceType = "auto", fileName = "") => {
+const uploadCloudinary = async (
+    fileBuffer,
+    folderName,
+    resourceType = "auto",
+    fileName = ""
+) => {
+    logInfo("uploadCloudinary", "Uploading file to Cloudinary...");
     const uploadOptions = {
         folder: folderName,
         resource_type: resourceType
@@ -20,8 +27,14 @@ const uploadCloudinary = async (fileBuffer, folderName, resourceType = "auto", f
             .upload_stream(uploadOptions, (error, result) => {
                 if (error) {
                     reject(error);
+                    logError(
+                        "uploadCloudinary",
+                        "Error uploading file to Cloudinary",
+                        error
+                    );
                 } else {
                     resolve(result);
+                    logInfo("uploadCloudinary", "File uploaded successfully");
                 }
             })
             .end(fileBuffer);
