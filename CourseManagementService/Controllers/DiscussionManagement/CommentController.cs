@@ -85,7 +85,7 @@ namespace CourseManagementService.Controllers.DiscussionManagement
                 return GetInvalidModelStateResponse();
             }
 
-            var responseInfo = await _commentDetailService.UpdateCommentReaction(id, reactionRequest);
+            var responseInfo = await _commentDetailService.UpdateReactionOfComment(id, reactionRequest);
             return HandleResponseInfo(responseInfo, resourceName: "comment");
         }
 

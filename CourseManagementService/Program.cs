@@ -33,6 +33,7 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 
 builder.Services.AddCustomAuthentication(builder.Configuration);
 builder.Services.AddCustomHostedServices();
+builder.Services.AddGemini(builder.Configuration);
 
 // Setting to use IUrlHelper in services
 builder.Services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
