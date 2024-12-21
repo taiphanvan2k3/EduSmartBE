@@ -2,6 +2,7 @@ using CourseManagementService.Common.Helpers;
 using CourseManagementService.Services.CourseManagement.Public.Schemas;
 using CourseManagementService.Services.CourseManagement.Student;
 using CourseManagementService.Services.CourseManagement.Student.Schemas;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CourseManagementService.Controllers.CourseManagement
@@ -36,6 +37,8 @@ namespace CourseManagementService.Controllers.CourseManagement
         /// <para>Created at: 2024/11/24</para>
         /// <para>Created by: TaiPV</para>
         /// </summary>
+        [AllowAnonymous]
+        [Authorize] // Any user can view the course progress of another user if they logged in
         [HttpGet("{userId}/courses")]
         [ProducesResponseType(typeof(ListOfEnrolledCourses), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ErrorResponse>), StatusCodes.Status404NotFound)]
