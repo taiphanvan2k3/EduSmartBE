@@ -134,7 +134,8 @@ namespace CourseManagementService.Services.CourseManagement.Student
                 LogInfo("Start", method);
                 var responseInfo = new ResponseInfo();
 
-                if (!await _grpcUserService.CheckUserExist(userId))
+                var targetUserProfile = await _grpcUserService.GetUserInfoWithRole(userId);
+                if (targetUserProfile == null)
                 {
                     return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "Student not found");
                 }
@@ -152,38 +153,63 @@ namespace CourseManagementService.Services.CourseManagement.Student
                 var visibilityEnumType = typeof(CourseProgressVisibility);
                 var listOfEnrolledCourses = new ListOfEnrolledCourses();
 
-                // Get user profile and list of courses belong to this user
-                var userProfileTask = _grpcUserService.GetUserInfoWithRole(userId);
-                var coursesTask = _context.CourseEnrollments
-                    .Where(x => x.StudentId == userId && (x.StudentId == currentUser.UserId 
-                        || x.VisibilityStatus == CourseProgressVisibility.Public))
-                    .Select(x => new EnrolledCourseInfo()
-                    {
-                        Id = x.CourseId,
-                        Name = x.Course.Name,
-                        ThumbnailURL = x.Course.ThumbnailURL,
-                        Description = x.Course.Description,
-                        TotalStudents = x.Course.Enrollments.Count,
-                        VisibilityStatus = new LookupDto()
-                        {
-                            Id = ((int)Enum.Parse(visibilityEnumType, x.VisibilityStatus.ToString())).ToString(),
-                            Name = Utils.GetEnumName(x.VisibilityStatus)
-                        },
-                        TotalLessons = x.Course.Chapters.Sum(ch => ch.Lessons.Count),
-                        Teacher = new TeacherDetail()
-                        {
-                            Id = x.Course.TeacherId
-                        }
-                    })
-                    .ToListAsync();
-
-                await Task.WhenAll(userProfileTask, coursesTask);
-                listOfEnrolledCourses.UserInfo = userProfileTask.Result;
-                listOfEnrolledCourses.Courses = coursesTask.Result;
-
-                if (listOfEnrolledCourses.Courses.Count > 0)
+                List<EnrolledCourseInfo> courses;
+                if (targetUserProfile.Roles.Contains(Constants.Role.TEACHER))
                 {
-                    await FillTeachersInfo(listOfEnrolledCourses.Courses);
+                    courses = await _context.Courses
+                        .Where(x => x.TeacherId == userId && x.IsPublished)
+                        .Select(x => new EnrolledCourseInfo()
+                        {
+                            Id = x.Id,
+                            Name = x.Name,
+                            ThumbnailURL = x.ThumbnailURL,
+                            Description = x.Description,
+                            TotalStudents = x.Enrollments.Count,
+                            VisibilityStatus = new LookupDto()
+                            {
+                                Id = ((int)Enum.Parse(visibilityEnumType, CourseProgressVisibility.Public.ToString())).ToString(),
+                                Name = Utils.GetEnumName(CourseProgressVisibility.Public)
+                            },
+                            TotalLessons = x.Chapters.Sum(ch => ch.Lessons.Count),
+                            Teacher = new TeacherDetail()
+                            {
+                                Id = x.TeacherId
+                            }
+                        })
+                        .ToListAsync();
+                }
+                else
+                {
+                    courses = await _context.CourseEnrollments
+                        .Where(x => x.StudentId == userId && (x.StudentId == currentUser.UserId
+                            || x.VisibilityStatus == CourseProgressVisibility.Public))
+                        .Select(x => new EnrolledCourseInfo()
+                        {
+                            Id = x.CourseId,
+                            Name = x.Course.Name,
+                            ThumbnailURL = x.Course.ThumbnailURL,
+                            Description = x.Course.Description,
+                            TotalStudents = x.Course.Enrollments.Count,
+                            VisibilityStatus = new LookupDto()
+                            {
+                                Id = ((int)Enum.Parse(visibilityEnumType, x.VisibilityStatus.ToString())).ToString(),
+                                Name = Utils.GetEnumName(x.VisibilityStatus)
+                            },
+                            TotalLessons = x.Course.Chapters.Sum(ch => ch.Lessons.Count),
+                            Teacher = new TeacherDetail()
+                            {
+                                Id = x.Course.TeacherId
+                            }
+                        })
+                        .ToListAsync();
+                }
+
+                listOfEnrolledCourses.UserInfo = targetUserProfile;
+                listOfEnrolledCourses.Courses = courses;
+                
+                await FillTeachersInfo(listOfEnrolledCourses.Courses);
+                if (targetUserProfile.Roles.Contains(Constants.Role.STUDENT))
+                {
 
                     var courseIds = listOfEnrolledCourses.Courses.Select(x => x.Id).ToList();
                     var courseIdsDict = listOfEnrolledCourses.Courses.ToDictionary(x => x.Id, x => x);
@@ -256,6 +282,11 @@ namespace CourseManagementService.Services.CourseManagement.Student
 
         private async Task FillTeachersInfo(List<EnrolledCourseInfo> courses)
         {
+            if (courses.Count == 0)
+            {
+                return;
+            }
+
             var teacherIds = courses.Select(x => x.Teacher.Id).Distinct().ToList();
 
             var teachersResponse = await _grpcUserService.GetListOfTeachers(teacherIds);
