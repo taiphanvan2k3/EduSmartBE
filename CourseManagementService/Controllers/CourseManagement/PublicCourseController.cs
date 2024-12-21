@@ -25,7 +25,6 @@ namespace CourseManagementService.Controllers.CourseManagement
             ?? throw new ArgumentNullException(nameof(listOfChaptersService));
         private readonly IPublicCourseDetailService _publicCourseDetailService = publicCourseDetailService
             ?? throw new ArgumentNullException(nameof(publicCourseDetailService));
-
         private readonly IListOfTagService _listOfTagService = listOfTagService
             ?? throw new ArgumentNullException(nameof(listOfTagService));
 
