@@ -6,7 +6,8 @@ const {
     getCourseTemplateById,
     createTemplateForCourse,
     updateTemplateForCourse,
-    deleteCourseTemplate
+    deleteCourseTemplate,
+    generateAchievement
 } = require("../services/achievement-templates/achievement-template-detail.service");
 
 module.exports = {
@@ -113,6 +114,31 @@ module.exports = {
         try {
             const courseTemplateId = req.params.id;
             const responseInfo = await deleteCourseTemplate(courseTemplateId);
+            res.json(responseInfo);
+        } catch (error) {
+            next(error);
+        }
+    },
+    generateAchievement: async (req, res, next) => {
+        try {
+            const currentUser = req.user;
+            const { courseId } = req.body;
+
+            if (!currentUser) {
+                return res.status(401).json({ message: "Unauthorized user" });
+            }
+
+            if (!courseId) {
+                return res
+                    .status(400)
+                    .json({ message: "Invalid request body" });
+            }
+
+            const responseInfo = await generateAchievement(
+                courseId,
+                currentUser.userId
+            );
+
             res.json(responseInfo);
         } catch (error) {
             next(error);
