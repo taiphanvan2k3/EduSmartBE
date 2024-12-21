@@ -13,11 +13,11 @@ namespace CourseManagementService.Extensions
 
             services.AddTransient<GeminiDelegatingHandler>();
 
+            // Khi inject GeminiClient vào các service khác, nó sẽ sử dụng cấu hình này, handler này thiết lập cho HttpClient
             services.AddHttpClient<GeminiClient>(
                 (serviceProvider, httpClient) =>
                 {
                     var geminiOptions = serviceProvider.GetRequiredService<IOptions<GeminiSetting>>().Value;
-
                     httpClient.BaseAddress = new Uri(geminiOptions.Url);
                 })
                 .AddHttpMessageHandler<GeminiDelegatingHandler>();
