@@ -1,10 +1,10 @@
 using AutoMapper;
-using Azure;
 using CourseManagementService.Common;
 using CourseManagementService.Common.Schemas;
 using CourseManagementService.Services.Cache;
 using CourseManagementService.Services.DiscussionManagement.Comments.Schemas;
 using CourseManagementService.Services.DiscussionManagement.Discussions;
+using CourseManagementService.Services.Gemini;
 using CourseManagementService.Services.Grpc.UserService;
 using Microsoft.EntityFrameworkCore;
 using TblComment = CourseManagementService.Database.Schemas.DiscussionEntities.Comment;
@@ -43,7 +43,7 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
         /// <para>Created at: 2024/11/30</para>
         /// <para>Created by: TaiPV</para>
         /// </summary>
-        public Task<ResponseInfo> UpdateCommentReaction(Guid commentId, ReactionRequestDto reactionRequestDto);
+        public Task<ResponseInfo> UpdateReactionOfComment(Guid commentId, ReactionRequestDto reactionRequestDto);
 
         /// <summary>
         /// Set a comment as deleted
@@ -73,6 +73,8 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
             ?? throw new ArgumentNullException(nameof(IGrpcUserService));
         private readonly ICacheService _cacheService = serviceProvider.GetService<ICacheService>()
             ?? throw new ArgumentNullException(nameof(ICacheService));
+        private readonly IUserContentValidationService _userContentValidationService = serviceProvider.GetService<IUserContentValidationService>()
+            ?? throw new ArgumentNullException(nameof(IUserContentValidationService));
 
         public async Task<ResponseInfo> GetReactions(Guid commentId)
         {
@@ -140,6 +142,7 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
             try
             {
                 LogInfo("Start", methodName);
+                var responseInfo = new ResponseInfo();
                 var currentUser = GetCurrentUser();
 
                 var discussionInfo = await _context.Discussions
@@ -167,6 +170,12 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                 if (parentComment == null && commentCreateDto.ParentId.HasValue)
                 {
                     return CreateEarlyResponseInfo(StatusCodes.Status400BadRequest, "Parent comment not found");
+                }
+
+                await ValidateCommentContent(commentCreateDto.Content, responseInfo);
+                if (!responseInfo.IsSuccess)
+                {
+                    return responseInfo;
                 }
 
                 var teacherIdOfCourse = await _discussionDetailService.GetTeacherIdOfCourse(commentCreateDto.DiscussionId);
@@ -206,18 +215,19 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                         ? "Teacher" : "Student";
                 }
 
-                var responseInfo = new ResponseInfo();
                 responseInfo.Data.Add("comment", commentDto);
-
                 await _cacheService.RemoveDataByPattern($"DiscussionInCourse:{discussionInfo.CourseId}:{currentUser.UserId}_ReplyByMe");
 
-                LogInfo("End", methodName);
                 return responseInfo;
             }
             catch (Exception e)
             {
                 LogError(e, methodName);
                 throw;
+            }
+            finally
+            {
+                LogInfo("End", methodName);
             }
         }
 
@@ -227,6 +237,7 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
             try
             {
                 LogInfo("Start", methodName);
+                var responseInfo = new ResponseInfo();
                 var currentUser = GetCurrentUser();
 
                 var canModifyCommentResponse = await CanModifyComment(commentUpdateDto.Id, currentUser.UserId);
@@ -236,6 +247,13 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                 }
 
                 var commentEntity = canModifyCommentResponse.Data["comment"] as TblComment;
+
+                await ValidateCommentContent(commentUpdateDto.Content, responseInfo);
+                if (!responseInfo.IsSuccess)
+                {
+                    return responseInfo;
+                }
+
                 commentEntity.Content = commentUpdateDto.Content;
                 await _context.SaveChangesAsync();
 
@@ -247,7 +265,6 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                     commentDto.CreatedBy = createdBy;
                 }
 
-                var responseInfo = new ResponseInfo();
                 responseInfo.Data.Add("comment", commentDto);
 
                 LogInfo("End", methodName);
@@ -260,7 +277,7 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
             }
         }
 
-        public async Task<ResponseInfo> UpdateCommentReaction(Guid commentId, ReactionRequestDto reactionRequestDto)
+        public async Task<ResponseInfo> UpdateReactionOfComment(Guid commentId, ReactionRequestDto reactionRequestDto)
         {
             var methodName = GetActualAsyncMethodName();
             try
@@ -435,6 +452,16 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
             }
 
             return new ResponseInfo(resource: "comment", commentEntity);
+        }
+
+        private async Task ValidateCommentContent(string content, ResponseInfo responseInfo)
+        {
+            var geminiResponse = await _userContentValidationService.ValidateUserContentAsync(content);
+            if (!geminiResponse.IsSuccess)
+            {
+                responseInfo.StatusCode = geminiResponse.StatusCode;
+                responseInfo.Message = geminiResponse.Message;
+            }
         }
     }
 }
