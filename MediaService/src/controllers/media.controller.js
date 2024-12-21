@@ -1,6 +1,7 @@
 const createError = require("http-errors");
 const { uploadCloudinary } = require("../helpers/init-cloudinary");
 const MediaService = require("../services/media.service");
+const { createAchievement } = require("../services/canvas.service");
 
 module.exports = {
     getMedia: async (req, res, next) => {
@@ -80,5 +81,16 @@ module.exports = {
             console.log(error.message);
             next(error);
         }
+    },
+    createAchievement: async (req, res, next) => {
+        const { studentName, courseName } = req.body;
+
+        await createAchievement(studentName, courseName).catch((err) =>
+            console.error("Lỗi:", err)
+        );
+
+        res.json({
+            message: "Achievement created successfully"
+        });
     }
 };
