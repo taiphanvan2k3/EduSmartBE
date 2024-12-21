@@ -5,6 +5,8 @@ const {
     createEarlyErrorResponse,
     createResponseInfo
 } = require("../../helpers/response-info-helper");
+const { checkStudentCompletedCourse } = require("../grpc/grpc-course.service");
+const { createAchievement } = require("../canvas.service");
 
 /**
  * Get course template by id
@@ -212,6 +214,58 @@ const deleteCourseTemplate = async (courseTemplateId) => {
     }
 };
 
+const generateAchievement = async (courseId, studentId) => {
+    const caller = "generateAchievement";
+    try {
+        logInfo(caller, "Start");
+        const grpcResponse = await checkStudentCompletedCourse(
+            courseId,
+            studentId
+        );
+
+        if (!grpcResponse.isSuccess) {
+            return createEarlyErrorResponse(
+                500,
+                "Internal Server Error",
+                grpcResponse.message
+            );
+        }
+
+        if (!grpcResponse.isCompleted) {
+            return createEarlyErrorResponse(
+                400,
+                "Bad Request",
+                "Student has not completed the course"
+            );
+        }
+
+        const defaultTemplate = await getDefaultTemplateOfCourse(courseId);
+        if (!defaultTemplate) {
+            return createEarlyErrorResponse(
+                404,
+                "Not Found",
+                "Your teacher has not created any template for this course"
+            );
+        }
+
+        const achievementURL = await createAchievement(
+            defaultTemplate.AchievementTemplateId,
+            grpcResponse.studentName,
+            grpcResponse.courseName,
+            grpcResponse.teacherName,
+            defaultTemplate.StudentNameTextStyle,
+            defaultTemplate.CourseNameTextStyle,
+            defaultTemplate.DateTextStyle,
+            defaultTemplate.TeacherNameTextStyle
+        );
+
+        logInfo(caller, "End");
+        return createResponseInfo("achievementURL", achievementURL);
+    } catch (error) {
+        logError(caller, error);
+    }
+};
+
 /**
  * Check if the request is valid for creating a course template
  * @author TaiPV
@@ -258,9 +312,31 @@ const isValidCourseTemplateRequest = async (
     return errorMessage;
 };
 
+const getDefaultTemplateOfCourse = async (courseId) => {
+    const caller = "getDefaultTemplateForCourse";
+    try {
+        logInfo(caller, "Start");
+
+        const query = `
+            SELECT "AchievementTemplateId", "CourseNameTextStyle", "StudentNameTextStyle", "DateTextStyle", "TeacherNameTextStyle"
+            FROM "CourseAchievementTemplates"
+            WHERE "CourseId" = $1
+            ORDER BY "IsDefault" DESC
+        `;
+
+        const { rows } = await pool.query(query, [courseId]);
+        return rows[0];
+    } catch (error) {
+        logError(caller, error);
+    } finally {
+        logInfo(caller, "End");
+    }
+};
+
 module.exports = {
     getCourseTemplateById,
     createTemplateForCourse,
     updateTemplateForCourse,
-    deleteCourseTemplate
+    deleteCourseTemplate,
+    generateAchievement
 };

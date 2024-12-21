@@ -4,6 +4,7 @@ using CourseManagementService.Common;
 using CourseManagementService.Database;
 using CourseManagementService.Enumerations;
 using CourseManagementService.Services.Cache;
+using CourseManagementService.Services.Grpc.UserService;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +12,9 @@ using TblCourseEnrollment = CourseManagementService.Database.Schemas.CourseEnrol
 
 namespace CourseManagementService.GrpcServices
 {
-    public class GrpcCourseService(DataContext context, ILogger<GrpcCourseService> logger, ICacheService cacheService,
+    public class GrpcCourseService(DataContext context, ILogger<GrpcCourseService> logger,
+        ICacheService cacheService,
+        IGrpcUserService grpcUserService,
         CommonProducer commonProducer)
         : Course.CourseBase
     {
@@ -23,6 +26,8 @@ namespace CourseManagementService.GrpcServices
             ?? throw new ArgumentNullException(nameof(cacheService));
         private readonly CommonProducer _commonProducer = commonProducer
             ?? throw new ArgumentNullException(nameof(commonProducer));
+        private readonly IGrpcUserService _grpcUserService = grpcUserService
+            ?? throw new ArgumentNullException(nameof(grpcUserService));
 
         protected static string GetActualAsyncMethodName([CallerMemberName] string name = null) => name;
 
@@ -211,6 +216,56 @@ namespace CourseManagementService.GrpcServices
             {
                 _logger.LogError(e, "[GrpcCourseService] [{Method}] Error", methodName);
                 throw;
+            }
+        }
+
+        public override async Task<CheckStudentCompletedCourseResponse> CheckStudentCompletedCourse(CheckStudentCompletedCourseRequest request, ServerCallContext context)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                _logger.LogInformation("[GrpcCourseService] [{Method}] Start", methodName);
+                var responseInfo = new CheckStudentCompletedCourseResponse();
+
+                var courseId = Guid.Parse(request.CourseId);
+                var courseCompletion = await _context.CourseEnrollments
+                    .Where(ce => ce.CourseId == courseId && ce.StudentId == request.StudentId && ce.IsCompleted)
+                    .Select(ce => new
+                    {
+                        ce.IsCompleted,
+                        ce.Course.Name,
+                        ce.Course.TeacherId
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (courseCompletion == null)
+                {
+                    responseInfo.IsSuccess = false;
+                    responseInfo.Message = "Student has not completed this course";
+                    return responseInfo;
+                }
+
+                responseInfo.IsCompleted = courseCompletion.IsCompleted;
+                responseInfo.IsSuccess = true;
+
+                if (responseInfo.IsCompleted)
+                {
+                    var studentTeacherInfo = await _grpcUserService.GetListOfUsers([request.StudentId, courseCompletion.TeacherId]);
+                    responseInfo.StudentName = studentTeacherInfo.FirstOrDefault(u => u.Id == request.StudentId)?.FullName ?? "N/A";
+                    responseInfo.TeacherName = studentTeacherInfo.FirstOrDefault(u => u.Id == courseCompletion.TeacherId)?.FullName ?? "N/A";
+                    responseInfo.CourseName = courseCompletion.Name;
+                }
+
+                return responseInfo;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[GrpcCourseService] [{Method}] Error", methodName);
+                throw;
+            }
+            finally
+            {
+                _logger.LogInformation("[GrpcCourseService] [{Method}] End", methodName);
             }
         }
 

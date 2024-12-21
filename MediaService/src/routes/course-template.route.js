@@ -5,7 +5,7 @@ const {
     isAllowForRoles
 } = require("../middlewares/auth");
 
-const TemplateController = require("../controllers/achievement-template.controller");
+const templateController = require("../controllers/achievement-template.controller");
 
 /**
  * @swagger
@@ -41,7 +41,7 @@ router.get(
     "/:id",
     verifyTokenAndAttachUser,
     isAllowForRoles(["Teacher"]),
-    TemplateController.getCourseTemplateById
+    templateController.getCourseTemplateById
 );
 
 /**
@@ -82,7 +82,7 @@ router.get(
     "/my-templates",
     verifyTokenAndAttachUser,
     isAllowForRoles(["Teacher"]),
-    TemplateController.getCourseTemplates
+    templateController.getCourseTemplates
 );
 
 /**
@@ -184,7 +184,7 @@ router.post(
     "/",
     verifyTokenAndAttachUser,
     isAllowForRoles(["Teacher"]),
-    TemplateController.createCourseTemplate
+    templateController.createCourseTemplate
 );
 
 /**
@@ -287,7 +287,7 @@ router.put(
     "/:id",
     verifyTokenAndAttachUser,
     isAllowForRoles(["Teacher"]),
-    TemplateController.updateCourseTemplate
+    templateController.updateCourseTemplate
 );
 
 /**
@@ -326,7 +326,7 @@ router.delete(
     "/:id",
     verifyTokenAndAttachUser,
     isAllowForRoles(["Teacher"]),
-    TemplateController.deleteCourseTemplate
+    templateController.deleteCourseTemplate
 );
 
 /**
