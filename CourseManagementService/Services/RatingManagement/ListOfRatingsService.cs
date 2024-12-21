@@ -89,8 +89,8 @@ namespace CourseManagementService.Services.RatingManagement
                     {
                         courseRating.User = userTemp;
                         courseRating.User.RoleInCourse = teacherIdInCourse == courseRating.User.Id
-                            ? RoleInCourse.TEACHER
-                            : RoleInCourse.STUDENT;
+                            ? Role.TEACHER
+                            : Role.STUDENT;
                     }
                 }
 
