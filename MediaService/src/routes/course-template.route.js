@@ -9,16 +9,49 @@ const TemplateController = require("../controllers/achievement-template.controll
 
 /**
  * @swagger
+ * /media-service/api/course-templates/{id}:
+ *   get:
+ *     summary: |
+ *       Get the course template information by ID
+ *       Created At: 2024/12/21
+ *       Created by: TaiPV
+ *     tags:
+ *       - Achievements
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The unique identifier for the course template.
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: A list of course templates associated with the provided courseId.
+ *         content:
+ *           application/json:
+ *             schema:
+ *                $ref: '#/components/schemas/CourseTemplate'
+ *       404:
+ *         description: No course template found for the given ID.
+ *     security:
+ *       - BearerAuth: []
+ */
+router.get(
+    "/:id",
+    verifyTokenAndAttachUser,
+    isAllowForRoles(["Teacher"]),
+    TemplateController.getCourseTemplateById
+);
+
+/**
+ * @swagger
  * /media-service/api/course-templates/my-templates:
  *   get:
  *     summary: |
  *       Get all the created course templates in a the course
  *       Created At: 2024/12/16
  *       Created by: TaiPV
- *     description: |
- *       Retrieve all course templates associated with a specific course. You need to provide the `courseId` to fetch the templates.
- *     createdAt: 2024/12/13
- *     createdBy: TaiPV
  *     tags:
  *       - Achievements
  *     parameters:
@@ -39,7 +72,7 @@ const TemplateController = require("../controllers/achievement-template.controll
  *               items:
  *                 $ref: '#/components/schemas/CourseTemplate'
  *       400:
- *         description: Bad request, possibly due to missing or invalid courseId.
+ *         description: Invalid request query
  *       404:
  *         description: No templates found for the given courseId.
  *     security:
@@ -152,6 +185,148 @@ router.post(
     verifyTokenAndAttachUser,
     isAllowForRoles(["Teacher"]),
     TemplateController.createCourseTemplate
+);
+
+/**
+ * @swagger
+ * /media-service/api/course-templates/{id}:
+ *   put:
+ *     summary: |
+ *       Update the course template for the course
+ *       Created At: 2024/12/21
+ *       Created by: TaiPV
+ *     tags:
+ *       - Achievements
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The unique identifier for the course template.
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               isDefault:
+ *                 type: boolean
+ *                 example: true
+ *               studentStyle:
+ *                 type: object
+ *                 properties:
+ *                   fontFamily:
+ *                     type: string
+ *                     example: Arial
+ *                   fontSize:
+ *                     type: string
+ *                     example: "12px"
+ *                   color:
+ *                     type: string
+ *                     example: "#000000"
+ *               courseNameStyle:
+ *                 type: object
+ *                 properties:
+ *                   fontFamily:
+ *                     type: string
+ *                     example: Times New Roman
+ *                   fontSize:
+ *                     type: string
+ *                     example: "14px"
+ *                   color:
+ *                     type: string
+ *                     example: "#333333"
+ *               dateStyle:
+ *                 type: object
+ *                 properties:
+ *                   fontFamily:
+ *                     type: string
+ *                     example: Verdana
+ *                   fontSize:
+ *                     type: string
+ *                     example: "10px"
+ *                   color:
+ *                     type: string
+ *                     example: "#666666"
+ *               teacherNameStyle:
+ *                 type: object
+ *                 properties:
+ *                   fontFamily:
+ *                     type: string
+ *                     example: Helvetica
+ *                   fontSize:
+ *                     type: string
+ *                     example: "12px"
+ *                   color:
+ *                     type: string
+ *                     example: "#111111"
+ *             required:
+ *               - templateId
+ *               - studentStyle
+ *               - courseNameStyle
+ *               - dateStyle
+ *               - teacherNameStyle
+ *     responses:
+ *       200:
+ *         description: Response info
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   format: uuid
+ *     security:
+ *       - BearerAuth: []
+ */
+router.put(
+    "/:id",
+    verifyTokenAndAttachUser,
+    isAllowForRoles(["Teacher"]),
+    TemplateController.updateCourseTemplate
+);
+
+/**
+ * @swagger
+ * /media-service/api/course-templates/{id}:
+ *   delete:
+ *     summary: |
+ *       Update the course template for the course
+ *       Created At: 2024/12/21
+ *       Created by: TaiPV
+ *     tags:
+ *       - Achievements
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The unique identifier for the course template.
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Response info
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                id:
+ *                 type: string
+ *                 format: uuid
+ *     security:
+ *       - BearerAuth: []
+ */
+router.delete(
+    "/:id",
+    verifyTokenAndAttachUser,
+    isAllowForRoles(["Teacher"]),
+    TemplateController.deleteCourseTemplate
 );
 
 /**

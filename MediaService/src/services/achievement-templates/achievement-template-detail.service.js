@@ -2,10 +2,44 @@ const pool = require("../../configs/database");
 const { v4: uuidv4 } = require("uuid");
 const { logInfo, logError } = require("../logger.service");
 const {
-    createEarlyErrorResponse
+    createEarlyErrorResponse,
+    createResponseInfo
 } = require("../../helpers/response-info-helper");
 
-async function createTemplateForCourse(courseTemplateRequest) {
+/**
+ * Get course template by id
+ * @author TaiPV
+ * @createdDate 2024/12/21
+ * @param {Guid} courseTemplateId - Id of course template
+ */
+const getCourseTemplateById = async (courseTemplateId) => {
+    const caller = "getCourseTemplateById";
+    try {
+        logInfo(caller, "Start");
+
+        const query = `
+            SELECT "CourseId", "AchievementTemplateId", "CourseNameTextStyle", "StudentNameTextStyle", "DateTextStyle", "TeacherNameTextStyle", "IsDefault"
+            FROM "CourseAchievementTemplates"
+            WHERE "Id" = $1
+        `;
+
+        const { rows } = await pool.query(query, [courseTemplateId]);
+        return rows[0];
+    } catch (error) {
+        logError(caller, error);
+    } finally {
+        logInfo(caller, "End");
+    }
+};
+
+/**
+ * Teacher creates a template for a course
+ * @author TaiPV
+ * @createdDate 2024/12/17
+ * @param {object} courseTemplateRequest
+ * @returns {Guid} - Id of created course template
+ */
+const createTemplateForCourse = async (courseTemplateRequest) => {
     const caller = "createTemplateForCourse";
     try {
         logInfo(caller, "Start");
@@ -19,7 +53,7 @@ async function createTemplateForCourse(courseTemplateRequest) {
             teacherNameStyle
         } = courseTemplateRequest;
 
-        const errorMessage = await isValidCourseTemplateCreationRequest(
+        const errorMessage = await isValidCourseTemplateRequest(
             courseId,
             templateId,
             isDefault
@@ -56,19 +90,142 @@ async function createTemplateForCourse(courseTemplateRequest) {
         ];
 
         const { rows } = await pool.query(query, values);
-        return rows[0];
+        return createResponseInfo("Id", rows[0].Id);
     } catch (error) {
         logError(caller, error);
         throw error;
     } finally {
         logInfo(caller, "End");
     }
-}
+};
 
-const isValidCourseTemplateCreationRequest = async (
+/**
+ * Teacher updates a template for a course
+ * @author TaiPV
+ * @createdDate 2024/12/17
+ * @param {Guid} courseTemplateId - Id of course template
+ * @param {object} courseTemplateRequest
+ * @returns {Promise<object>} - Updated course template
+ */
+const updateTemplateForCourse = async (
+    courseTemplateId,
+    courseTemplateRequest
+) => {
+    const caller = "createTemplateForCourse";
+    try {
+        logInfo(caller, "Start");
+        const {
+            isDefault,
+            studentStyle,
+            courseNameStyle,
+            dateStyle,
+            teacherNameStyle
+        } = courseTemplateRequest;
+
+        const findCourseTemplateQuery = `
+            SELECT "CourseId", "AchievementTemplateId"
+            FROM "CourseAchievementTemplates"
+            WHERE "Id" = $1
+        `;
+
+        const { rows: courseTemplateRows } = await pool.query(
+            findCourseTemplateQuery,
+            [courseTemplateId]
+        );
+
+        if (courseTemplateRows.length == 0) {
+            return createEarlyErrorResponse(
+                404,
+                "Not Found",
+                "Course template not found"
+            );
+        }
+
+        const errorMessage = await isValidCourseTemplateRequest(
+            courseTemplateRows[0].CourseId,
+            courseTemplateRows[0].AchievementTemplateId,
+            isDefault,
+            true
+        );
+
+        if (errorMessage) {
+            return createEarlyErrorResponse(400, "Bad Request", errorMessage);
+        }
+
+        const query = `
+            UPDATE "CourseAchievementTemplates"
+            SET
+                "CourseNameTextStyle" = $1,
+                "StudentNameTextStyle" = $2,
+                "DateTextStyle" = $3,
+                "TeacherNameTextStyle" = $4,
+                "IsDefault" = $5
+            WHERE "Id" = $6
+            RETURNING *;
+        `;
+
+        const values = [
+            courseNameStyle,
+            studentStyle,
+            dateStyle,
+            teacherNameStyle,
+            isDefault,
+            courseTemplateId
+        ];
+
+        const { rows } = await pool.query(query, values);
+        return createResponseInfo("courseTemplate", rows[0]);
+    } catch (error) {
+        logError(caller, error);
+        throw error;
+    } finally {
+        logInfo(caller, "End");
+    }
+};
+
+const deleteCourseTemplate = async (courseTemplateId) => {
+    const caller = "deleteCourseTemplate";
+    try {
+        logInfo(caller, "Start");
+
+        const query = `
+            DELETE FROM "CourseAchievementTemplates"
+            WHERE "Id" = $1
+        `;
+
+        const { rowCount } = await pool.query(query, [courseTemplateId]);
+
+        if (rowCount == 0) {
+            return createEarlyErrorResponse(
+                404,
+                "Not Found",
+                "Course template not found"
+            );
+        }
+
+        return createResponseInfo("id", courseTemplateId);
+    } catch (error) {
+        logError(caller, error);
+        throw error;
+    } finally {
+        logInfo(caller, "End");
+    }
+};
+
+/**
+ * Check if the request is valid for creating a course template
+ * @author TaiPV
+ * @createdDate 2024/12/15
+ * @param {Guid} courseId
+ * @param {number} templateId - Range from 1 to 6
+ * @param {boolean} isDefault - True if the template is default
+ * @returns {Promise<string>} - Error message if the request is invalid, otherwise return empty string
+ */
+const isValidCourseTemplateRequest = async (
     courseId,
     templateId,
-    isDefault
+    isDefault,
+    isEdit = false
 ) => {
     // Kiểm tra xem đã thêm template này chưa và đã tồn tại template nào là default chưa
     const checkQuery = `
@@ -92,7 +249,7 @@ const isValidCourseTemplateCreationRequest = async (
         ) {
             errorMessage = "Default template is existed in course";
             break;
-        } else if (row.AchievementTemplateId == templateId) {
+        } else if (row.AchievementTemplateId == templateId && !isEdit) {
             errorMessage = "Template is existed in course";
             break;
         }
@@ -102,5 +259,8 @@ const isValidCourseTemplateCreationRequest = async (
 };
 
 module.exports = {
-    createTemplateForCourse
+    getCourseTemplateById,
+    createTemplateForCourse,
+    updateTemplateForCourse,
+    deleteCourseTemplate
 };
