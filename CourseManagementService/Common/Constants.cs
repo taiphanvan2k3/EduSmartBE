@@ -20,7 +20,7 @@ namespace CourseManagementService.Common
 
         public static readonly string IN_PROGRESS_THUMBNAIL = "https://res.cloudinary.com/da1aqhx1g/image/upload/f_auto,q_auto/v1/default-assets/rklr1cd3da0mkulzjq6b";
 
-        public static class RoleInCourse
+        public static class Role
         {
             public const string TEACHER = "Teacher";
 
