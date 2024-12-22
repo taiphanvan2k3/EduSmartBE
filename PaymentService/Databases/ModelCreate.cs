@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PaymentService.Commons.Helpers;
+using PaymentService.Commons.Schemas;
 using PaymentService.Databases.Schemas;
 
 namespace PaymentService.Databases
@@ -73,6 +74,20 @@ namespace PaymentService.Databases
                 entity.ToTable("WithdrawalRequests");
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Id).ValueGeneratedNever();
+
+                entity.HasIndex(e => e.UserId);
+
+                entity.Property(e => e.Currency)
+                    .HasConversion<string>()
+                    .IsRequired()
+                    .HasMaxLength(3);
+
+                entity.Property(e => e.CreatorInfo)
+                    .HasColumnType("jsonb")
+                    .HasConversion(
+                        v => JsonSerializerUtils.Serialize(v),
+                        v => JsonSerializerUtils.Deserialize<CreatorInfo>(v)
+                    );
             });
 
             modelBuilder.Entity<StorageInfo>(entity =>
