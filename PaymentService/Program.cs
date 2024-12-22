@@ -9,6 +9,7 @@ using PaymentService.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using PaymentService.AsyncDataServices;
 using PaymentService.EventProcessing;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.UseCustomLog(Constants.SERVICE_NAME);
@@ -39,7 +40,13 @@ builder.Services.AddScoped(x =>
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddCustomCorsConfig();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Sử dụng camelCase cho tên property của JSON response -> cho việc tạo camelCase cho example của ProduceResponse
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    });
+
 builder.Services.AddAuthorization();
 builder.Services.AddGrpc();
 

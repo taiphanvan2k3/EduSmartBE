@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using PaymentService.Commons.Schemas;
 using PaymentService.Enumerations;
 
 namespace PaymentService.Databases.Schemas
@@ -10,6 +11,8 @@ namespace PaymentService.Databases.Schemas
         public int UserId { get; set; }
 
         public decimal Amount { get; set; }
+
+        public CurrencyType Currency { get; set; }
 
         public Guid BankAccountId { get; set; }
 
@@ -23,6 +26,8 @@ namespace PaymentService.Databases.Schemas
         public DateTimeOffset? ApprovedAt { get; set; }
 
         public int ApprovedBy { get; set; }
+
+        public CreatorInfo CreatorInfo { get; set; }
 
         public virtual BankAccount BankAccount { get; set; }
 

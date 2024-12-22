@@ -1,5 +1,5 @@
-using AutoMapper;
-using PaymentService.Commons;
+using Microsoft.EntityFrameworkCore;
+using PaymentService.Commons.Helpers;
 using PaymentService.Commons.Schemas;
 using PaymentService.Extensions;
 using PaymentService.Services.WithdrawalRequests.Schemas;
@@ -8,47 +8,57 @@ namespace PaymentService.Services.WithdrawalRequests
 {
     public interface IListOfWithdrawalRequestService
     {
-
         /// <summary>
         /// Get withdrawal requests
-        /// <para>Author: ManhTD</para>
-        /// <para>Created at: 9/11/2024</para>
+        /// <para>Author: ManhTD - Created at: 9/11/2024</para>
+        /// <para>Author: TaiPV - Updated at: 22/12/2024</para>
         /// </summary>
-        /// <param name="searchCondition"></param>
         /// <returns></returns>
-        Task<PaginatedList<WithdrawalRequestDto>> GetWithdrawalRequestsAsync(SearchCondition searchCondition);
+        Task<PaginatedList<WithdrawalRequestForAdmin>> GetWithdrawalRequestsAsync(WithdrawalRequestSearchConditionForAdmin searchCondition);
 
         /// <summary>
         /// Get withdrawal requests by user id
-        /// <para>Author: ManhTD</para>
-        /// <para>Created at: 9/11/2024</para>
+        /// <para>Author: ManhTD - Created at: 9/11/2024</para>
+        /// <para>Author: TaiPV - Updated at: 22/12/2024</para>
         /// </summary>
-        /// <param name="userId"></param>
-        /// <param name="searchCondition"></param>
         /// <returns></returns>
-        Task<PaginatedList<WithdrawalRequestDto>> GetWithdrawalRequestsByUserIdAsync(int userId, SearchCondition searchCondition);
+        Task<PaginatedList<WithdrawalRequestDto>> GetWithdrawalRequestsByUserIdAsync(int userId,
+            WithdrawalRequestSearchCondition searchCondition);
     }
 
     public class ListOfWithdrawalRequestService(IServiceProvider serviceProvider,
         ILogger<ListOfWithdrawalRequestService> logger) : BaseService(serviceProvider, logger), IListOfWithdrawalRequestService
     {
-        public async Task<PaginatedList<WithdrawalRequestDto>> GetWithdrawalRequestsAsync(SearchCondition searchCondition)
+        public async Task<PaginatedList<WithdrawalRequestForAdmin>> GetWithdrawalRequestsAsync(WithdrawalRequestSearchConditionForAdmin searchCondition)
         {
             var methodName = GetActualAsyncMethodName();
             try
             {
                 _logger.LogInformation("[ListOfWithdrawalRequestService] [{Method}] Start", methodName);
-                searchCondition.SearchInput = searchCondition.SearchInput.Trim();
+                searchCondition.SearchInput = searchCondition.SearchInput.Trim().ToLower();
+                searchCondition.FromDate = searchCondition.FromDate?.ToUniversalTime();
+                searchCondition.ToDate = searchCondition.ToDate?.ToUniversalTime();
 
                 var withdrawalRequestsQuery = _context.WithdrawalRequests
                     .Where(x =>
                         string.IsNullOrEmpty(searchCondition.SearchInput) ||
-                        x.BankAccount.AccountName.Contains(searchCondition.SearchInput))
-                    .Select(x => new WithdrawalRequestDto()
+                        x.CreatorInfo.Email.Contains(searchCondition.SearchInput) ||
+                        x.CreatorInfo.Username.Contains(searchCondition.SearchInput) ||
+                        EF.Functions.ILike(x.CreatorInfo.FullName, $"%{searchCondition.SearchInput}%")
+                    )
+                    .Where(x =>
+                        (!searchCondition.FromDate.HasValue || x.RequestedAt >= searchCondition.FromDate) &&
+                        (!searchCondition.ToDate.HasValue || x.RequestedAt <= searchCondition.ToDate)
+                    )
+                    .OrderByDescending(x => x.RequestedAt)
+                    .Select(x => new WithdrawalRequestForAdmin()
                     {
                         Id = x.Id,
                         UserId = x.UserId,
+                        CreatorInfo = x.CreatorInfo,
                         Amount = x.Amount,
+                        Currency = x.Currency.ToString(),
+                        AmountInBaseCurrency = Utils.ConvertToBaseCurrency(x.Amount, x.Currency),
                         BankAccountId = x.BankAccountId,
                         Status = x.Status,
                         RequestedAt = x.RequestedAt,
@@ -70,22 +80,29 @@ namespace PaymentService.Services.WithdrawalRequests
             }
         }
 
-        public async Task<PaginatedList<WithdrawalRequestDto>> GetWithdrawalRequestsByUserIdAsync(int userId, SearchCondition searchCondition)
+        public async Task<PaginatedList<WithdrawalRequestDto>> GetWithdrawalRequestsByUserIdAsync(int userId, WithdrawalRequestSearchCondition searchCondition)
         {
             var methodName = GetActualAsyncMethodName();
             try
             {
                 _logger.LogInformation("[ListOfWithdrawalRequestService] [{Method}] Start", methodName);
-                searchCondition.SearchInput = searchCondition.SearchInput.Trim();
+
+                searchCondition.FromDate = searchCondition.FromDate?.ToUniversalTime();
+                searchCondition.ToDate = searchCondition.ToDate?.ToUniversalTime();
 
                 var withdrawalRequestsQuery = _context.WithdrawalRequests
+                    .Where(x => x.UserId == userId)
                     .Where(x =>
-                        x.UserId == userId)
+                        (!searchCondition.FromDate.HasValue || x.RequestedAt >= searchCondition.FromDate) &&
+                        (!searchCondition.ToDate.HasValue || x.RequestedAt <= searchCondition.ToDate)
+                    )
+                    .OrderByDescending(x => x.RequestedAt)
                     .Select(x => new WithdrawalRequestDto()
                     {
                         Id = x.Id,
                         UserId = x.UserId,
                         Amount = x.Amount,
+                        Currency = x.Currency.ToString(),
                         BankAccountId = x.BankAccountId,
                         Status = x.Status,
                         RequestedAt = x.RequestedAt,
@@ -95,7 +112,8 @@ namespace PaymentService.Services.WithdrawalRequests
                         BankAccountName = x.BankAccount.AccountName
                     });
 
-                var paginatedWithdrawalRequests = await withdrawalRequestsQuery.ToPaginatedListAsync(searchCondition.CurrentPage, searchCondition.PageSize);
+                var paginatedWithdrawalRequests = await withdrawalRequestsQuery
+                    .ToPaginatedListAsync(searchCondition.CurrentPage, searchCondition.PageSize);
 
                 _logger.LogInformation("[ListOfWithdrawalRequestService] [{Method}] End", methodName);
                 return paginatedWithdrawalRequests;

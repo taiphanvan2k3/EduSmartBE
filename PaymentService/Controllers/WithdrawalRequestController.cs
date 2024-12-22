@@ -10,16 +10,15 @@ namespace PaymentService.Controllers
     [Route("payment-service/api/withdrawal-requests")]
     [ApiController]
     public class WithdrawalRequestController(IListOfWithdrawalRequestService listOfWithdrawalRequestService,
-        IWithdrawalRequestService withdrawalRequestService) : ControllerBase
+        IWithdrawalRequestDetailService withdrawalRequestDetailService) : BaseController
     {
         private readonly IListOfWithdrawalRequestService _listOfWithdrawalRequestService = listOfWithdrawalRequestService
             ?? throw new ArgumentNullException(nameof(listOfWithdrawalRequestService));
-
-        private readonly IWithdrawalRequestService _withdrawalRequestService = withdrawalRequestService
-            ?? throw new ArgumentNullException(nameof(withdrawalRequestService));
+        private readonly IWithdrawalRequestDetailService _withdrawalRequestService = withdrawalRequestDetailService
+            ?? throw new ArgumentNullException(nameof(withdrawalRequestDetailService));
 
         /// <summary>
-        /// Get withdrawal requests
+        /// Admin get withdrawal requests from teacher
         /// <para>Created at: 9/11/2024</para>
         /// <para>Created by ManhTD</para>
         /// </summary>
@@ -30,7 +29,7 @@ namespace PaymentService.Controllers
         [Filters.Auth(Roles = "Admin")]
         [HttpGet]
         [ProducesResponseType(typeof(PaginatedList<WithdrawalRequestDto>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetWithdrawalRequests([FromQuery] SearchCondition searchCondition)
+        public async Task<IActionResult> GetWithdrawalRequests([FromQuery] WithdrawalRequestSearchConditionForAdmin searchCondition)
         {
             try
             {
@@ -44,7 +43,7 @@ namespace PaymentService.Controllers
         }
 
         /// <summary>
-        /// Get withdrawal requests by user id
+        /// Teachers get their withdrawal requests
         /// <para>Created at: 9/11/2024</para>
         /// <para>Created by ManhTD</para>
         /// </summary>
@@ -59,12 +58,11 @@ namespace PaymentService.Controllers
         [Filters.Auth(Roles = "Teacher")]
         [HttpGet("my-withdrawal-requests")]
         [ProducesResponseType(typeof(PaginatedList<WithdrawalRequestDto>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetWithdrawalRequestsByUserId([FromQuery] SearchCondition searchCondition)
+        public async Task<IActionResult> GetWithdrawalRequestsByUserId([FromQuery] WithdrawalRequestSearchCondition searchCondition)
         {
             try
             {
                 var userId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "userId")?.Value;
-
                 var withdrawalRequests = await _listOfWithdrawalRequestService.GetWithdrawalRequestsByUserIdAsync(int.Parse(userId), searchCondition);
                 return Ok(withdrawalRequests);
             }
@@ -86,12 +84,12 @@ namespace PaymentService.Controllers
         [Filters.Auth(Roles = "Teacher")]
         [HttpPost]
         [ProducesResponseType(typeof(ResponseInfo), StatusCodes.Status200OK)]
-        public async Task<IActionResult> AddWithdrawalRequest([FromBody] WithdrawalRequestPost withdrawalRequest)
+        public async Task<IActionResult> CreateWithdrawalRequest([FromBody] WithdrawalRequestPost withdrawalRequest)
         {
             try
             {
-                var response = await _withdrawalRequestService.AddWithdrawalRequestAsync(withdrawalRequest);
-                return Ok(response);
+                var response = await _withdrawalRequestService.CreateWithdrawalRequestAsync(withdrawalRequest);
+                return HandleResponseInfo(response, resourceName: "id");
             }
             catch (Exception e)
             {
