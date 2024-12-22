@@ -5,20 +5,13 @@ using PaymentService.Enumerations;
 using PaymentService.Services.WithdrawalRequests.Schemas;
 using TblWithdrawalRequest = PaymentService.Databases.Schemas.WithdrawalRequest;
 using TblTeacherEarning = PaymentService.Databases.Schemas.TeacherEarning;
+using PaymentService.Commons.Schemas;
+using PaymentService.Commons.Helpers;
 
 namespace PaymentService.Services.WithdrawalRequests
 {
-    public interface IWithdrawalRequestService
+    public interface IWithdrawalRequestDetailService
     {
-        /// <summary>
-        /// Add withdrawal request
-        /// <para>Author: ManhTD</para>
-        /// <para>Created at: 9/11/2024</para>
-        /// </summary>
-        /// <param name="withdrawalRequest"></param>
-        /// <returns></returns>
-        Task<ResponseInfo> AddWithdrawalRequestAsync(WithdrawalRequestPost withdrawalRequest);
-
         /// <summary>
         /// Get withdrawal request by id
         /// <para>Author: ManhTD</para>
@@ -29,13 +22,22 @@ namespace PaymentService.Services.WithdrawalRequests
         Task<ResponseInfo> GetWithdrawalRequestAsync(Guid id);
 
         /// <summary>
+        /// Create a new withdrawal request
+        /// <para>Author: ManhTD - Created at: 9/11/2024</para>
+        /// <para>Author: TaiPV - Updated at: 22/12/2024</para>
+        /// </summary>
+        /// <param name="withdrawalRequest"></param>
+        /// <returns></returns>
+        Task<ResponseInfo> CreateWithdrawalRequestAsync(WithdrawalRequestPost withdrawalRequest);
+
+        /// <summary>
         /// Update withdrawal request status
         /// <para>Author: ManhTD</para>
         /// <para>Created at: 9/11/2024</para>
         /// </summary>
-        /// <param name="withdrawalRequest"></param>
+        /// <param name="withdrawalRequestDto"></param>
         /// <returns></returns>
-        Task<ResponseInfo> UpdateWithdrawalRequestStatusAsync(WithdrawalRequestDto withdrawalRequest);
+        Task<ResponseInfo> UpdateWithdrawalRequestStatusAsync(WithdrawalRequestDto withdrawalRequestDto);
 
         /// <summary>
         /// Delete withdrawal request
@@ -58,13 +60,13 @@ namespace PaymentService.Services.WithdrawalRequests
         Task<ResponseInfo> BankMoneyToTeacherAsync(Guid id, int userId, int amount);
     }
 
-    public class WithdrawalRequestService(IServiceProvider serviceProvider,
-        ILogger<WithdrawalRequestService> logger,
-        IMapper mapper) : BaseService(serviceProvider, logger), IWithdrawalRequestService
+    public class WithdrawalRequestDetailService(IServiceProvider serviceProvider,
+        ILogger<WithdrawalRequestDetailService> logger,
+        IMapper mapper) : BaseService(serviceProvider, logger), IWithdrawalRequestDetailService
     {
         private readonly IMapper _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
 
-        public async Task<ResponseInfo> AddWithdrawalRequestAsync(WithdrawalRequestPost withdrawalRequest)
+        public async Task<ResponseInfo> CreateWithdrawalRequestAsync(WithdrawalRequestPost withdrawalRequest)
         {
             var methodName = GetActualAsyncMethodName();
             try
@@ -72,18 +74,20 @@ namespace PaymentService.Services.WithdrawalRequests
                 _logger.LogInformation("[WithdrawalRequestService] [{Method}] Start", methodName);
                 var response = new ResponseInfo();
 
-                int userId = GetCurrentUser().UserId;
+                var currentUser = GetCurrentUser();
 
-                var teacherEarning = await _context.TeacherEarnings.FirstOrDefaultAsync(e => e.UserId == userId);
+                var teacherEarning = await _context.TeacherEarnings
+                    .FirstOrDefaultAsync(e => e.UserId == currentUser.UserId);
 
                 if (teacherEarning is null)
                 {
                     teacherEarning = new TblTeacherEarning
                     {
-                        UserId = userId,
+                        UserId = currentUser.UserId,
                         CurrentBalance = 0,
                         TotalWithdrawn = 0
                     };
+
                     await _context.TeacherEarnings.AddAsync(teacherEarning);
                     await _context.SaveChangesAsync();
                     response.Message = "No teacher earning found. Created new teacher earning";
@@ -91,7 +95,13 @@ namespace PaymentService.Services.WithdrawalRequests
                 }
                 else
                 {
-                    if (teacherEarning.CurrentBalance < withdrawalRequest.Amount)
+                    var totalPendingWithdrawalInBaseCurrency = await _context.WithdrawalRequests
+                        .Where(w => w.UserId == currentUser.UserId && w.Status == RequestStatus.Pending)
+                        .SumAsync(w => w.Amount * (w.Currency == CurrencyType.VND ? 1 : Constants.EXCHANGE_RATE_USD_TO_VND));
+                    var withdrawalAmountInBaseCurrency = Utils.ConvertToBaseCurrency(withdrawalRequest.Amount, withdrawalRequest.CurrencyType);
+
+                    if (teacherEarning.CurrentBalance < withdrawalAmountInBaseCurrency
+                        || teacherEarning.CurrentBalance - totalPendingWithdrawalInBaseCurrency < withdrawalAmountInBaseCurrency)
                     {
                         response.Message = "Not enough balance";
                         response.StatusCode = StatusCodes.Status400BadRequest;
@@ -101,17 +111,24 @@ namespace PaymentService.Services.WithdrawalRequests
                         var withdrawalRequestEntity = new TblWithdrawalRequest
                         {
                             Id = Guid.NewGuid(),
-                            UserId = userId,
+                            UserId = currentUser.UserId,
                             Amount = withdrawalRequest.Amount,
                             BankAccountId = withdrawalRequest.BankAccountId,
                             Status = RequestStatus.Pending,
-                            RequestedAt = DateTime.Now
+                            RequestedAt = DateTime.Now,
+                            CreatorInfo = new CreatorInfo()
+                            {
+                                Username = currentUser.UserName,
+                                Email = currentUser.Email,
+                                FullName = currentUser.FullName
+                            },
+                            Currency = withdrawalRequest.CurrencyType
                         };
 
                         await _context.WithdrawalRequests.AddAsync(withdrawalRequestEntity);
                         await _context.SaveChangesAsync();
 
-                        response.Message = "Add withdrawalRequest successfully";
+                        response.Data.Add("id", withdrawalRequestEntity.Id);
                     }
                 }
                 _logger.LogInformation("[WithdrawalRequestService] [{Method}] End", methodName);
@@ -153,7 +170,7 @@ namespace PaymentService.Services.WithdrawalRequests
             }
         }
 
-        public Task<ResponseInfo> UpdateWithdrawalRequestStatusAsync(WithdrawalRequestDto withdrawalRequest)
+        public async Task<ResponseInfo> UpdateWithdrawalRequestStatusAsync(WithdrawalRequestDto withdrawalRequestDto)
         {
             var methodName = GetActualAsyncMethodName();
             try
@@ -161,34 +178,35 @@ namespace PaymentService.Services.WithdrawalRequests
                 _logger.LogInformation("[WithdrawalRequestService] [{Method}] Start", methodName);
                 var response = new ResponseInfo();
 
-                var withdrawalRequestQuery = _context.WithdrawalRequests.FirstOrDefault(x => x.Id == withdrawalRequest.Id);
-                if (withdrawalRequestQuery == null)
+                var withdrawalRequest = await _context.WithdrawalRequests
+                    .FirstOrDefaultAsync(x => x.Id == withdrawalRequestDto.Id);
+                if (withdrawalRequest == null)
                 {
                     response.StatusCode = StatusCodes.Status400BadRequest;
                     response.Message = "WithdrawalRequest not found";
 
                     _logger.LogInformation("[WithdrawalRequestService] [{Method}] End", methodName);
-                    return Task.FromResult(response);
+                    return response;
                 }
 
-                if (withdrawalRequestQuery.UserId != withdrawalRequest.UserId)
+                if (withdrawalRequest.UserId != withdrawalRequest.UserId)
                 {
                     response.StatusCode = StatusCodes.Status403Forbidden;
                     response.Message = "You don't have permission to update this withdrawalRequest";
 
                     _logger.LogInformation("[WithdrawalRequestService] [{Method}] End", methodName);
-                    return Task.FromResult(response);
+                    return response;
                 }
 
-                withdrawalRequestQuery.Status = withdrawalRequest.Status;
-                withdrawalRequestQuery.ApprovedAt = DateTime.Now;
+                withdrawalRequest.Status = withdrawalRequest.Status;
+                withdrawalRequest.ApprovedAt = DateTime.Now;
 
-                _context.WithdrawalRequests.Update(withdrawalRequestQuery);
-                _context.SaveChanges();
+                _context.WithdrawalRequests.Update(withdrawalRequest);
+                await _context.SaveChangesAsync();
 
                 response.Message = "Update withdrawalRequest status successfully";
                 _logger.LogInformation("[WithdrawalRequestService] [{Method}] End", methodName);
-                return Task.FromResult(response);
+                return response;
             }
             catch (Exception e)
             {

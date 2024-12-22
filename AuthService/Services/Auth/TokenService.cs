@@ -196,6 +196,7 @@ namespace AuthService.Services.Auth
             var claims = new List<Claim>
             {
                 new("username", userInfo.Username),
+                new("fullName", $"{userInfo.FirstName} {userInfo.LastName}"),
                 new(ClaimTypes.Email, userInfo.Email),
                 new("userId", userInfo.Id.ToString()),
                 new("iss", _jwtSetting.Issuer),

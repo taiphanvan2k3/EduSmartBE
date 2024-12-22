@@ -78,6 +78,7 @@ namespace PaymentService.Services
             {
                 UserId = int.Parse(currentUser.FindFirst("userId")?.Value ?? "0"),
                 UserName = currentUser.FindFirst("username")?.Value,
+                FullName = currentUser.FindFirst("fullName")?.Value,
                 Email = currentUser.FindFirst(ClaimTypes.Email)?.Value,
                 Roles = currentUser.FindFirst(ClaimTypes.Role)?.Value.Split(',').ToList()
             };
