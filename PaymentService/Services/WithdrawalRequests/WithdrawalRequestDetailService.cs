@@ -7,6 +7,8 @@ using TblWithdrawalRequest = PaymentService.Databases.Schemas.WithdrawalRequest;
 using TblTeacherEarning = PaymentService.Databases.Schemas.TeacherEarning;
 using PaymentService.Commons.Schemas;
 using PaymentService.Commons.Helpers;
+using PaymentService.Services.Sepay.Schemas;
+using TblPaymentTransaction = PaymentService.Databases.Schemas.PaymentTransaction;
 
 namespace PaymentService.Services.WithdrawalRequests
 {
@@ -49,15 +51,13 @@ namespace PaymentService.Services.WithdrawalRequests
         Task<ResponseInfo> DeleteWithdrawalRequestAsync(Guid id);
 
         /// <summary>
-        /// Bank money to teacher
-        /// <para>Author: ManhTD</para>
-        /// <para>Created at: 9/11/2024</para>
+        /// Admin get payment info of withdrawal request
+        /// <para>Author: TaiPV</para>
+        /// <para>Created at: 2024/12/23</para>
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="userId"></param>
-        /// <param name="amount"></param>
+        /// <param name="id">Id of withdrawal request</param>
         /// <returns></returns>
-        Task<ResponseInfo> BankMoneyToTeacherAsync(Guid id, int userId, int amount);
+        Task<ResponseInfo> GetPaymentInfoOfWithdrawalRequestAsync(Guid id);
     }
 
     public class WithdrawalRequestDetailService(IServiceProvider serviceProvider,
@@ -256,9 +256,94 @@ namespace PaymentService.Services.WithdrawalRequests
             }
         }
 
-        public Task<ResponseInfo> BankMoneyToTeacherAsync(Guid id, int userId, int amount)
+        public async Task<ResponseInfo> GetPaymentInfoOfWithdrawalRequestAsync(Guid id)
         {
-            throw new NotImplementedException();
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var withdrawalRequestIdString = $"\"withdrawalRequestId\":\"{id}\"";
+
+                var relatedInfo = await _context.PaymentTransactions
+                    .Where(p => p.RelatedInformation.Contains(withdrawalRequestIdString))
+                    .Select(p => p.RelatedInformation)
+                    .FirstOrDefaultAsync();
+
+                if (!string.IsNullOrEmpty(relatedInfo))
+                {
+                    return CreateResponseInfo("paymentInfo", JsonSerializerUtils.Deserialize<WithdrawalRelatedInfo>(relatedInfo).QRCode);
+                }
+
+                var withdrawalRequest = await _context.WithdrawalRequests
+                    .Where(w => w.Id == id)
+                    .Select(w => new
+                    {
+                        w.BankAccount.Bank.Bin,
+                        w.BankAccount.AccountNumber,
+                        w.BankAccount.AccountName,
+                        Amount = Utils.ConvertToBaseCurrency(w.Amount, w.Currency),
+                        ReceiverId = w.UserId
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (withdrawalRequest == null)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status400BadRequest, "Withdrawal request not found");
+                }
+
+                var transactionOrder = $"SEVQR{Utils.GenerateRandomString(7)}";
+                var qrData = new PaymentQRData()
+                {
+                    Bin = withdrawalRequest.Bin,
+                    AccountNumber = withdrawalRequest.AccountNumber,
+                    AccountName = withdrawalRequest.AccountName,
+                    Amount = withdrawalRequest.Amount,
+                    TransactionOrder = transactionOrder
+                };
+
+                var currentUser = GetCurrentUser();
+                var qrCode = Utils.GenerateQRCode(qrData);
+                relatedInfo = JsonSerializerUtils.Serialize(new WithdrawalRelatedInfo()
+                {
+                    WithdrawalRequestId = id,
+                    QRCode = qrCode
+                });
+
+                var paymentTransactionEntity = new TblPaymentTransaction()
+                {
+                    Id = Guid.NewGuid(),
+                    Code = transactionOrder,
+                    UserId = currentUser.UserId,
+                    PaymentMethod = PaymentMethod.Sepay,
+                    Amount = withdrawalRequest.Amount,
+                    Currency = CurrencyType.VND,
+                    OrderStatus = OrderStatus.New,
+                    TransactionType = TransactionType.WithdrawalRequest,
+                    RelatedInformation = relatedInfo,
+                    CreatedAt = DateTime.Now,
+                    CreatorInfo = new CreatorInfo()
+                    {
+                        Username = currentUser.UserName,
+                        Email = currentUser.Email,
+                        FullName = currentUser.FullName
+                    },
+                    ReceiverId = withdrawalRequest.ReceiverId,
+                };
+
+                await _context.PaymentTransactions.AddAsync(paymentTransactionEntity);
+                await _context.SaveChangesAsync();
+
+                return CreateResponseInfo("paymentInfo", qrCode);
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+            finally
+            {
+                LogInfo("End", methodName);
+            }
         }
     }
 }

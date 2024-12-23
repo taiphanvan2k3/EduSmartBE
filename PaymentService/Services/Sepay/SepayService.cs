@@ -8,23 +8,30 @@ using PaymentService.Services.PaymentTransactions.Course;
 using PaymentService.Services.PaymentTransactions.Course.Schemas;
 using PaymentService.Services.PaymentTransactions.Shared.Schemas;
 using PaymentService.Services.Sepay.Schemas;
+using PaymentService.Services.WithdrawalRequests.Schemas;
 using TblPaymentTransaction = PaymentService.Databases.Schemas.PaymentTransaction;
 
 namespace PaymentService.Services.Sepay
 {
     public interface ISepayService
     {
+        /// <summary>
+        /// Handle Sepay payment request
+        /// <para>Author: TaiPV</para>
+        /// <para>Created at: 2024/11/21</para>
+        /// </summary>
+        /// <param name="sepayRequest">Content of Sepay request</param>
+        /// <returns></returns>
         public Task<ResponseInfo> HandlePaymentRequest(SepayRequest sepayRequest);
-
 
         /// <summary>
         /// Bank money to teacher
         /// <para>Author: ManhTD</para>
         /// <para>Created at: 9/11/2024</para>
         /// </summary>
-        /// <param name="sepayWithdrawlRequest"></param>
+        /// <param name="sepayWithdrawalRequest"></param>
         /// <returns></returns>
-        Task SaveWithdrawalTransaction(SepayWithdrawlRequest sepayWithdrawlRequest);
+        public Task<ResponseInfo> SaveWithdrawalTransaction(SepayWithdrawalRequest sepayWithdrawalRequest);
 
     }
 
@@ -111,59 +118,65 @@ namespace PaymentService.Services.Sepay
             }
         }
 
-        public async Task SaveWithdrawalTransaction(SepayWithdrawlRequest sepayWithdrawlRequest)
+        public async Task<ResponseInfo> SaveWithdrawalTransaction(SepayWithdrawalRequest sepayWithdrawalRequest)
         {
             var methodName = GetActualAsyncMethodName();
             try
             {
-                _logger.LogInformation("[SepayService] [{Method}] Start", methodName);
+                LogInfo("Start", methodName);
+                var paymentTransaction = await _context.PaymentTransactions
+                    .FirstOrDefaultAsync(x => x.Code == sepayWithdrawalRequest.PaymentContent);
+
+                if (paymentTransaction == null)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "NotFound", "Payment transaction not found");
+                }
+
+                if (paymentTransaction.OrderStatus == OrderStatus.SUCCESS)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status400BadRequest, "InvalidStatus",
+                        "Payment transaction is already completed");
+                }
+
+                paymentTransaction.OrderStatus = OrderStatus.SUCCESS;
+                paymentTransaction.CompletedAt = DateTimeOffset.UtcNow;
+
+                var withdrawalRequestId = JsonSerializerUtils.Deserialize<WithdrawalRelatedInfo>(paymentTransaction.RelatedInformation).WithdrawalRequestId;
                 var withdrawalRequest = await _context.WithdrawalRequests
-                    .FirstOrDefaultAsync(x => x.Id == Guid.Parse(sepayWithdrawlRequest.Content));
-                if (withdrawalRequest == null)
+                    .FirstOrDefaultAsync(x => x.Id == withdrawalRequestId);
+
+                withdrawalRequest.Status = RequestStatus.Approved;
+                withdrawalRequest.ApprovedAt = paymentTransaction.CompletedAt;
+                withdrawalRequest.ApprovedBy = paymentTransaction.UserId;
+
+                var teacherEarning = await _context.TeacherEarnings
+                    .FirstOrDefaultAsync(x => x.UserId == withdrawalRequest.UserId);
+
+                if (teacherEarning != null)
                 {
-                    throw new Exception("Withdrawal request not found");
+                    teacherEarning.CurrentBalance -= withdrawalRequest.Amount;
+                    teacherEarning.TotalWithdrawn += withdrawalRequest.Amount;
                 }
-                else
+
+                await _context.SaveChangesAsync();
+
+                var responseInfo = new ResponseInfo
                 {
-                    withdrawalRequest.Status = RequestStatus.Approved;
-                    withdrawalRequest.ApprovedAt = DateTime.Now;
-                    _context.WithdrawalRequests.Update(withdrawalRequest);
+                    StatusCode = StatusCodes.Status200OK,
+                    Message = "Withdrawal transaction completed"
+                };
 
-                    var teacherEarning = await _context.TeacherEarnings
-                        .FirstOrDefaultAsync(x => x.UserId == withdrawalRequest.UserId);
-                    
-                    if (teacherEarning != null)
-                    {
-                        teacherEarning.CurrentBalance -= withdrawalRequest.Amount;
-                        teacherEarning.TotalWithdrawn += withdrawalRequest.Amount;
-                        _context.TeacherEarnings.Update(teacherEarning);
-                    }
-
-                    var currencyType = Enum.Parse<CurrencyType>(CurrencyType.VND.ToString());
-                    var coursePaymentTransaction = new TblPaymentTransaction
-                    {
-                        Id = Guid.NewGuid(),
-                        Code = sepayWithdrawlRequest.Code,
-                        UserId = withdrawalRequest.UserId,
-                        Amount = withdrawalRequest.Amount,
-                        Currency = currencyType,
-                        PaymentMethod = PaymentMethod.Sepay,
-                        TransactionType = TransactionType.DrawingRequest,
-                        OrderStatus = OrderStatus.SUCCESS,
-                        RelatedInformation = sepayWithdrawlRequest.Content,
-                        CompletedAt = DateTimeOffset.Parse(sepayWithdrawlRequest.TransactionDate),
-                        CreatedAt = DateTimeOffset.Now,
-                    };
-                    await _context.PaymentTransactions.AddAsync(coursePaymentTransaction);
-                    await _context.SaveChangesAsync();
-                }
-                _logger.LogInformation("[SepayService] [{Method}] End", methodName);
-
+                await NotifyClient(paymentTransaction.UserId.ToString(), paymentTransaction.TransactionType.ToString(), responseInfo);
+                return responseInfo;
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "[SepayService] [{Method}] Error", methodName);
+                LogError(e, methodName);
                 throw;
+            }
+            finally
+            {
+                LogInfo("End", methodName);
             }
         }
 
