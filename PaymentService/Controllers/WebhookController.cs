@@ -35,23 +35,15 @@ namespace PaymentService.Controllers
         }
 
         [HttpPost("sepay/receive")]
-        public async Task<IActionResult> ReceiveWebhook([FromBody] SepayWithdrawlRequest request)
+        public async Task<IActionResult> ReceiveWebhook([FromBody] SepayWithdrawalRequest request)
         {
-            try
+            if (request == null)
             {
-                if (request == null)
-                {
-                    return BadRequest("Invalid request body");
-                }
-
-                await _sepayService.SaveWithdrawalTransaction(request);
-
-                return Ok(new { message = "Webhook received and processed successfully" });
+                return BadRequest("Invalid request body");
             }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status200OK, e.Message);
-            }
+
+            var responseInfo = await _sepayService.SaveWithdrawalTransaction(request);
+            return HandleResponseInfoNoResource(responseInfo);
         }
     }
 }
