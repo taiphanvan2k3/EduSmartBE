@@ -271,7 +271,7 @@ namespace PaymentService.Services.WithdrawalRequests
 
                 if (!string.IsNullOrEmpty(relatedInfo))
                 {
-                    return CreateResponseInfo("paymentInfo", JsonSerializerUtils.Deserialize<WithdrawalRelatedInfo>(relatedInfo).QRCode);
+                    return CreateResponseInfo("qrCode", JsonSerializerUtils.Deserialize<WithdrawalRelatedInfo>(relatedInfo).QRCode);
                 }
 
                 var withdrawalRequest = await _context.WithdrawalRequests
@@ -333,7 +333,7 @@ namespace PaymentService.Services.WithdrawalRequests
                 await _context.PaymentTransactions.AddAsync(paymentTransactionEntity);
                 await _context.SaveChangesAsync();
 
-                return CreateResponseInfo("paymentInfo", qrCode);
+                return CreateResponseInfo("qrCode", qrCode);
             }
             catch (Exception e)
             {

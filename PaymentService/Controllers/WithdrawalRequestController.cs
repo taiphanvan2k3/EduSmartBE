@@ -52,7 +52,7 @@ namespace PaymentService.Controllers
         public async Task<IActionResult> GetPaymentInfoOfWithdrawalRequest([FromRoute] Guid id)
         {
             var responseInfo = await _withdrawalRequestService.GetPaymentInfoOfWithdrawalRequestAsync(id);
-            return HandleResponseInfo(responseInfo, resourceName: "paymentInfo");
+            return HandleResponseInfo(responseInfo, resourceName: "qrCode");
         }
 
         /// <summary>
