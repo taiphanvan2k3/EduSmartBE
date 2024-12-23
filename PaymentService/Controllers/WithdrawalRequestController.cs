@@ -43,6 +43,19 @@ namespace PaymentService.Controllers
         }
 
         /// <summary>
+        /// Admin get payment info of withdrawal request
+        /// <para>Created at: 2024/12/23</para>
+        /// <para>Created by TaiPV</para>
+        /// </summary>
+        [Filters.Auth(Roles = "Admin")]
+        [HttpGet("{id}/payment-info")]
+        public async Task<IActionResult> GetPaymentInfoOfWithdrawalRequest([FromRoute] Guid id)
+        {
+            var responseInfo = await _withdrawalRequestService.GetPaymentInfoOfWithdrawalRequestAsync(id);
+            return HandleResponseInfo(responseInfo, resourceName: "paymentInfo");
+        }
+
+        /// <summary>
         /// Teachers get their withdrawal requests
         /// <para>Created at: 9/11/2024</para>
         /// <para>Created by ManhTD</para>
