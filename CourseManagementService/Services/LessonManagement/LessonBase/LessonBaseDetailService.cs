@@ -626,7 +626,7 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
                 var lessonType = permissionResponse.Data["LessonType"];
                 var duration = permissionResponse.Data["Duration"] as long? ?? 0;
 
-                if (lessonType != LessonType.Quiz && lessonProgressUpdateRequest.TimeSpent > duration)
+                if (lessonType == LessonType.Video && lessonProgressUpdateRequest.TimeSpent > duration)
                 {
                     return CreateEarlyResponseInfo(StatusCodes.Status400BadRequest, "Time spent is invalid");
                 }
@@ -655,14 +655,15 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
 
                     await _context.LessonTrackings.AddAsync(lessonTrackingEntity);
                 }
-                else if (lessonTrackingEntity.TimeSpent < lessonProgressUpdateRequest.TimeSpent)
+                else if (lessonTrackingEntity.TimeSpent < lessonProgressUpdateRequest.TimeSpent
+                    || lessonType != LessonType.Video)
                 {
                     lessonTrackingEntity.TimeSpent = lessonProgressUpdateRequest.TimeSpent;
                     lessonTrackingEntity.IsCompleted = lessonProgressUpdateRequest.LessonType != LessonType.Video
                         || (lessonProgressUpdateRequest.TimeSpent * 1.0 / lessonDuration) >= 0.7;
                 }
 
-                var unlockedNextLessonId = default(Guid);
+                Guid? unlockedNextLessonId = null;
                 if (lessonTrackingEntity.IsCompleted)
                 {
                     // Unlock the next lesson
@@ -708,7 +709,7 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
 
         private async Task<ResponseInfo> CheckCanUpdateLessonProgress(Guid lessonId, int userId)
         {
-            var lesson = await _context.Lessons
+            var currentLesson = await _context.Lessons
                 .Where(l => l.Id == lessonId)
                 .Select(l => new
                 {
@@ -723,27 +724,48 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
                 })
                 .FirstOrDefaultAsync();
 
-            if (lesson == null)
+            if (currentLesson == null)
             {
                 return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "Lesson not found");
             }
 
-            if (lesson.TeacherId != userId && !lesson.IsEnrolled)
+            if (currentLesson.TeacherId != userId && !currentLesson.IsEnrolled)
             {
                 return CreateEarlyResponseInfo(StatusCodes.Status403Forbidden, "You are not allowed to access this resource");
             }
 
+            // Kiểm tra xem có thực sự học bài trước đó hay chưa
+            if (currentLesson.LessonOrder != 1 || currentLesson.ChapterOrder != 1)
+            {
+                var currentCompositeOrder = currentLesson.ChapterOrder * 1000 + currentLesson.LessonOrder;
+                var isLearnedPreviousLesson = await _context.Lessons
+                    .Where(l => l.Chapter.CourseId == currentLesson.CourseId && l.Chapter.IsPublished && l.IsPublished)
+                    .Where(l => l.Chapter.Order * 1000 + l.Order < currentCompositeOrder)
+                    .OrderByDescending(l => l.Chapter.Order * 1000 + l.Order)
+                    .Select(l => new
+                    {
+                        IsLearnedPreviousLesson = l.LessonTrackings.Any(lt => lt.StudentId == userId && lt.IsCompleted)
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (!isLearnedPreviousLesson.IsLearnedPreviousLesson)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status400BadRequest,
+                        "You have not learned the previous lesson");
+                }
+            }
+
             var responseInfo = new ResponseInfo();
-            responseInfo.Data.Add("Duration", lesson.Duration);
-            responseInfo.Data.Add("CourseId", lesson.CourseId);
-            responseInfo.Data.Add("ChapterOrder", lesson.ChapterOrder);
-            responseInfo.Data.Add("LessonOrder", lesson.LessonOrder);
-            responseInfo.Data.Add("LessonType", lesson.LessonType);
+            responseInfo.Data.Add("Duration", currentLesson.Duration);
+            responseInfo.Data.Add("CourseId", currentLesson.CourseId);
+            responseInfo.Data.Add("ChapterOrder", currentLesson.ChapterOrder);
+            responseInfo.Data.Add("LessonOrder", currentLesson.LessonOrder);
+            responseInfo.Data.Add("LessonType", currentLesson.LessonType);
 
             return responseInfo;
         }
 
-        private async Task<Guid> UnlockNextLesson(Guid courseId, int userId, int currentChapterOrder, int currentLessonOrder)
+        private async Task<Guid?> UnlockNextLesson(Guid courseId, int userId, int currentChapterOrder, int currentLessonOrder)
         {
             var currentCompositeOrder = currentChapterOrder * 1000 + currentLessonOrder;
             var nextLessonId = await _context.Lessons
@@ -755,7 +777,7 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
 
             if (nextLessonId == default)
             {
-                return default;
+                return null;
             }
 
             await _context.LessonTrackings.AddAsync(new TblLessonTracking()
