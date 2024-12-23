@@ -40,6 +40,7 @@ namespace PaymentService.Services.WithdrawalRequests
                 searchCondition.ToDate = searchCondition.ToDate?.ToUniversalTime();
 
                 var withdrawalRequestsQuery = _context.WithdrawalRequests
+                    .Where(x => !searchCondition.RequestStatus.HasValue || x.Status == searchCondition.RequestStatus)
                     .Where(x =>
                         string.IsNullOrEmpty(searchCondition.SearchInput) ||
                         x.CreatorInfo.Email.Contains(searchCondition.SearchInput) ||
@@ -91,7 +92,8 @@ namespace PaymentService.Services.WithdrawalRequests
                 searchCondition.ToDate = searchCondition.ToDate?.ToUniversalTime();
 
                 var withdrawalRequestsQuery = _context.WithdrawalRequests
-                    .Where(x => x.UserId == userId)
+                    .Where(x => x.UserId == userId
+                        && (!searchCondition.RequestStatus.HasValue || x.Status == searchCondition.RequestStatus))
                     .Where(x =>
                         (!searchCondition.FromDate.HasValue || x.RequestedAt >= searchCondition.FromDate) &&
                         (!searchCondition.ToDate.HasValue || x.RequestedAt <= searchCondition.ToDate)
