@@ -121,11 +121,12 @@ namespace PaymentService.Services.Sepay
         public async Task<ResponseInfo> SaveWithdrawalTransaction(SepayWithdrawalRequest sepayWithdrawalRequest)
         {
             var methodName = GetActualAsyncMethodName();
+            TblPaymentTransaction paymentTransaction = null;
             try
             {
                 LogInfo("Start", methodName);
-                var paymentTransaction = await _context.PaymentTransactions
-                    .FirstOrDefaultAsync(x => x.Code == sepayWithdrawalRequest.PaymentContent);
+                paymentTransaction = await _context.PaymentTransactions
+                   .FirstOrDefaultAsync(x => x.Code == sepayWithdrawalRequest.PaymentContent);
 
                 if (paymentTransaction == null)
                 {
@@ -172,6 +173,15 @@ namespace PaymentService.Services.Sepay
             catch (Exception e)
             {
                 LogError(e, methodName);
+
+                if (paymentTransaction != null)
+                {
+                    var responseInfo = CreateEarlyResponseInfo(StatusCodes.Status500InternalServerError,
+                        "InternalServerError", e.InnerException?.Message ?? e.Message);
+
+                    await NotifyClient(paymentTransaction.UserId.ToString(),
+                        paymentTransaction.TransactionType.ToString(), responseInfo);
+                }
                 throw;
             }
             finally
