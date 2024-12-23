@@ -149,7 +149,7 @@ namespace PaymentService.GrpcServices
                 var response = new MonthlyDataPaymentResponse();
 
                 var monthlyDrawingRequests = await _context.PaymentTransactions
-                    .Where(x => x.TransactionType == TransactionType.DrawingRequest
+                    .Where(x => x.TransactionType == TransactionType.WithdrawalRequest
                         && x.OrderStatus == OrderStatus.SUCCESS
                         && x.CreatedAt.Year == DateTime.Now.Year)
                     .GroupBy(x => x.CreatedAt.Month)
