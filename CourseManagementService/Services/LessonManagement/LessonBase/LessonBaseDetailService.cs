@@ -780,12 +780,15 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
                 return null;
             }
 
-            await _context.LessonTrackings.AddAsync(new TblLessonTracking()
+            if (!await _context.LessonTrackings.AnyAsync(lt => lt.LessonId == nextLessonId && lt.StudentId == userId))
             {
-                LessonId = nextLessonId,
-                CourseId = courseId,
-                StudentId = userId
-            });
+                await _context.LessonTrackings.AddAsync(new TblLessonTracking()
+                {
+                    LessonId = nextLessonId,
+                    CourseId = courseId,
+                    StudentId = userId
+                });
+            }
 
             return nextLessonId;
         }
