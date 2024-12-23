@@ -13,6 +13,7 @@ using CourseManagementService.Services.Grpc.PaymentService;
 using CourseManagementService.Services.Grpc.PaymentService.Schemas;
 using CourseManagementService.Services.Grpc.UserService;
 using CourseManagementService.Services.LessonManagement.LessonBase;
+using CourseManagementService.Services.LessonManagement.LessonBase.Schemas;
 using CourseManagementService.Services.Medias;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -193,7 +194,28 @@ namespace CourseManagementService.Services.CourseManagement.Public
                     courseDetail.UnlockedLessons = await _lessonBaseDetailService.GetUnlockedLessons(courseId, currentUser.UserId);
                     courseDetail.BookmarkedLessonIds = await _bookmarkService.GetBookmarkedLessonIds(courseId);
                 }
-                courseDetail.Course.FirstLesson = await _lessonBaseDetailService.GetFirstLessonInfo(courseId);
+
+                if (courseDetail.Chapters.Count > 0)
+                {
+                    var firstLesson = courseDetail.Chapters[0].Lessons.FirstOrDefault();
+                    courseDetail.Course.FirstLesson = firstLesson != null ? new LessonInfoBase()
+                    {
+                        Id = firstLesson.Id,
+                        LessonType = firstLesson.LessonType
+                    } : null;
+                }
+
+                if (courseDetail.UnlockedLessons.Count == 0)
+                {
+                    courseDetail.UnlockedLessons.Add(new LessonTrackingDetail()
+                    {
+                        LessonId = courseDetail.Course.FirstLesson.Id,
+                        LessonOrder = 1,
+                        ChapterOrder = 1,
+                        TimeSpent = 0,
+                        IsCompleted = false
+                    });
+                }
 
                 _cacheService.SetData(cacheKey, courseDetail, DateTimeOffset.Now.AddMinutes(CacheManager.CourseDetail.ExpireTimeInMinutes));
 

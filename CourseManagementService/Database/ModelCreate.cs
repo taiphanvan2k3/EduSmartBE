@@ -234,7 +234,8 @@ namespace CourseManagementService.Database
                     .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasIndex(lt => new { lt.CourseId, lt.StudentId });
-                entity.HasIndex(lt => new { lt.LessonId, lt.StudentId });
+                entity.HasIndex(lt => new { lt.LessonId, lt.StudentId })
+                    .IsUnique();
             });
 
             modelBuilder.Entity<SupportRequest>(entity =>
