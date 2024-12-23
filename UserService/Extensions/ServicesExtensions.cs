@@ -101,7 +101,8 @@ namespace UserService.Extensions
                 options.AddPolicy("AllowSpecificOrigin",
                     builder =>
                     {
-                        builder.WithOrigins("http://localhost:3000", "http://localhost:3030", "https://edu-smart-dut.vercel.app")
+                        builder.WithOrigins("http://localhost:3000", "http://localhost:3030",
+                                "https://edu-smart-dut.vercel.app", "https://edu-smart-admin.vercel.app")
                             .AllowAnyHeader()
                             .AllowAnyMethod()
                             .AllowCredentials(); // Cho phép client gửi cookie qua cross-origin
