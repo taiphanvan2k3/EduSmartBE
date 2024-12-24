@@ -3,7 +3,7 @@ const {
 } = require("../services/achievement-templates/list-of-achievement-templates.service");
 
 module.exports = {
-    getAllTemplates: async (req, res, next) => {
+    getAllTemplates: async (_, res, next) => {
         try {
             const templates = await getAllTemplates();
             res.json(templates);

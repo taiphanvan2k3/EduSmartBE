@@ -7,10 +7,7 @@ const {
     getCourseTemplateById,
     createTemplateForCourse,
     updateTemplateForCourse,
-    deleteCourseTemplate,
-    generateAchievement,
-    saveExportedStudentAchievement,
-    getExportedAchievement
+    deleteCourseTemplate
 } = require("../services/achievement-templates/achievement-template-detail.service");
 const { handleResponseInfo } = require("../helpers/response-info-helper");
 
@@ -81,18 +78,18 @@ module.exports = {
         try {
             const {
                 templateId,
-                studentStyle,
-                courseNameStyle,
-                dateStyle,
-                teacherNameStyle
+                studentNameTextStyle,
+                courseNameTextStyle,
+                dateTextStyle,
+                teacherNameTextStyle
             } = req.body;
 
             if (
                 !templateId ||
-                !studentStyle ||
-                !courseNameStyle ||
-                !dateStyle ||
-                !teacherNameStyle
+                !studentNameTextStyle ||
+                !courseNameTextStyle ||
+                !dateTextStyle ||
+                !teacherNameTextStyle
             ) {
                 return res
                     .status(400)
@@ -109,17 +106,17 @@ module.exports = {
         try {
             const courseTemplateId = req.params.id;
             const {
-                studentStyle,
-                courseNameStyle,
-                dateStyle,
-                teacherNameStyle
+                studentNameTextStyle,
+                courseNameTextStyle,
+                dateTextStyle,
+                teacherNameTextStyle
             } = req.body;
 
             if (
-                !studentStyle ||
-                !courseNameStyle ||
-                !dateStyle ||
-                !teacherNameStyle
+                !studentNameTextStyle ||
+                !courseNameTextStyle ||
+                !dateTextStyle ||
+                !teacherNameTextStyle
             ) {
                 return res
                     .status(400)
