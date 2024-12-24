@@ -147,7 +147,7 @@ router.get(
  *                 type: integer
  *                 description: ID of the achievement template
  *                 example: 1
- *               studentStyle:
+ *               studentNameTextStyle:
  *                 type: object
  *                 properties:
  *                   fontFamily:
@@ -159,7 +159,7 @@ router.get(
  *                   color:
  *                     type: string
  *                     example: "#000000"
- *               courseNameStyle:
+ *               courseNameTextStyle:
  *                 type: object
  *                 properties:
  *                   fontFamily:
@@ -171,7 +171,7 @@ router.get(
  *                   color:
  *                     type: string
  *                     example: "#333333"
- *               dateStyle:
+ *               dateTextStyle:
  *                 type: object
  *                 properties:
  *                   fontFamily:
@@ -183,7 +183,7 @@ router.get(
  *                   color:
  *                     type: string
  *                     example: "#666666"
- *               teacherNameStyle:
+ *               teacherNameTextStyle:
  *                 type: object
  *                 properties:
  *                   fontFamily:
@@ -197,10 +197,10 @@ router.get(
  *                     example: "#111111"
  *             required:
  *               - templateId
- *               - studentStyle
- *               - courseNameStyle
- *               - dateStyle
- *               - teacherNameStyle
+ *               - studentNameTextStyle
+ *               - courseNameTextStyle
+ *               - dateTextStyle
+ *               - teacherNameTextStyle
  *     responses:
  *       200:
  *         description: Response info
@@ -250,7 +250,7 @@ router.post(
  *               isDefault:
  *                 type: boolean
  *                 example: true
- *               studentStyle:
+ *               studentNameTextStyle:
  *                 type: object
  *                 properties:
  *                   fontFamily:
@@ -262,7 +262,7 @@ router.post(
  *                   color:
  *                     type: string
  *                     example: "#000000"
- *               courseNameStyle:
+ *               courseNameTextStyle:
  *                 type: object
  *                 properties:
  *                   fontFamily:
@@ -274,7 +274,7 @@ router.post(
  *                   color:
  *                     type: string
  *                     example: "#333333"
- *               dateStyle:
+ *               dateTextStyle:
  *                 type: object
  *                 properties:
  *                   fontFamily:
@@ -286,7 +286,7 @@ router.post(
  *                   color:
  *                     type: string
  *                     example: "#666666"
- *               teacherNameStyle:
+ *               teacherNameTextStyle:
  *                 type: object
  *                 properties:
  *                   fontFamily:
@@ -300,10 +300,10 @@ router.post(
  *                     example: "#111111"
  *             required:
  *               - templateId
- *               - studentStyle
- *               - courseNameStyle
- *               - dateStyle
- *               - teacherNameStyle
+ *               - studentNameTextStyle
+ *               - courseNameTextStyle
+ *               - dateTextStyle
+ *               - teacherNameTextStyle
  *     responses:
  *       200:
  *         description: Response info
