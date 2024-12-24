@@ -34,8 +34,6 @@ const client = new proto.Course(
 );
 
 const checkStudentCompletedCourse = (courseId, studentId) => {
-    console.log(grpcEndpoint);
-
     return new Promise((resolve, reject) => {
         client.CheckStudentCompletedCourse(
             { studentId, courseId },

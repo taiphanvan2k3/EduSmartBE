@@ -1,3 +1,13 @@
+/**
+ * Create an error response with the given status code, error and message
+ * @author TaiPV
+ * @createdDate 2024/12/21
+ *
+ * @param {string} statusCode
+ * @param {string} error
+ * @param {string} message
+ * @returns
+ */
 const createEarlyErrorResponse = (statusCode, error, message) => {
     return {
         statusCode,
@@ -6,6 +16,14 @@ const createEarlyErrorResponse = (statusCode, error, message) => {
     };
 };
 
+/**
+ * Create a response info with the given data and resource name
+ * @author TaiPV
+ * @createdDate 2024/12/21
+ *
+ * @param {string} resourceName
+ * @param {any} data
+ */
 const createResponseInfo = (resourceName, data) => {
     return {
         statusCode: 200,
@@ -15,6 +33,14 @@ const createResponseInfo = (resourceName, data) => {
     };
 };
 
+/**
+ * Handle response info by returning the data with the given resource name
+ * @author TaiPV
+ * @createdDate 2024/12/21
+ *
+ * @param {string} resourceName
+ * @param {any} data
+ */
 const handleResponseInfo = (resourceName, responseInfo) => {
     if (responseInfo.statusCode === 200) {
         return {

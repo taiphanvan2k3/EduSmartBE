@@ -1,8 +1,9 @@
 const {
-    getCourseTemplates,
-    getAllAchievementTemplates
+    getAllTemplates,
+    getCourseTemplates
 } = require("../services/achievement-templates/list-of-achievement-templates.service");
 const {
+    getDefaultCourseTemplateInCourse,
     getCourseTemplateById,
     createTemplateForCourse,
     updateTemplateForCourse,
@@ -14,9 +15,9 @@ const {
 const { handleResponseInfo } = require("../helpers/response-info-helper");
 
 module.exports = {
-    getAchievementTemplates: async (req, res, next) => {
+    getAllTemplates: async (req, res, next) => {
         try {
-            const templates = await getAllAchievementTemplates();
+            const templates = await getAllTemplates();
             res.json(templates);
         } catch (error) {
             next(error);
@@ -37,6 +38,28 @@ module.exports = {
             next(error);
         }
     },
+    getDefaultCourseTemplate: async (req, res, next) => {
+        try {
+            const { courseId } = req.query;
+            if (!courseId) {
+                return res
+                    .status(400)
+                    .json({ message: "Invalid request query" });
+            }
+
+            const responseInfo =
+                await getDefaultCourseTemplateInCourse(courseId);
+            if (responseInfo.statusCode === 200) {
+                return res.json(
+                    handleResponseInfo("courseTemplate", responseInfo)
+                );
+            }
+
+            return res.json(responseInfo);
+        } catch (error) {
+            next(error);
+        }
+    },
     getCourseTemplateById: async (req, res, next) => {
         try {
             const courseTemplateId = req.params.id;
@@ -50,33 +73,6 @@ module.exports = {
             }
 
             res.json(courseTemplate);
-        } catch (error) {
-            next(error);
-        }
-    },
-    getAchievementInCourse: async (req, res, next) => {
-        try {
-            const currentUser = req.user;
-            const { courseId } = req.params;
-
-            if (!currentUser) {
-                return res.status(401).json({ message: "Unauthorized user" });
-            }
-
-            if (!courseId) {
-                return res
-                    .status(400)
-                    .json({ message: "Invalid request query" });
-            }
-
-            const exportedAchievementInCourse = await getExportedAchievement(
-                courseId,
-                currentUser.userId
-            );
-
-            return res.json(
-                handleResponseInfo("achievement", exportedAchievementInCourse)
-            );
         } catch (error) {
             next(error);
         }
@@ -145,42 +141,6 @@ module.exports = {
             const courseTemplateId = req.params.id;
             const responseInfo = await deleteCourseTemplate(courseTemplateId);
             res.json(handleResponseInfo("id", responseInfo));
-        } catch (error) {
-            next(error);
-        }
-    },
-    generateAchievement: async (req, res, next) => {
-        try {
-            const currentUser = req.user;
-            const { courseId } = req.body;
-
-            if (!currentUser) {
-                return res.status(401).json({ message: "Unauthorized user" });
-            }
-
-            if (!courseId) {
-                return res
-                    .status(400)
-                    .json({ message: "Invalid request body" });
-            }
-
-            const responseInfo = await generateAchievement(
-                courseId,
-                currentUser.userId
-            );
-
-            res.json(handleResponseInfo("achievementURL", responseInfo));
-
-            if (responseInfo.statusCode === 200) {
-                setImmediate(async () => {
-                    // Do something after sending response
-                    await saveExportedStudentAchievement(
-                        courseId,
-                        currentUser.userId,
-                        responseInfo.data.achievementURL
-                    );
-                });
-            }
         } catch (error) {
             next(error);
         }
