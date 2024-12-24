@@ -5,43 +5,41 @@ const {
     isAllowForRoles
 } = require("../middlewares/auth");
 
-const templateController = require("../controllers/achievement-template.controller");
+const courseTemplateController = require("../controllers/course-template.controller");
 
 /**
  * @swagger
- * /media-service/api/course-templates/{id}:
+ * /media-service/api/course-templates/default-template:
  *   get:
  *     summary: |
- *       Get the course template information by ID
- *       Created At: 2024/12/21
+ *       Get the default course template for the course
+ *       Created At: 2024/12/24
  *       Created by: TaiPV
  *     tags:
- *       - Achievements
+ *       - Course Templates
  *     parameters:
- *       - in: path
- *         name: id
+ *       - in: query
+ *         name: courseId
  *         required: true
- *         description: The unique identifier for the course template.
+ *         description: Id of the course
  *         schema:
  *           type: string
  *           format: uuid
  *     responses:
  *       200:
- *         description: A list of course templates associated with the provided courseId.
+ *         description: The default course template for the course
  *         content:
  *           application/json:
  *             schema:
  *                $ref: '#/components/schemas/CourseTemplate'
- *       404:
- *         description: No course template found for the given ID.
  *     security:
  *       - BearerAuth: []
  */
 router.get(
-    "/:id",
+    "/default-template",
     verifyTokenAndAttachUser,
     isAllowForRoles(["Teacher"]),
-    templateController.getCourseTemplateById
+    courseTemplateController.getDefaultCourseTemplate
 );
 
 /**
@@ -53,12 +51,12 @@ router.get(
  *       Created At: 2024/12/16
  *       Created by: TaiPV
  *     tags:
- *       - Achievements
+ *       - Course Templates
  *     parameters:
  *       - in: query
  *         name: courseId
  *         required: true
- *         description: The unique identifier for the course.
+ *         description: Id of course
  *         schema:
  *           type: string
  *           format: uuid
@@ -82,7 +80,44 @@ router.get(
     "/my-templates",
     verifyTokenAndAttachUser,
     isAllowForRoles(["Teacher"]),
-    templateController.getCourseTemplates
+    courseTemplateController.getCourseTemplates
+);
+
+/**
+ * @swagger
+ * /media-service/api/course-templates/{id}:
+ *   get:
+ *     summary: |
+ *       Get the course template information by ID
+ *       Created At: 2024/12/21
+ *       Created by: TaiPV
+ *     tags:
+ *       - Course Templates
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Id of Course template
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: A list of course templates associated with the provided courseId.
+ *         content:
+ *           application/json:
+ *             schema:
+ *                $ref: '#/components/schemas/CourseTemplate'
+ *       404:
+ *         description: No course template found for the given ID.
+ *     security:
+ *       - BearerAuth: []
+ */
+router.get(
+    "/:id",
+    verifyTokenAndAttachUser,
+    isAllowForRoles(["Teacher"]),
+    courseTemplateController.getCourseTemplateById
 );
 
 /**
@@ -90,11 +125,11 @@ router.get(
  * /media-service/api/course-templates:
  *   post:
  *     summary: |
- *       Create a new course template for the course
+ *       Teacher create a new course template for the course
  *       Created At: 2024/12/13
  *       Created by: TaiPV
  *     tags:
- *       - Achievements
+ *       - Course Templates
  *     requestBody:
  *       required: true
  *       content:
@@ -184,7 +219,7 @@ router.post(
     "/",
     verifyTokenAndAttachUser,
     isAllowForRoles(["Teacher"]),
-    templateController.createCourseTemplate
+    courseTemplateController.createCourseTemplate
 );
 
 /**
@@ -196,12 +231,12 @@ router.post(
  *       Created At: 2024/12/21
  *       Created by: TaiPV
  *     tags:
- *       - Achievements
+ *       - Course Templates
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         description: The unique identifier for the course template.
+ *         description: Id of Course Template
  *         schema:
  *           type: string
  *           format: uuid
@@ -287,7 +322,7 @@ router.put(
     "/:id",
     verifyTokenAndAttachUser,
     isAllowForRoles(["Teacher"]),
-    templateController.updateCourseTemplate
+    courseTemplateController.updateCourseTemplate
 );
 
 /**
@@ -299,12 +334,12 @@ router.put(
  *       Created At: 2024/12/21
  *       Created by: TaiPV
  *     tags:
- *       - Achievements
+ *       - Course Templates
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         description: The unique identifier for the course template.
+ *         description: Id of Course Template
  *         schema:
  *           type: string
  *           format: uuid
@@ -326,7 +361,7 @@ router.delete(
     "/:id",
     verifyTokenAndAttachUser,
     isAllowForRoles(["Teacher"]),
-    templateController.deleteCourseTemplate
+    courseTemplateController.deleteCourseTemplate
 );
 
 /**

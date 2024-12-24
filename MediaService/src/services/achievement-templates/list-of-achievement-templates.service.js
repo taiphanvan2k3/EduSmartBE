@@ -7,7 +7,7 @@ const { logInfo, logError } = require("../logger.service");
  * @createdDate 2024/12/13
  * @returns
  */
-async function getAllAchievementTemplates() {
+async function getAllTemplates() {
     const caller = "getAllAchievementTemplates";
     try {
         logInfo(caller, "Start");
@@ -71,6 +71,6 @@ async function getCourseTemplates(courseId) {
 }
 
 module.exports = {
-    getAllAchievementTemplates,
+    getAllTemplates,
     getCourseTemplates
 };

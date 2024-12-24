@@ -75,37 +75,4 @@ router.post(
     MediaController.uploadFile
 );
 
-/**
- * @swagger
- * /media-service/api/media/achievement:
- *   post:
- *     summary: |
- *       Create an achievement (ONLY TESTING, DON'T USE IN PRODUCTION)
- *       Created At: 2024/11/20
- *       Created by: TaiPV
- *     tags:
- *       - Medias
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               studentName:
- *                 type: string
- *                 example: "Nguyen Van A"
- *               courseName:
- *                 type: string
- *                 example: "Node.js for Beginners"
- *     responses:
- *       200:
- *         description: Successfully uploaded
- *       400:
- *         description: Error in upload
- *       500:
- *         description: Server error
- */
-router.post("/achievement", MediaController.createAchievement);
-
 module.exports = router;
