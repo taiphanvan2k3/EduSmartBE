@@ -94,10 +94,10 @@ const createTemplateForCourse = async (courseTemplateRequest) => {
             isDefault,
             courseId,
             templateId,
-            studentStyle,
-            courseNameStyle,
-            dateStyle,
-            teacherNameStyle
+            studentNameTextStyle,
+            courseNameTextStyle,
+            dateTextStyle,
+            teacherNameTextStyle
         } = courseTemplateRequest;
 
         const errorMessage = await isValidCourseTemplateRequest(
@@ -129,10 +129,10 @@ const createTemplateForCourse = async (courseTemplateRequest) => {
             uuidv4(),
             courseId,
             templateId,
-            courseNameStyle,
-            studentStyle,
-            dateStyle,
-            teacherNameStyle,
+            courseNameTextStyle,
+            studentNameTextStyle,
+            dateTextStyle,
+            teacherNameTextStyle,
             isDefault
         ];
 
@@ -163,10 +163,10 @@ const updateTemplateForCourse = async (
         logInfo(caller, "Start");
         const {
             isDefault,
-            studentStyle,
-            courseNameStyle,
-            dateStyle,
-            teacherNameStyle
+            studentNameTextStyle,
+            courseNameTextStyle,
+            dateTextStyle,
+            teacherNameTextStyle
         } = courseTemplateRequest;
 
         const findCourseTemplateQuery = `
@@ -212,10 +212,10 @@ const updateTemplateForCourse = async (
         `;
 
         const values = [
-            courseNameStyle,
-            studentStyle,
-            dateStyle,
-            teacherNameStyle,
+            courseNameTextStyle,
+            studentNameTextStyle,
+            dateTextStyle,
+            teacherNameTextStyle,
             isDefault,
             courseTemplateId
         ];
