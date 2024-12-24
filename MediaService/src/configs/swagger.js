@@ -21,6 +21,20 @@ const options = {
             version: "1.0.0",
             description: "Media Service API"
         },
+        tags: [
+            {
+                name: "Templates",
+                description: "Template management operations"
+            },
+            {
+                name: "Course Templates",
+                description: "Teacher manages the course templates"
+            },
+            {
+                name: "Achievements",
+                description: "Achievement management operations"
+            }
+        ],
         servers: [serverUrl],
         components: {
             securitySchemes: {

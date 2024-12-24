@@ -229,7 +229,7 @@ namespace CourseManagementService.GrpcServices
 
                 var courseId = Guid.Parse(request.CourseId);
                 var courseCompletion = await _context.CourseEnrollments
-                    .Where(ce => ce.CourseId == courseId && ce.StudentId == request.StudentId && ce.IsCompleted)
+                    .Where(ce => ce.CourseId == courseId && ce.StudentId == request.StudentId)
                     .Select(ce => new
                     {
                         ce.IsCompleted,
@@ -240,7 +240,8 @@ namespace CourseManagementService.GrpcServices
 
                 if (courseCompletion == null)
                 {
-                    responseInfo.IsSuccess = false;
+                    responseInfo.IsSuccess = true;
+                    responseInfo.IsCompleted = false;
                     responseInfo.Message = "Student has not completed this course";
                     return responseInfo;
                 }
@@ -261,7 +262,12 @@ namespace CourseManagementService.GrpcServices
             catch (Exception e)
             {
                 _logger.LogError(e, "[GrpcCourseService] [{Method}] Error", methodName);
-                throw;
+                return new CheckStudentCompletedCourseResponse
+                {
+                    IsSuccess = false,
+                    IsCompleted = false,
+                    Message = e.InnerException?.Message ?? e.Message
+                };
             }
             finally
             {

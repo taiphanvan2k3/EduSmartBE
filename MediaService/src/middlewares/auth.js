@@ -19,9 +19,10 @@ function verifyTokenAndAttachUser(req, res, next) {
 
         // Attach decoded token data to the request object
         req.user = {
+            userId: decoded.userId,
             username: decoded.username,
             email: decoded.email,
-            userId: decoded.userId,
+            fullName: decoded.fullName,
             iss: decoded.iss,
             aud: decoded.aud,
             role: decoded.role,
@@ -32,7 +33,7 @@ function verifyTokenAndAttachUser(req, res, next) {
 
         next(); // Proceed to the next middleware or route handler
     } catch (error) {
-        return res.status(403).json({
+        return res.status(401).json({
             statusCode: 401,
             error: "Unauthorized",
             message: "You need to be authenticated to access this resource."

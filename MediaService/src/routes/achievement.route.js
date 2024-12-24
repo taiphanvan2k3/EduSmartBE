@@ -1,8 +1,9 @@
 const express = require("express");
 const router = express.Router();
+const { upload } = require("../middlewares/uploadFile");
 const { verifyTokenAndAttachUser } = require("../middlewares/auth");
 
-const templateController = require("../controllers/achievement-template.controller");
+const achievementController = require("../controllers/achievement.controller");
 
 /**
  * @swagger
@@ -13,11 +14,11 @@ const templateController = require("../controllers/achievement-template.controll
 
 /**
  * @swagger
- * /media-service/api/achievements/my-achievement-in-course/{courseId}:
+ * /media-service/api/achievements/my-achievements/{courseId}:
  *   get:
  *     summary: |
- *       Get all achievements that teacher can choose to give to students
- *       Created At: 2024/12/09
+ *       Student get the exported achievement in a course
+ *       Created At: 2024/12/21
  *       Created by: TaiPV
  *     tags:
  *       - Achievements
@@ -30,7 +31,7 @@ const templateController = require("../controllers/achievement-template.controll
  *           format: uuid
  *     responses:
  *       200:
- *         description: Achievement template URL with creation time
+ *         description: The exported achievement in a courses
  *         content:
  *           application/json:
  *             schema:
@@ -45,46 +46,18 @@ const templateController = require("../controllers/achievement-template.controll
  *                     achievementURL:
  *                       type: object
  *                       properties:
- *                         AchievementURL:
+ *                         achievementURL:
  *                           type: string
- *                         CreatedAt:
+ *                         createdAt:
  *                           type: string
  *                           format: date-time
  *     security:
  *       - BearerAuth: []
  */
 router.get(
-    "/my-achievement-in-course/:courseId",
+    "/my-achievements/:courseId",
     verifyTokenAndAttachUser,
-    templateController.getAchievementInCourse
-);
-
-/**
- * @swagger
- * /media-service/api/achievements/templates:
- *   get:
- *     summary: |
- *       Get all achievements that teacher can choose to give to students
- *       Created At: 2024/12/09
- *       Created by: TaiPV
- *     tags:
- *       - Achievements
- *     responses:
- *       200:
- *         description: List of achievement templates
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/AchievementTemplate'
- *     security:
- *       - BearerAuth: []
- */
-router.get(
-    "/templates",
-    verifyTokenAndAttachUser,
-    templateController.getAchievementTemplates
+    achievementController.getAchievementInCourse
 );
 
 /**
@@ -124,7 +97,62 @@ router.get(
 router.post(
     "/",
     verifyTokenAndAttachUser,
-    templateController.generateAchievement
+    achievementController.generateAchievement
+);
+
+/**
+ * @swagger
+ * /media-service/api/achievements/exports:
+ *   post:
+ *     summary: Export student achievements and save a record
+ *     description: Endpoint to export student achievements and save the data in the database.
+ *     tags:
+ *       - Achievements
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               courseId:
+ *                 type: string
+ *                 description: Id of course
+ *               achievementFile:
+ *                 type: string
+ *                 format: binary
+ *                 description: The file containing achievement data to be exported
+ *             required:
+ *               - courseId
+ *               - achievementFile
+ *     responses:
+ *       200:
+ *         description: Export and save operation completed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Export completed successfully."
+ *       400:
+ *         description: Bad request, invalid input
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ *     security:
+ *       - BearerAuth: []
+ */
+router.post(
+    "/exports",
+    verifyTokenAndAttachUser,
+    upload.single("achievementFile"),
+    achievementController.saveExportedStudentAchievement
 );
 
 /**
