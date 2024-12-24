@@ -171,7 +171,6 @@ namespace PaymentService.Services.Sepay
                     Message = "Withdrawal transaction completed"
                 };
 
-                await NotifyClient(paymentTransaction.UserId.ToString(), paymentTransaction.TransactionType.ToString(), responseInfo);
                 return responseInfo;
             }
             catch (Exception e)
