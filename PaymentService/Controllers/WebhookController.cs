@@ -42,7 +42,7 @@ namespace PaymentService.Controllers
                 return BadRequest("Invalid request body");
             }
 
-            var responseInfo = await _sepayService.SaveWithdrawalTransaction(request);
+            var responseInfo = await _sepayService.HandleWithdrawalRequestTransaction(request);
             return HandleResponseInfoNoResource(responseInfo);
         }
     }

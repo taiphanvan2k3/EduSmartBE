@@ -26,13 +26,12 @@ namespace PaymentService.Services.Sepay
 
         /// <summary>
         /// Bank money to teacher
-        /// <para>Author: ManhTD</para>
-        /// <para>Created at: 9/11/2024</para>
+        /// <para>Author: ManhTD - Created at: 2024/11/28</para>
+        /// <para>Author: TaiPV - Created at: 2024/12/24</para>
         /// </summary>
         /// <param name="sepayWithdrawalRequest"></param>
         /// <returns></returns>
-        public Task<ResponseInfo> SaveWithdrawalTransaction(SepayWithdrawalRequest sepayWithdrawalRequest);
-
+        public Task<ResponseInfo> HandleWithdrawalRequestTransaction(SepayWithdrawalRequest sepayWithdrawalRequest);
     }
 
     public class SepayService(IServiceProvider serviceProvider, ILogger<SepayService> logger)
@@ -118,10 +117,12 @@ namespace PaymentService.Services.Sepay
             }
         }
 
-        public async Task<ResponseInfo> SaveWithdrawalTransaction(SepayWithdrawalRequest sepayWithdrawalRequest)
+        public async Task<ResponseInfo> HandleWithdrawalRequestTransaction(SepayWithdrawalRequest sepayWithdrawalRequest)
         {
             var methodName = GetActualAsyncMethodName();
+            var responseInfo = new ResponseInfo();
             TblPaymentTransaction paymentTransaction = null;
+
             try
             {
                 LogInfo("Start", methodName);
@@ -130,17 +131,20 @@ namespace PaymentService.Services.Sepay
 
                 if (paymentTransaction == null)
                 {
-                    return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "NotFound", "Payment transaction not found");
+                    responseInfo = CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "NotFound", "Payment transaction not found");
+                    return responseInfo;
                 }
 
                 if (paymentTransaction.OrderStatus == OrderStatus.SUCCESS)
                 {
-                    return CreateEarlyResponseInfo(StatusCodes.Status400BadRequest, "InvalidStatus",
-                        "Payment transaction is already completed");
+                    responseInfo = CreateEarlyResponseInfo(StatusCodes.Status400BadRequest, "InvalidStatus",
+                       "Payment transaction is already completed");
+                    return responseInfo;
                 }
 
                 paymentTransaction.OrderStatus = OrderStatus.SUCCESS;
                 paymentTransaction.CompletedAt = DateTimeOffset.UtcNow;
+                paymentTransaction.Error = "";
 
                 var withdrawalRequestId = JsonSerializerUtils.Deserialize<WithdrawalRelatedInfo>(paymentTransaction.RelatedInformation).WithdrawalRequestId;
                 var withdrawalRequest = await _context.WithdrawalRequests
@@ -161,7 +165,7 @@ namespace PaymentService.Services.Sepay
 
                 await _context.SaveChangesAsync();
 
-                var responseInfo = new ResponseInfo
+                responseInfo = new ResponseInfo
                 {
                     StatusCode = StatusCodes.Status200OK,
                     Message = "Withdrawal transaction completed"
@@ -173,19 +177,23 @@ namespace PaymentService.Services.Sepay
             catch (Exception e)
             {
                 LogError(e, methodName);
-
-                if (paymentTransaction != null)
-                {
-                    var responseInfo = CreateEarlyResponseInfo(StatusCodes.Status500InternalServerError,
-                        "InternalServerError", e.InnerException?.Message ?? e.Message);
-
-                    await NotifyClient(paymentTransaction.UserId.ToString(),
-                        paymentTransaction.TransactionType.ToString(), responseInfo);
-                }
+                responseInfo = CreateEarlyResponseInfo(StatusCodes.Status500InternalServerError,
+                    "InternalServerError", e.InnerException?.Message ?? e.Message);
                 throw;
             }
             finally
             {
+                if (paymentTransaction != null)
+                {
+                    await NotifyClient(paymentTransaction.UserId.ToString(), paymentTransaction.TransactionType.ToString(), responseInfo);
+
+                    if (!responseInfo.IsSuccess && paymentTransaction.OrderStatus != OrderStatus.SUCCESS)
+                    {
+                        paymentTransaction.OrderStatus = OrderStatus.FAILED;
+                        paymentTransaction.Error = responseInfo.Message;
+                        await _context.SaveChangesAsync();
+                    }
+                }
                 LogInfo("End", methodName);
             }
         }
