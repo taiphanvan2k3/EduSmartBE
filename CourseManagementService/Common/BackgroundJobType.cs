@@ -8,5 +8,6 @@ namespace CourseManagementService.Common
         public const string UpdateLessonVideo = "UpdateVideoLesson";
         public const string UpdateLessonThumbnail = "UpdateLessonThumbnail";
         public const string UnlockFirstLesson = "UnlockFirstLesson";
+        public const string CreateNotification = "CreateNotification";
     }
 }

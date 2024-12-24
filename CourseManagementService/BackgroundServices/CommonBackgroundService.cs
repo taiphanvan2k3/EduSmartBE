@@ -5,6 +5,8 @@ using CourseManagementService.Services.CourseManagement.Teacher;
 using CourseManagementService.Services.LessonManagement.VideoLesson;
 using CourseManagementService.Services.Medias;
 using CourseManagementService.Services.Medias.Schemas;
+using CourseManagementService.Services.NotificationManagement;
+using CourseManagementService.Services.NotificationManagement.Schemas;
 
 namespace CourseManagementService.BackgroundServices
 {
@@ -52,6 +54,9 @@ namespace CourseManagementService.BackgroundServices
                         break;
                     case BackgroundJobType.UnlockFirstLesson:
                         await UnlockFirstLessonAsync(scope.ServiceProvider.GetRequiredService<IStudentCourseDetailService>(), data.Data);
+                        break;
+                    case BackgroundJobType.CreateNotification:
+                        await CreateNotificationAsync(scope.ServiceProvider.GetRequiredService<INotificationDetailService>(), data.Data);
                         break;
                     default:
                         throw new ArgumentException("Unsupported job type.");
@@ -184,6 +189,19 @@ namespace CourseManagementService.BackgroundServices
             catch (Exception e)
             {
                 Console.WriteLine("Unlock first lesson failed: " + e.InnerException?.Message ?? e.Message);
+            }
+        }
+
+        private static async Task CreateNotificationAsync(INotificationDetailService notificationDetailService, Dictionary<string, dynamic> data)
+        {
+            try
+            {
+                var notificationCreateDto = data["notificationCreateDto"] as NotificationCreateDto;
+                await notificationDetailService.CreateNotificationAsync(notificationCreateDto);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Create notification failed: " + e.InnerException?.Message ?? e.Message);
             }
         }
     }
