@@ -205,7 +205,7 @@ namespace CourseManagementService.Services.CourseManagement.Public
                     } : null;
                 }
 
-                if (courseDetail.UnlockedLessons.Count == 0)
+                if (courseDetail.UnlockedLessons.Count == 0 && courseDetail.Course.FirstLesson != null)
                 {
                     courseDetail.UnlockedLessons.Add(new LessonTrackingDetail()
                     {

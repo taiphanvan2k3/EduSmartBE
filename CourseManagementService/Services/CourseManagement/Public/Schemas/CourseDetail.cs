@@ -14,12 +14,12 @@ namespace CourseManagementService.Services.CourseManagement.Public.Schemas
         public CourseDto Course { get; set; }
 
         [JsonProperty(Order = 100)]
-        public List<ChapterDetail> Chapters { get; set; }
+        public List<ChapterDetail> Chapters { get; set; } = [];
 
         [JsonProperty(Order = 101)]
         public List<LessonTrackingDetail> UnlockedLessons { get; set; } = [];
 
         [JsonProperty(Order = 102)]
-        public List<Guid> BookmarkedLessonIds { get; set; }
+        public List<Guid> BookmarkedLessonIds { get; set; } = [];
     }
 }
