@@ -7,6 +7,51 @@ const {
 } = require("../../helpers/response-info-helper");
 const { checkStudentCompletedCourse } = require("../grpc/grpc-course.service");
 const { createAchievement } = require("../canvas.service");
+const {
+    uploadCloudinary,
+    deleteCloudinary
+} = require("../../helpers/init-cloudinary");
+
+/**
+ * Get the default course template in a course
+ * @author TaiPV
+ * @createdDate 2024/12/24
+ * @param {Guid} courseId
+ * @returns
+ */
+const getDefaultCourseTemplateInCourse = async (courseId) => {
+    const caller = "getDefaultCourseTemplateInCourse";
+    try {
+        logInfo(caller, "Start");
+
+        const query = `
+            SELECT "Id", "CourseId", "AchievementTemplateId", "CourseNameTextStyle", "StudentNameTextStyle", "DateTextStyle", "TeacherNameTextStyle", "IsDefault"
+            FROM "CourseAchievementTemplates"
+            WHERE "CourseId" = $1 AND "IsDefault" = true
+        `;
+
+        const { rows } = await pool.query(query, [courseId]);
+        let courseTemplate = null;
+        if (rows.length > 0) {
+            courseTemplate = {
+                id: rows[0].Id,
+                courseId: rows[0].CourseId,
+                achievementTemplateId: rows[0].AchievementTemplateId,
+                courseNameTextStyle: rows[0].CourseNameTextStyle,
+                studentNameTextStyle: rows[0].StudentNameTextStyle,
+                dateTextStyle: rows[0].DateTextStyle,
+                teacherNameTextStyle: rows[0].TeacherNameTextStyle,
+                isDefault: rows[0].IsDefault
+            };
+        }
+        return createResponseInfo("courseTemplate", courseTemplate);
+    } catch (error) {
+        logError(caller, error);
+        throw error;
+    } finally {
+        logInfo(caller, "End");
+    }
+};
 
 /**
  * Get course template by id
@@ -275,25 +320,101 @@ const generateAchievement = async (courseId, studentId) => {
         );
 
         logInfo(caller, "End");
-        return createResponseInfo("achievementURL", achievementURL);
+        return createResponseInfo("achievement", {
+            courseId,
+            achievementURL,
+            createdAt: new Date().toISOString()
+        });
     } catch (error) {
         logError(caller, error);
     }
 };
 
-const checkIsExportedAchievement = async (courseId, studentId) => {
-    const caller = "checkIsExportedAchievement";
+/**
+ * Save the achievement that student has exported to the database
+ * @param {Guid} courseId
+ * @param {number} studentId
+ */
+const saveExportedStudentAchievementFromWeb = async (
+    courseId,
+    studentId,
+    studentName,
+    achievementFile
+) => {
+    const caller = "saveExportedStudentAchievement";
+    let publicId = null;
+
     try {
         logInfo(caller, "Start");
+
+        if (await checkIsExportedAchievement(courseId, studentId)) {
+            return createEarlyErrorResponse(
+                400,
+                "Bad Request",
+                "Achievement has already been exported in this course"
+            );
+        }
+
+        const isCompletedValidation = await validateCompletedCourse(
+            courseId,
+            studentId
+        );
+
+        if (isCompletedValidation.statusCode !== 200) {
+            return isCompletedValidation;
+        }
+
+        const date = new Date();
+        const uploadResponse = await uploadCloudinary(
+            achievementFile.buffer,
+            "achievements",
+            "auto",
+            `${studentName}_${date.getTime()}`
+        );
+
+        publicId = uploadResponse?.public_id;
+
         const query = `
-            SELECT 1 FROM "StudentAchievements"
-            WHERE "CourseId" = $1 AND "StudentId" = $2
+            INSERT INTO "StudentAchievements" (
+                "Id",
+                "CourseId",
+                "StudentId",
+                "AchievementURL"
+            )
+            VALUES ($1, $2, $3, $4)
+            RETURNING "AchievementURL", "CourseId", "CreatedAt";
         `;
 
-        const { rows } = await pool.query(query, [courseId, studentId]);
-        return rows.length > 0;
+        const values = [
+            uuidv4(),
+            courseId,
+            studentId,
+            uploadResponse.secure_url
+        ];
+
+        const { rows } = await pool.query(query, values);
+        if (rows.length == 0) {
+            return createEarlyErrorResponse(
+                500,
+                "Internal Server Error",
+                "Error saving achievement"
+            );
+        }
+
+        return createResponseInfo("achievement", {
+            courseId: rows[0].CourseId,
+            achievementURL: rows[0].AchievementURL,
+            createdAt: rows[0].CreatedAt
+        });
     } catch (error) {
+        if (publicId) {
+            await deleteCloudinary(publicId);
+        }
+
         logError(caller, error);
+        throw error;
+    } finally {
+        logInfo(caller, "End");
     }
 };
 
@@ -443,12 +564,51 @@ const getDefaultTemplateOfCourse = async (courseId) => {
     }
 };
 
+const checkIsExportedAchievement = async (courseId, studentId) => {
+    const caller = "checkIsExportedAchievement";
+    try {
+        logInfo(caller, "Start");
+        const query = `
+            SELECT 1 FROM "StudentAchievements"
+            WHERE "CourseId" = $1 AND "StudentId" = $2
+        `;
+
+        const { rows } = await pool.query(query, [courseId, studentId]);
+        return rows.length > 0;
+    } catch (error) {
+        logError(caller, error);
+    }
+};
+
+const validateCompletedCourse = async (courseId, studentId) => {
+    const grpcResponse = await checkStudentCompletedCourse(courseId, studentId);
+    if (!grpcResponse.isSuccess) {
+        return createEarlyErrorResponse(
+            500,
+            "Internal Server Error",
+            grpcResponse.message
+        );
+    }
+
+    if (!grpcResponse.isCompleted) {
+        return createEarlyErrorResponse(
+            400,
+            "Bad Request",
+            "Student has not completed the course"
+        );
+    }
+
+    return createResponseInfo("statusCode", 200);
+};
+
 module.exports = {
+    getDefaultCourseTemplateInCourse,
     getCourseTemplateById,
     createTemplateForCourse,
     updateTemplateForCourse,
     deleteCourseTemplate,
     generateAchievement,
     saveExportedStudentAchievement,
+    saveExportedStudentAchievementFromWeb,
     getExportedAchievement
 };
