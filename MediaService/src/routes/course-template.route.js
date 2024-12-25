@@ -44,47 +44,6 @@ router.get(
 
 /**
  * @swagger
- * /media-service/api/course-templates/my-templates:
- *   get:
- *     summary: |
- *       Get all the created course templates in a the course
- *       Created At: 2024/12/16
- *       Created by: TaiPV
- *     tags:
- *       - Course Templates
- *     parameters:
- *       - in: query
- *         name: courseId
- *         required: true
- *         description: Id of course
- *         schema:
- *           type: string
- *           format: uuid
- *     responses:
- *       200:
- *         description: A list of course templates associated with the provided courseId.
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/CourseTemplate'
- *       400:
- *         description: Invalid request query
- *       404:
- *         description: No templates found for the given courseId.
- *     security:
- *       - BearerAuth: []
- */
-router.get(
-    "/my-templates",
-    verifyTokenAndAttachUser,
-    isAllowForRoles(["Teacher"]),
-    courseTemplateController.getCourseTemplates
-);
-
-/**
- * @swagger
  * /media-service/api/course-templates/{id}:
  *   get:
  *     summary: |
@@ -250,6 +209,10 @@ router.post(
  *               isDefault:
  *                 type: boolean
  *                 example: true
+ *               templateId:
+ *                 type: integer
+ *                 description: ID of the achievement template
+ *                 example: 1
  *               studentNameTextStyle:
  *                 type: object
  *                 properties:
@@ -403,10 +366,10 @@ router.delete(
  *           type: string
  *           format: uuid
  *           description: The unique identifier for the template.
- *         achievementTemplateId:
+ *         templateId:
  *           type: integer
- *           description: ID of the achievement template.
- *         studentStyle:
+ *           description: ID of the template.
+ *         studentTextStyle:
  *           type: object
  *           properties:
  *             fontFamily:
@@ -418,7 +381,7 @@ router.delete(
  *             color:
  *               type: string
  *               example: "#000000"
- *         courseNameStyle:
+ *         courseNameTextStyle:
  *           type: object
  *           properties:
  *             fontFamily:
@@ -430,7 +393,7 @@ router.delete(
  *             color:
  *               type: string
  *               example: "#333333"
- *         dateStyle:
+ *         dateTextStyle:
  *           type: object
  *           properties:
  *             fontFamily:
@@ -442,7 +405,7 @@ router.delete(
  *             color:
  *               type: string
  *               example: "#666666"
- *         teacherNameStyle:
+ *         teacherNameTextStyle:
  *           type: object
  *           properties:
  *             fontFamily:

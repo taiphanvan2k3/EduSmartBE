@@ -1,6 +1,6 @@
 const {
     getAllTemplates
-} = require("../services/achievement-templates/list-of-achievement-templates.service");
+} = require("../services/templates/list-of-templates.service");
 
 module.exports = {
     getAllTemplates: async (_, res, next) => {
