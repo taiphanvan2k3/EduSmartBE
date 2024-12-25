@@ -3,7 +3,7 @@ const {
     getExportedAchievement,
     saveExportedStudentAchievement,
     saveExportedStudentAchievementFromWeb
-} = require("../services/achievement-templates/achievement-template-detail.service");
+} = require("../services/achievements/achievement-detail.service");
 const { handleResponseInfo } = require("../helpers/response-info-helper");
 
 module.exports = {
@@ -27,15 +27,25 @@ module.exports = {
                 currentUser.userId
             );
 
-            res.json(handleResponseInfo("achievement", responseInfo));
+            let localPath = "";
+            if (responseInfo.statusCode === 200) {
+                responseInfo.data.achievement.localPathInPublic =
+                    req.protocol +
+                    "://" +
+                    req.get("host") +
+                    responseInfo.data.achievement.localPathInPublic;
+                localPath = responseInfo.data.achievement.localPath;
+                delete responseInfo.data.achievement.localPath;
+            }
 
+            res.json(handleResponseInfo("achievement", responseInfo));
             if (responseInfo.statusCode === 200) {
                 setImmediate(async () => {
                     // Do something after sending response
                     await saveExportedStudentAchievement(
                         courseId,
                         currentUser.userId,
-                        responseInfo.data.achievement.achievementURL
+                        localPath
                     );
                 });
             }
@@ -65,6 +75,16 @@ module.exports = {
                 currentUser.fullName,
                 achievementFile
             );
+
+            if (responseInfo.statusCode === 200) {
+                responseInfo.data.achievement.localPathInPublic =
+                    req.protocol +
+                    "://" +
+                    req.get("host") +
+                    responseInfo.data.achievement.localPathInPublic;
+
+                delete responseInfo.data.achievement.localPath;
+            }
 
             res.json(handleResponseInfo("achievement", responseInfo));
         } catch (error) {

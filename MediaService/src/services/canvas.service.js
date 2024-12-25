@@ -1,8 +1,9 @@
 const { logInfo, logError } = require("./logger.service");
 const { createCanvas, loadImage } = require("canvas");
 const { uploadCloudinary } = require("../helpers/init-cloudinary");
-const { formatDateTime } = require("../helpers/utils");
+const { formatDateTime, createFolderIfNotExist } = require("../helpers/utils");
 const path = require("path");
+const fs = require("fs");
 
 class TextStyle {
     constructor(fontFamily, fontSize, color) {
@@ -59,11 +60,15 @@ async function createAchievement(
             image.width,
             Number.parseFloat(studentNameTextStyle.fontSize)
         );
+
         const nameTextWidth = ctx.measureText(studentName).width;
+        const nameTextHeight =
+            ctx.measureText(studentName).actualBoundingBoxAscent;
         const namePosition = {
             x: (image.width - nameTextWidth) / 2, // Căn giữa tên sinh viên
-            y: 395 // Tọa độ y
+            y: (templateId == 1 ? 375 : 400) - nameTextHeight / 2 // Tọa độ y
         };
+
         ctx.fillText(studentName, namePosition.x, namePosition.y);
 
         // ====== Course Name ======
@@ -109,15 +114,32 @@ async function createAchievement(
 
         const buffer = canvas.toBuffer("image/jpeg");
 
-        const uploadResult = await uploadCloudinary(
-            buffer,
-            "student-achievements",
-            "image",
+        // Lưu vào thư mục public
+        const localFolderPath = path.join(
+            __dirname,
+            "..",
+            "..",
+            "public",
+            "media-service",
+            "temp_achievements"
+        );
+        const fileName = `${studentName}-${date.getTime()}.jpg`;
+
+        createFolderIfNotExist(localFolderPath);
+
+        const achievementLocalPath = path.join(
+            localFolderPath,
             `${studentName}-${date.getTime()}.jpg`
         );
 
-        logInfo(caller, "Achievement image created successfully!");
-        return uploadResult.secure_url;
+        fs.writeFileSync(achievementLocalPath, buffer);
+
+        logInfo(caller, "Achievement image save to local folder successfully");
+
+        return {
+            localPath: achievementLocalPath,
+            localPathInPublic: `/media-service/temp_achievements/${fileName}`
+        };
     } catch (error) {
         logError(caller, error.message);
         throw error;
@@ -131,7 +153,7 @@ const setTextStyle = (ctx, textStyle) => {
 
 const modifyFontSize = (ctx, text, maxWidth, currentFontSize) => {
     let currentTextWidth = ctx.measureText(text).width;
-    while (currentTextWidth >= maxWidth || maxWidth - currentTextWidth <= 100) {
+    while (currentTextWidth >= maxWidth || maxWidth - currentTextWidth <= 200) {
         currentFontSize -= 2;
         ctx.font = `${currentFontSize}px "Dancing Script"`;
         currentTextWidth = ctx.measureText(text).width;

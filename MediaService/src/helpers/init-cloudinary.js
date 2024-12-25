@@ -1,4 +1,5 @@
 const { logInfo, logError } = require("../services/logger.service");
+
 const cloudinary = require("cloudinary").v2;
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -41,6 +42,32 @@ const uploadCloudinary = async (
     });
 };
 
+const uploadCloudinaryFromFilePath = async (filePath, folderName) => {
+    logInfo("uploadCloudinaryFromFilePath", "Uploading file to Cloudinary...");
+    const uploadOptions = {
+        folder: folderName
+    };
+
+    return new Promise((resolve, reject) => {
+        cloudinary.uploader.upload(filePath, uploadOptions, (error, result) => {
+            if (error) {
+                reject(error);
+                logError(
+                    "uploadCloudinaryFromFilePath",
+                    "Error uploading file to Cloudinary",
+                    error
+                );
+            } else {
+                resolve(result);
+                logInfo(
+                    "uploadCloudinaryFromFilePath",
+                    "File uploaded successfully"
+                );
+            }
+        });
+    });
+};
+
 const deleteCloudinary = async (publicId) => {
     return new Promise((resolve, reject) => {
         cloudinary.uploader.destroy(publicId, (error, result) => {
@@ -55,5 +82,6 @@ const deleteCloudinary = async (publicId) => {
 
 module.exports = {
     uploadCloudinary,
+    uploadCloudinaryFromFilePath,
     deleteCloudinary
 };
