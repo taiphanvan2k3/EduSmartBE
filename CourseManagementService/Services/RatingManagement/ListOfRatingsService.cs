@@ -65,12 +65,6 @@ namespace CourseManagementService.Services.RatingManagement
                 LogInfo("Start", methodName);
                 var currentUser = GetCurrentUser();
 
-                var coursePermission = await _lessonBaseDetailService.CheckCoursePermission(courseId, currentUser.UserId);
-                if (!coursePermission.IsSuccess)
-                {
-                    return coursePermission;
-                }
-
                 PaginatedList<CourseRatingDetail> courseRatings = await _context.CourseRatings
                     .Where(x => x.CourseId == courseId)
                     .OrderByDescending(x => x.CreatedAt)
