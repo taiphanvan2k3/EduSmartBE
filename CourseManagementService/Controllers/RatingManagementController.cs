@@ -26,6 +26,7 @@ namespace CourseManagementService.Controllers
         /// <param name="courseId">Id of the course</param>
         /// <param name="paramsSearch">Pagination information</param>
         /// <returns></returns>
+        [AllowAnonymous]
         [HttpGet("courses/{courseId}/ratings")]
         public async Task<IActionResult> GetListOfCourseRatings([FromRoute] Guid courseId, [FromQuery] ParamsSearch paramsSearch)
         {
