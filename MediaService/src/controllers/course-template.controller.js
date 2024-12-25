@@ -1,40 +1,13 @@
 const {
-    getAllTemplates,
-    getCourseTemplates
-} = require("../services/achievement-templates/list-of-achievement-templates.service");
-const {
     getDefaultCourseTemplateInCourse,
     getCourseTemplateById,
     createTemplateForCourse,
     updateTemplateForCourse,
     deleteCourseTemplate
-} = require("../services/achievement-templates/achievement-template-detail.service");
+} = require("../services/course-templates/course-template-detail.service");
 const { handleResponseInfo } = require("../helpers/response-info-helper");
 
 module.exports = {
-    getAllTemplates: async (req, res, next) => {
-        try {
-            const templates = await getAllTemplates();
-            res.json(templates);
-        } catch (error) {
-            next(error);
-        }
-    },
-    getCourseTemplates: async (req, res, next) => {
-        try {
-            const { courseId } = req.query;
-            if (!courseId) {
-                return res
-                    .status(400)
-                    .json({ message: "Invalid request query" });
-            }
-
-            const templates = await getCourseTemplates(courseId);
-            res.json(templates);
-        } catch (error) {
-            next(error);
-        }
-    },
     getDefaultCourseTemplate: async (req, res, next) => {
         try {
             const { courseId } = req.query;
@@ -60,16 +33,9 @@ module.exports = {
     getCourseTemplateById: async (req, res, next) => {
         try {
             const courseTemplateId = req.params.id;
-            const courseTemplate =
-                await getCourseTemplateById(courseTemplateId);
+            const responseInfo = await getCourseTemplateById(courseTemplateId);
 
-            if (!courseTemplate) {
-                return res
-                    .status(404)
-                    .json({ message: "Course template not found" });
-            }
-
-            res.json(courseTemplate);
+            return res.json(handleResponseInfo("courseTemplate", responseInfo));
         } catch (error) {
             next(error);
         }
@@ -86,6 +52,8 @@ module.exports = {
 
             if (
                 !templateId ||
+                templateId <= 0 ||
+                templateId > 6 ||
                 !studentNameTextStyle ||
                 !courseNameTextStyle ||
                 !dateTextStyle ||
@@ -106,6 +74,7 @@ module.exports = {
         try {
             const courseTemplateId = req.params.id;
             const {
+                templateId,
                 studentNameTextStyle,
                 courseNameTextStyle,
                 dateTextStyle,
@@ -113,6 +82,9 @@ module.exports = {
             } = req.body;
 
             if (
+                !templateId ||
+                templateId <= 0 ||
+                templateId > 6 ||
                 !studentNameTextStyle ||
                 !courseNameTextStyle ||
                 !dateTextStyle ||

@@ -104,7 +104,10 @@ router.post(
  * @swagger
  * /media-service/api/achievements/exports:
  *   post:
- *     summary: Export student achievements and save a record
+ *     summary: |
+ *       Save the exported student achievement after the export operation is completed at Web
+ *       Created At: 2024/12/21
+ *       Created by: TaiPV
  *     description: Endpoint to export student achievements and save the data in the database.
  *     tags:
  *       - Achievements
