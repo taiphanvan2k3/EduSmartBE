@@ -23,6 +23,15 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
         public Task<ResponseInfo> GetReactions(Guid commentId);
 
         /// <summary>
+        /// Get detail of a comment
+        /// <para>Created at: 2024/12/25</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="commentId">Id of the comment</param>
+        /// <returns></returns>
+        public Task<ResponseInfo> GetCommentDetail(Guid commentId);
+
+        /// <summary>
         /// Create a comment
         /// <para>Created at: 2024/11/30</para>
         /// <para>Created by: TaiPV</para> 
@@ -75,6 +84,90 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
             ?? throw new ArgumentNullException(nameof(ICacheService));
         private readonly IUserContentValidationService _userContentValidationService = serviceProvider.GetService<IUserContentValidationService>()
             ?? throw new ArgumentNullException(nameof(IUserContentValidationService));
+
+        public async Task<ResponseInfo> GetCommentDetail(Guid commentId)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var currentUser = GetCurrentUser();
+
+                var canAccessCommentResponse = await CanAccessComment(commentId, currentUser.UserId);
+                if (!canAccessCommentResponse.IsSuccess || canAccessCommentResponse.Data["comment"] == null)
+                {
+                    return canAccessCommentResponse;
+                }
+
+                var teacherIdOfCourse = canAccessCommentResponse.Data["comment"].TeacherId as int?;
+
+                var commentDto = await _context.Comments
+                    .Where(c => c.Id == commentId)
+                    .OrderByDescending(c => c.CreatedAt)
+                    .Select(c => new CommentDetail
+                    {
+                        Id = c.Id,
+                        Content = c.Content,
+                        CreatedBy = new UserDetail
+                        {
+                            Id = c.CreatedBy,
+                            RoleInCourse = c.RoleOfUser
+                        },
+                        MentionedUser = c.MentionedUserId.HasValue ? new UserDetail
+                        {
+                            Id = c.MentionedUserId.Value
+                        } : null,
+                        Reactions = new ReactionsInfo
+                        {
+                            Count = c.Reactions.Count,
+                            Types = c.Reactions.Select(r => r.Type).Distinct().ToList()
+                        },
+                        ReplyCount = c.Replies.Count,
+                        HasReacted = c.Reactions.Any(r => r.UserId == currentUser.UserId),
+                        ReactionType = c.Reactions.Where(r => r.UserId == currentUser.UserId).Select(r => r.Type).FirstOrDefault(),
+                        IsApproved = c.IsApproved,
+                        DiscussionId = c.DiscussionId,
+                        ParentId = c.ParentId,
+                        CreatedAt = c.CreatedAt,
+                        IsDelFlag = c.IsDelFlag,
+                        UpdatedAt = c.UpdatedAt,
+                    })
+                    .FirstOrDefaultAsync();
+
+                var userIds = new List<int> { commentDto.CreatedBy.Id };
+                if (commentDto.MentionedUser != null)
+                {
+                    userIds.Add(commentDto.MentionedUser.Id);
+                }
+
+                var userInfos = await _grpcUserService.GetListOfUsers(userIds);
+                if (userInfos.Count == 0)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status500InternalServerError, "Cannot get user info");
+                }
+
+                string roleInCourseOfCreator = commentDto.CreatedBy.RoleInCourse;
+                commentDto.CreatedBy = userInfos.FirstOrDefault(x => x.Id == commentDto.CreatedBy.Id);
+                commentDto.CreatedBy.RoleInCourse = roleInCourseOfCreator;
+
+                if (commentDto.MentionedUser != null)
+                {
+                    commentDto.MentionedUser = userInfos.FirstOrDefault(x => x.Id == commentDto.MentionedUser.Id);
+                    commentDto.MentionedUser.RoleInCourse = commentDto.MentionedUser.Id == teacherIdOfCourse ? "Teacher" : "Student";
+                }
+
+                return new ResponseInfo(resource: "comment", commentDto);
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+            finally
+            {
+                LogInfo("End", methodName);
+            }
+        }
 
         public async Task<ResponseInfo> GetReactions(Guid commentId)
         {
@@ -428,6 +521,32 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
             {
                 LogInfo("End", methodName);
             }
+        }
+
+        private async Task<ResponseInfo> CanAccessComment(Guid commentId, int userId)
+        {
+            var commentInfo = await _context.Comments
+                .Where(x => x.Id == commentId)
+                .Select(x => new
+                {
+                    x.Discussion.Course.TeacherId,
+                    x.CreatedBy,
+                    IsEnrolled = x.Discussion.Course.Enrollments.Any(e => e.StudentId == userId && !e.LeaveDate.HasValue),
+                    RoleInCourse = x.Discussion.Course.TeacherId == userId ? "Teacher" : "Student"
+                })
+                .FirstOrDefaultAsync();
+
+            if (commentInfo == null)
+            {
+                return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "Comment not found");
+            }
+
+            if (commentInfo.CreatedBy != userId && commentInfo.TeacherId != userId && !commentInfo.IsEnrolled)
+            {
+                return CreateEarlyResponseInfo(StatusCodes.Status403Forbidden, "You do not have permission to access this comment");
+            }
+
+            return new ResponseInfo(resource: "comment", commentInfo);
         }
 
         private async Task<ResponseInfo> CanModifyComment(Guid commentId, int userId)
