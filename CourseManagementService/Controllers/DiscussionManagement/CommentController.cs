@@ -19,6 +19,20 @@ namespace CourseManagementService.Controllers.DiscussionManagement
             ?? throw new ArgumentNullException(nameof(commentDetailService));
 
         /// <summary>
+        /// Get comment detail by id
+        /// <para>Created at: 2024/12/25</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="id">Id of comment</param>
+        [HttpGet("{id}")]
+        [ProducesResponseType(typeof(CommentDetail), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetCommentById(Guid id)
+        {
+            var responseInfo = await _commentDetailService.GetCommentDetail(id);
+            return HandleResponseInfo(responseInfo, resourceName: "comment");
+        }
+
+        /// <summary>
         /// Get list of reactions of a comment
         /// <para>Created at: 2024/11/30</para>
         /// <para>Created by: TaiPV</para>
