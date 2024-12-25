@@ -1,10 +1,14 @@
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace CourseManagementService.Services.DiscussionManagement.Discussions.Schemas
 {
     public class DiscussionCreateDto : IValidatableObject
     {
+        [SwaggerIgnore]
+        public Guid Id { get; set; }
+
         public Guid LessonId { get; set; }
 
         public int TypeId { get; set; }
