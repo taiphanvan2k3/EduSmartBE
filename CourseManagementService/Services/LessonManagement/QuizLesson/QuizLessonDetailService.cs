@@ -10,6 +10,7 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper.QueryableExtensions;
 using CourseManagementService.Services.LessonManagement.LessonBase.Schemas;
+using CourseManagementService.Services.NotificationManagement.Schemas;
 
 namespace CourseManagementService.Services.LessonManagement.QuizLesson
 {
@@ -168,6 +169,13 @@ namespace CourseManagementService.Services.LessonManagement.QuizLesson
                 responseInfo.Data.Add("lesson", lessonDto);
 
                 await _lessonBaseDetailService.ClearCourseDetailCache(courseId: isExistChapterResponse.Data["courseId"]);
+                await _lessonBaseDetailService.NotifyWhenLessonAdded(new LessonAddedNotificationData()
+                {
+                    CourseId = isExistChapterResponse.Data["courseId"],
+                    LessonId = lessonEntity.Id,
+                    LessonName = lessonEntity.Title
+                });
+
                 LogInfo("End", methodName);
                 return responseInfo;
             }
