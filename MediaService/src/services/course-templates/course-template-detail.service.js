@@ -196,10 +196,6 @@ const updateTemplateForCourse = async (
             );
         }
 
-        if (errorMessage) {
-            return createEarlyErrorResponse(400, "Bad Request", errorMessage);
-        }
-
         const query = `
             UPDATE "CourseAchievementTemplates"
             SET
@@ -232,7 +228,10 @@ const updateTemplateForCourse = async (
             );
         }
 
-        return convertCourseTemplateToDto(rows[0]);
+        return createResponseInfo(
+            "courseTemplate",
+            convertCourseTemplateToDto(rows[0])
+        );
     } catch (error) {
         logError(caller, error);
         throw error;
