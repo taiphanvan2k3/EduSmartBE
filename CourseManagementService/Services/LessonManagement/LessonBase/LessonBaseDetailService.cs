@@ -672,13 +672,24 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
                     unlockedNextLessonId = await UnlockNextLesson(courseId, currentUser.UserId, chapterOrder, lessonOrder);
                 }
 
+                var responseInfo = new ResponseInfo();
+
+                if (unlockedNextLessonId == null && lessonTrackingEntity.IsCompleted)
+                {
+                    // Student has completed the course
+                    await MarkCourseAsCompleted(responseInfo, courseId, currentUser.UserId);
+                    if (!responseInfo.IsSuccess) return responseInfo;
+                }
+
                 await _context.SaveChangesAsync();
-                return new ResponseInfo(resource: "lessonProgress", new
+                responseInfo.Data.Add("lessonProgress", new
                 {
                     lessonProgressUpdateRequest.LessonId,
                     lessonTrackingEntity.IsCompleted,
                     unlockedNextLessonId
                 });
+
+                return responseInfo;
             }
             catch (Exception e)
             {
@@ -791,6 +802,25 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
             }
 
             return nextLessonId;
+        }
+
+        private async Task MarkCourseAsCompleted(ResponseInfo responseInfo, Guid courseId, int userId)
+        {
+            var courseEnrollmentEntity = await _context.CourseEnrollments
+                .Where(c => c.CourseId == courseId && c.StudentId == userId)
+                .FirstOrDefaultAsync();
+
+            if (courseEnrollmentEntity == null)
+            {
+                responseInfo.Error = "Failed to mark the course as completed";
+                responseInfo.StatusCode = StatusCodes.Status500InternalServerError;
+            }
+
+            if (!courseEnrollmentEntity.IsCompleted)
+            {
+                courseEnrollmentEntity.IsCompleted = true;
+                courseEnrollmentEntity.CompletionDate = DateTimeOffset.UtcNow;
+            }
         }
     }
 }
