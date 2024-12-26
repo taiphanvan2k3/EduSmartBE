@@ -14,10 +14,10 @@ const achievementController = require("../controllers/achievement.controller");
 
 /**
  * @swagger
- * /media-service/api/achievements/my-achievements/{courseId}:
+ * /media-service/api/achievements/my-achievements/in-course/{courseId}:
  *   get:
  *     summary: |
- *       Student get the exported achievement in a course
+ *       Student get the achievement export status in a course
  *       Created At: 2024/12/21
  *       Created by: TaiPV
  *     tags:
@@ -31,31 +31,33 @@ const achievementController = require("../controllers/achievement.controller");
  *           format: uuid
  *     responses:
  *       200:
- *         description: The exported achievement in a courses
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 statusCode:
- *                   type: integer
- *                   example: 200
- *                 data:
+ *                 exportStatus:
  *                   type: object
  *                   properties:
- *                     achievementURL:
+ *                     canExport:
+ *                       type: boolean
+ *                       example: true
+ *                     achievement:
  *                       type: object
+ *                       nullable: true
  *                       properties:
  *                         achievementURL:
  *                           type: string
+ *                           example: "https://example.com/achievement"
  *                         createdAt:
  *                           type: string
  *                           format: date-time
+ *                           example: "2024-12-25T06:35:04.456Z"
  *     security:
  *       - BearerAuth: []
  */
 router.get(
-    "/my-achievements/:courseId",
+    "/my-achievements/in-course/:courseId",
     verifyTokenAndAttachUser,
     achievementController.getAchievementInCourse
 );
