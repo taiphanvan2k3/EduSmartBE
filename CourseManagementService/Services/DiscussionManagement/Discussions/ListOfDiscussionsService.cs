@@ -64,7 +64,8 @@ namespace CourseManagementService.Services.DiscussionManagement.Discussions
                             Id = x.Type.Id.ToString(),
                             Name = x.Type.Name
                         },
-                        CreatedAt = x.CreatedAt
+                        CreatedAt = x.CreatedAt,
+                        IsDelFlag = x.IsDelFlag
                     })
                     .ToPaginatedListAsync(searchCondition.CurrentPage, searchCondition.PageSize);
 
@@ -145,7 +146,8 @@ namespace CourseManagementService.Services.DiscussionManagement.Discussions
                                 Id = d.Type.Id.ToString(),
                                 Name = d.Type.Name
                             },
-                            CreatedAt = d.CreatedAt
+                            CreatedAt = d.CreatedAt,
+                            IsDelFlag = d.IsDelFlag
                         }
                     })
                     .ToPaginatedListAsync(searchCondition.CurrentPage, searchCondition.PageSize);

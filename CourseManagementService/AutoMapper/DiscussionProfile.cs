@@ -12,6 +12,7 @@ namespace CourseManagementService.AutoMapper
         {
             CreateMap<DiscussionCreateDto, TblDiscussion>();
             CreateMap<TblDiscussion, DiscussionCreateDto>();
+
             CreateMap<TblDiscussion, DiscussionDetail>()
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => new LookupDto
                 {
@@ -22,6 +23,13 @@ namespace CourseManagementService.AutoMapper
                 {
                     Id = src.CreatedBy,
                     Roles = src.RoleOfUser
+                }));
+
+            CreateMap<TblDiscussion, DiscussionInfo>()
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => new LookupDto
+                {
+                    Id = src.Type.Id.ToString(),
+                    Name = src.Type.Name
                 }));
         }
     }
