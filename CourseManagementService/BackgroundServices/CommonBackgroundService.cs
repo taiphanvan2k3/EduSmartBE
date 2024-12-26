@@ -10,6 +10,10 @@ using CourseManagementService.Services.NotificationManagement.Schemas;
 
 namespace CourseManagementService.BackgroundServices
 {
+    /// <summary>
+    /// Maybe replace this class with a generic one that can handle all types of background jobs. (NotificationQueue)
+    /// </summary>
+    /// <param name="channel"></param>
     public class CommonProducer(Channel<BackgroundJobData> channel)
     {
         private readonly Channel<BackgroundJobData> _channel = channel;

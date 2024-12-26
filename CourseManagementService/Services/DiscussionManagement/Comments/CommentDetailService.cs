@@ -1,5 +1,4 @@
 using AutoMapper;
-using CloudinaryDotNet;
 using CourseManagementService.BackgroundServices;
 using CourseManagementService.Common;
 using CourseManagementService.Common.Schemas;
@@ -419,7 +418,11 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                     .Where(x => x.Id == commentId)
                     .Select(x => new
                     {
-                        x.ParentId
+                        x.ParentId,
+                        x.DiscussionId,
+                        x.CreatedBy,
+                        x.Discussion.CourseId,
+                        x.Discussion.LessonId
                     })
                     .FirstOrDefaultAsync();
 
@@ -442,6 +445,33 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                         };
 
                         await _context.Reactions.AddAsync(newReactionEntity);
+                        await _commonProducer.EnqueueDataAsync(new BackgroundJobData()
+                        {
+                            JobType = BackgroundJobType.CreateNotification,
+                            Data = new Dictionary<string, dynamic>
+                            {
+                                {"notificationCreateDto", new NotificationCreateDto()
+                                {
+                                    Type = NotificationType.Reaction,
+                                    ReceiverId = commentEntity.CreatedBy,
+                                    SenderInfo = new SenderInfo()
+                                    {
+                                        Id = currentUser.UserId,
+                                        FullName = currentUser.FullName,
+                                        IsSystem = false,
+                                        IsTeacher = currentUser.IsTeacher
+                                    },
+                                    RelatedEntityId = commentId.ToString(),
+                                    RelatedEntityType = RelatedEntityType.Comment,
+                                    CourseId = commentEntity.CourseId,
+                                    MetaData = new Dictionary<string, string>
+                                    {
+                                        {"DiscussionId", commentEntity.ParentId.ToString()},
+                                        {"LessonId", commentEntity.LessonId.ToString()}
+                                    }
+                                }}
+                            }
+                        });
                     }
                     else
                     {

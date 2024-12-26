@@ -1,10 +1,12 @@
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using CourseManagementService.Common;
+using CourseManagementService.Database.Schemas.NotificationEntities;
 using CourseManagementService.Services.ChapterManagement;
 using CourseManagementService.Services.LessonManagement.LessonBase;
 using CourseManagementService.Services.LessonManagement.LessonBase.Schemas;
 using CourseManagementService.Services.LessonManagement.TextLesson.Schemas;
+using CourseManagementService.Services.NotificationManagement.Schemas;
 using Microsoft.EntityFrameworkCore;
 using TblLesson = CourseManagementService.Database.Schemas.Lesson;
 
@@ -147,6 +149,14 @@ namespace CourseManagementService.Services.LessonManagement.TextLesson
                 responseInfo.Data.Add("lesson", lessonDto);
 
                 await _lessonBaseDetailService.ClearCourseDetailCache(courseId: isExistChapterResponse.Data["courseId"]);
+
+                await _lessonBaseDetailService.NotifyWhenLessonAdded(new LessonAddedNotificationData()
+                {
+                    CourseId = isExistChapterResponse.Data["courseId"],
+                    LessonId = lessonEntity.Id,
+                    LessonName = lessonEntity.Title
+                });
+
                 return responseInfo;
             }
             catch (Exception e)

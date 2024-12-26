@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>SignalR Simple Example</title>
+    </head>
+
+    <body>
+        <h1>SignalR Simple Connect/Disconnect Example</h1>
+        <p id="status">Status: Disconnected</p>
+        <button id="connectBtn">Connect</button>
+        <button id="disconnectBtn" disabled>Disconnect</button>
+
+        <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr/dist/browser/signalr.min.js"></script>
+        <script>
+            // const hubUrl = "https://edusmart.info.vn/course-service/hub/notification";
+            const hubUrl = "http://localhost:7152/course-service/hub/notification";
+            let connection = null;
+
+            const status = document.getElementById("status");
+            const connectBtn = document.getElementById("connectBtn");
+            const disconnectBtn = document.getElementById("disconnectBtn");
+
+            const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im14dCIsImZ1bGxOYW1lIjoiWHXDom4gVHLGsOG7nW5nIE1haSIsImVtYWlsIjoibWFpeHVhbnRydW9uZzIwMDN0QGdtYWlsLmNvbSIsInVzZXJJZCI6IjE1NCIsImlzcyI6IlNtYXJ0RWR1LkF1dGhTZXJ2aWNlIiwiYXVkIjoiU21hcnRFZHUuQ2xpZW50cyIsInJvbGUiOiJTdHVkZW50IiwibmJmIjoxNzM1MTQzMTM4LCJleHAiOjE3MzUxNDQwMzgsImlhdCI6MTczNTE0MzEzOH0.3I8qb-WFhikLdlVRGXOWETrsEFggiT7lYTIOKdgFAEU";
+
+            // Connect to SignalR
+            connectBtn.addEventListener("click", async () => {
+                connection = new signalR.HubConnectionBuilder()
+                    .withUrl(hubUrl, {
+                        accessTokenFactory: () => token, // Cung cấp token để gửi đến server
+                    })
+                    .withAutomaticReconnect()
+                    .build();
+
+                connection.on("Connected", (connectionId, message) => {
+                    console.log("Connected event received from server:", {
+                        connectionId,
+                        message,
+                    });
+                    alert(`Connected: ${message}`);
+                });
+
+                connection.on("Disconnected", (connectionId, message) => {
+                    console.log("Disconnected event received from server:", {
+                        connectionId,
+                        message,
+                    });
+                    alert(`Disconnected: ${message}`);
+                });
+
+                connection.on("BuyCourseCompleted", (message) => {
+                    console.log("Event received from server:", message);
+                });
+
+                try {
+                    await connection.start();
+                    status.textContent = "Status: Connected";
+                    connectBtn.disabled = true;
+                    disconnectBtn.disabled = false;
+
+                    console.log("Connected to SignalR hub.");
+                } catch (err) {
+                    console.error("Error connecting:", err);
+                }
+            });
+
+            // Disconnect from SignalR
+            disconnectBtn.addEventListener("click", async () => {
+                if (connection) {
+                    try {
+                        await connection.stop();
+                        status.textContent = "Status: Disconnected";
+                        connectBtn.disabled = false;
+                        disconnectBtn.disabled = true;
+
+                        console.log("Disconnected from SignalR hub.");
+                    } catch (err) {
+                        console.error("Error disconnecting:", err);
+                    }
+                }
+            });
+        </script>
+    </body>
+</html>

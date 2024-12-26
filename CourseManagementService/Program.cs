@@ -3,11 +3,13 @@ using CourseManagementService.Common;
 using CourseManagementService.Database.InitDb;
 using CourseManagementService.Extensions;
 using CourseManagementService.GrpcServices;
+using CourseManagementService.Hubs;
 using CourseManagementService.Middlewares;
 using CourseManagementService.Settings;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.AspNetCore.SignalR;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -65,6 +67,10 @@ builder.Services.AddControllers()
 builder.Services.AddAuthorization();
 builder.Services.AddGrpc();
 
+// Add SignalR
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
+
 if (builder.Environment.IsProduction())
 {
     builder.WebHost.UseUrls("http://0.0.0.0:80");
@@ -117,5 +123,7 @@ app.UseAuthorization();
 app.UseMiddleware<ExceptionHandlerMiddleware>();
 
 app.MapGrpcService<GrpcCourseService>();
+app.MapHub<NotificationHub>("/course-service/hub/notification");
+
 app.MapControllers();
 await app.RunAsync();

@@ -32,6 +32,7 @@ namespace CourseManagementService.Database.Schemas.NotificationEntities
         ///   <item><description><c>ReactionType</c>: The type of reaction (e.g., like, love, etc.)</description></item>
         ///   <item><description><c>ReactionCount</c>: The number of reactions (excluding the current user's reaction)</description></item>
         ///   <item><description><c>Discussion Id</c>: Id of discussion</description></item>
+        ///   <item><description><c>Lesson Id</c>: Id of lesson</description></item>  
         /// </list>
         /// 
         /// <b>For new lesson notifications:</b>
