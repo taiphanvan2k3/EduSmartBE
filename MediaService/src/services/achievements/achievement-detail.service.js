@@ -207,10 +207,29 @@ const saveExportedStudentAchievement = async (
  * @param {Guid} courseId
  * @param {number} studentId
  */
-const getExportedAchievement = async (courseId, studentId) => {
-    const caller = "getExportedAchievement";
+const checkAchievementExportStatus = async (courseId, studentId) => {
+    const caller = "checkAchievementExportStatus";
     try {
         logInfo(caller, "Start");
+
+        const isCompletedCourseResponse = await validateCompletedCourse(
+            courseId,
+            studentId
+        );
+
+        if (isCompletedCourseResponse.statusCode === 500)
+            return isCompletedCourseResponse;
+
+        if (isCompletedCourseResponse.statusCode === 400) {
+            return createResponseInfo("exportStatus", {
+                canExport: false,
+                achievement: null
+            });
+        }
+
+        const achievementExportStatus = {
+            canExport: true
+        };
 
         const query = `
             SELECT "AchievementURL", "CreatedAt"
@@ -220,17 +239,15 @@ const getExportedAchievement = async (courseId, studentId) => {
 
         const { rows } = await pool.query(query, [courseId, studentId]);
         if (rows.length == 0) {
-            return createEarlyErrorResponse(
-                404,
-                "Not Found",
-                "Achievement not found"
-            );
+            achievementExportStatus.achievement = null;
+        } else {
+            achievementExportStatus.achievement = {
+                achievementURL: rows[0].AchievementURL,
+                createdAt: rows[0].CreatedAt
+            };
         }
 
-        return createResponseInfo("achievement", {
-            achievementURL: rows[0].AchievementURL,
-            createdAt: rows[0].CreatedAt
-        });
+        return createResponseInfo("exportStatus", achievementExportStatus);
     } catch (error) {
         logError(caller, error);
     } finally {
@@ -279,5 +296,5 @@ module.exports = {
     generateAchievement,
     saveExportedStudentAchievement,
     saveExportedStudentAchievementFromWeb,
-    getExportedAchievement
+    checkAchievementExportStatus
 };
