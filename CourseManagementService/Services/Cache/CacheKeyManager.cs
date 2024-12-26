@@ -1,5 +1,6 @@
 using CourseManagementService.Common.Helpers;
 using CourseManagementService.Services.CourseManagement.Public.Schemas;
+using CourseManagementService.Services.DiscussionManagement.Discussions.Schemas;
 
 namespace CourseManagementService.Services.Cache
 {
@@ -119,9 +120,28 @@ namespace CourseManagementService.Services.Cache
 
         public static class DiscussionInCourse
         {
-            public static string Key(Guid courseId, int userId, string keyword, int currentPage, int pageSize)
+            /// <summary>
+            /// Create a unique identifier for a cache key of discussion list in a course.
+            /// </summary>
+            /// <param name="courseId">Id of course.</param>
+            /// <param name="userId">ID của người dùng.</param>
+            /// <param name="discussionFilter">
+            /// Bộ lọc thảo luận.
+            /// <see cref="DiscussionFilter"/>
+            /// </param>
+            /// <param name="currentPage">Current page.</param>
+            /// <param name="pageSize">Page size.</param>
+            /// <returns>
+            /// "DiscussionInCourse:{courseId}:{userId}_{discussionFilter}_{currentPage}_{pageSize}".
+            /// </returns>
+            public static string Key(Guid courseId, int userId, string discussionFilter, int currentPage, int pageSize)
             {
-                return $"DiscussionInCourse:{courseId}:{userId}_{keyword}_{currentPage}_{pageSize}";
+                return $"DiscussionInCourse:{courseId}:{userId}_{discussionFilter}_{currentPage}_{pageSize}";
+            }
+
+            public static string PrefixKey(Guid courseId, int userId, string discussionFilter)
+            {
+                return $"DiscussionInCourse:{courseId}:{userId}_{discussionFilter}";
             }
 
             public static int ExpireTimeInMinutesForStudent => 60;

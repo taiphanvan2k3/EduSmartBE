@@ -17,6 +17,9 @@ namespace CourseManagementService.Services.DiscussionManagement.Discussions.Sche
         [JsonProperty(Order = 4)]
         public LookupDto Type { get; set; }
 
+        [JsonProperty(Order = 5)]
+        public bool IsDelFlag { get; set; }
+
         [JsonProperty(Order = 8)]
         public DateTimeOffset CreatedAt { get; set; }
     }
