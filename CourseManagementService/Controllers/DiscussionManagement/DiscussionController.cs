@@ -170,6 +170,20 @@ namespace CourseManagementService.Controllers.DiscussionManagement
         }
 
         /// <summary>
+        /// Restore a delete discussion
+        /// <para>Created at: 2024/12/01</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="id">Id of discussion</param>
+        /// <returns></returns>
+        [HttpPut("{id}/restore")]
+        public async Task<IActionResult> RestoreDiscussion(Guid id)
+        {
+            var responseInfo = await _discussionDetailService.RestoreDiscussion(id);
+            return HandleResponseInfo(responseInfo, resourceName: "discussion");
+        }
+
+        /// <summary>
         /// Delete a discussion
         /// <para>Created at: 2024/11/30</para>
         /// <para>Created by: TaiPV</para>
