@@ -43,9 +43,18 @@ namespace CourseManagementService.Services.DiscussionManagement.Discussions
         /// <para>Created at: 2024/11/28</para>
         /// <para>Created by: TaiPV</para>
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="id">Id of discussion</param>
         /// <returns></returns>
         public Task<ResponseInfo> DeleteDiscussion(Guid id);
+
+        /// <summary>
+        /// Restore a discussion
+        /// <para>Created at: 2024/12/26</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="id">Id of discussion</param>
+        /// <returns></returns>
+        public Task<ResponseInfo> RestoreDiscussion(Guid id);
 
         /// <summary>
         /// Get discussion types
@@ -309,6 +318,58 @@ namespace CourseManagementService.Services.DiscussionManagement.Discussions
             }
         }
 
+        public async Task<ResponseInfo> RestoreDiscussion(Guid id)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var currentUser = GetCurrentUser();
+
+                var discussionEntity = await _context.Discussions
+                    .Include(d => d.Type)
+                    .Where(d => d.Id == id)
+                    .FirstOrDefaultAsync();
+
+                if (discussionEntity == null)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "Discussion not found");
+                }
+
+                if (discussionEntity.CreatedBy != currentUser.UserId)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status403Forbidden, "You have permission to delete this discussion");
+                }
+
+                if (!await _lessonBaseDetailService.CanAccessLessonMaterial(discussionEntity.LessonId, currentUser.UserId))
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status403Forbidden, "You have no longer permission to delete this discussion");
+                }
+
+                discussionEntity.IsDelFlag = false;
+                await _context.SaveChangesAsync();
+
+                var responseInfo = new ResponseInfo();
+                var discussionDto = _mapper.Map<DiscussionInfo>(discussionEntity);
+
+                responseInfo.Data.Add("discussion", discussionDto);
+
+                var teacherIdInCourse = await GetTeacherIdOfCourse(id);
+                await ClearCacheData(discussionEntity.CourseId, currentUser.UserId, teacherIdInCourse);
+
+                return responseInfo;
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+            finally
+            {
+                LogInfo("End", methodName);
+            }
+        }
+
         public async Task<bool> CanAccessDiscussion(Guid discussionId, int userId)
         {
             var methodName = GetActualAsyncMethodName();
@@ -428,12 +489,12 @@ namespace CourseManagementService.Services.DiscussionManagement.Discussions
 
         private async Task ClearCacheData(Guid courseId, int userId, int teacherId)
         {
-            List<string> cachedKeys = [
-                $"DiscussionInCourse:{courseId}:{userId}_CreatedByMe",
-                $"DiscussionInCourse:{courseId}:{teacherId}_ForTeacher"
+            List<string> discussionCacheKeys = [
+                CacheManager.DiscussionInCourse.PrefixKey(courseId, userId, "CreatedByMe"),
+                CacheManager.DiscussionInCourse.PrefixKey(courseId, teacherId, "ForTeacher")
             ];
 
-            await _cacheService.RemoveDataByPatterns(cachedKeys);
+            await _cacheService.RemoveDataByPatterns(discussionCacheKeys);
         }
     }
 }
