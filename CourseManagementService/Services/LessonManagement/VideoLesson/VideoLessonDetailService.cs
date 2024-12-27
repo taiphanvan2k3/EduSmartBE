@@ -11,6 +11,7 @@ using CourseManagementService.Services.LessonManagement.LessonBase.Schemas;
 using CourseManagementService.Services.LessonManagement.VideoLesson.Schemas;
 using CourseManagementService.Services.Medias;
 using CourseManagementService.Services.Medias.Schemas;
+using CourseManagementService.Services.NotificationManagement.Schemas;
 using Microsoft.EntityFrameworkCore;
 using TblLesson = CourseManagementService.Database.Schemas.Lesson;
 using TblVideoLesson = CourseManagementService.Database.Schemas.VideoLesson;
@@ -218,6 +219,13 @@ namespace CourseManagementService.Services.LessonManagement.VideoLesson
 
                 await StartUploadVideoJob(videoLessonInfo.Video, videoLessonEntity.Id);
                 await _lessonBaseDetailService.ClearCourseDetailCache(courseId: isExistChapterResponse.Data["courseId"]);
+
+                await _lessonBaseDetailService.NotifyWhenLessonAdded(new LessonAddedNotificationData()
+                {
+                    CourseId = isExistChapterResponse.Data["courseId"],
+                    LessonId = lessonEntity.Id,
+                    LessonName = lessonEntity.Title
+                });
 
                 return responseInfo;
             }

@@ -3,6 +3,8 @@ using CourseManagementService.BackgroundServices;
 using CourseManagementService.Common;
 using CourseManagementService.Common.Helpers;
 using CourseManagementService.Common.Schemas;
+using CourseManagementService.Database.Schemas.NotificationEntities;
+using CourseManagementService.Enumerations;
 using CourseManagementService.Extensions;
 using CourseManagementService.GrpcServices;
 using CourseManagementService.Services.Cache;
@@ -11,6 +13,7 @@ using CourseManagementService.Services.CourseManagement.Teacher.Schemas;
 using CourseManagementService.Services.Grpc.UserService;
 using CourseManagementService.Services.LessonManagement.LessonBase.Schemas;
 using CourseManagementService.Services.Medias;
+using CourseManagementService.Services.NotificationManagement.Schemas;
 using Grpc.Net.Client;
 using Microsoft.EntityFrameworkCore;
 using TblCourse = CourseManagementService.Database.Schemas.Course;
@@ -467,6 +470,8 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
 
                 courseDto.CurrencyCode = currencyTask.Result.Code;
                 response.Data.Add("Course", courseDto);
+
+                await NotifyWhenLessonAdded(id);
                 return response;
             }
             catch (Exception e)
@@ -837,6 +842,42 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
         {
             var prefixOwnedCoursesCacheKey = CacheManager.OwnedCourses.PrefixKey(userId);
             _cacheService.RemoveDataByPatternUsingLuaScript(prefixOwnedCoursesCacheKey);
+        }
+
+        private async Task NotifyWhenLessonAdded(Guid courseId)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+
+                var notificationCreateDto = new NotificationCreateDto()
+                {
+                    Type = NotificationType.CourseDetailModification,
+                    RelatedEntityId = courseId.ToString(),
+                    RelatedEntityType = RelatedEntityType.Course,
+                    CourseId = courseId,
+                    MetaData = []
+                };
+
+                await _commonProducer.EnqueueDataAsync(new BackgroundJobData()
+                {
+                    JobType = BackgroundJobType.CreateNotification,
+                    Data = new Dictionary<string, dynamic>()
+                    {
+                        { "notificationCreateDto", notificationCreateDto }
+                    }
+                });
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+            finally
+            {
+                LogInfo("End", methodName);
+            }
         }
     }
 }

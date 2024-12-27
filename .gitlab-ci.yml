@@ -35,7 +35,6 @@ restore_and_build_service:
         - 'UserService/**/*'
         - 'CourseManagementService/**/*'
         - 'PaymentService/**/*'
-        - 'MediaService/**/*'
 
 build_media_service:
   stage: build_nodejs_services
