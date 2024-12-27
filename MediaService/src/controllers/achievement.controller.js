@@ -1,6 +1,6 @@
 const {
     generateAchievement,
-    checkAchievementExportStatus,
+    getAchievementExportStatus,
     saveExportedStudentAchievement,
     saveExportedStudentAchievementFromWeb
 } = require("../services/achievements/achievement-detail.service");
@@ -106,7 +106,7 @@ module.exports = {
                     .json({ message: "Invalid request query" });
             }
 
-            const responseInfo = await checkAchievementExportStatus(
+            const responseInfo = await getAchievementExportStatus(
                 courseId,
                 currentUser.userId
             );
