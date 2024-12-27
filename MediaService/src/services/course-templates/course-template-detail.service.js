@@ -19,8 +19,9 @@ const getDefaultCourseTemplateInCourse = async (courseId) => {
         logInfo(caller, "Start");
 
         const query = `
-            SELECT "Id", "CourseId", "AchievementTemplateId", "CourseNameTextStyle", "StudentNameTextStyle", "DateTextStyle", "TeacherNameTextStyle", "IsDefault"
-            FROM "CourseAchievementTemplates"
+            SELECT c."Id", "CourseId", "AchievementTemplateId", t."TemplateURL", "CourseNameTextStyle", "StudentNameTextStyle", "DateTextStyle", "TeacherNameTextStyle", "IsDefault"
+            FROM "CourseAchievementTemplates" c
+            JOIN "AchievementTemplates" t ON c."AchievementTemplateId" = t."Id"
             WHERE "CourseId" = $1 AND "IsDefault" = true
         `;
 
@@ -281,6 +282,7 @@ const convertCourseTemplateToDto = (courseTemplate) => {
         id: courseTemplate.Id,
         courseId: courseTemplate.CourseId,
         templateId: courseTemplate.AchievementTemplateId,
+        templateURL: courseTemplate.TemplateURL,
         courseNameTextStyle: courseTemplate.CourseNameTextStyle,
         studentNameTextStyle: courseTemplate.StudentNameTextStyle,
         dateTextStyle: courseTemplate.DateTextStyle,
