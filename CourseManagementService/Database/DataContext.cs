@@ -1,6 +1,7 @@
 using System.Reflection;
 using CourseManagementService.Database.Schemas;
 using CourseManagementService.Database.Schemas.DiscussionEntities;
+using CourseManagementService.Database.Schemas.NotificationEntities;
 using Microsoft.EntityFrameworkCore;
 
 namespace CourseManagementService.Database
@@ -43,6 +44,8 @@ namespace CourseManagementService.Database
         public DbSet<Reaction> Reactions { get; set; }
         public DbSet<Note> Notes { get; set; }
         public DbSet<Bookmark> Bookmarks { get; set; }
+        public DbSet<UserNotification> UserNotifications { get; set; }
+        public DbSet<NotificationBellClickLog> NotificationBellClickLogs { get; set; }
 
         public override int SaveChanges()
         {

@@ -1,11 +1,15 @@
 using AutoMapper;
+using CourseManagementService.BackgroundServices;
 using CourseManagementService.Common;
 using CourseManagementService.Common.Schemas;
+using CourseManagementService.Database.Schemas.NotificationEntities;
+using CourseManagementService.Enumerations;
 using CourseManagementService.Services.Cache;
 using CourseManagementService.Services.DiscussionManagement.Comments.Schemas;
 using CourseManagementService.Services.DiscussionManagement.Discussions;
 using CourseManagementService.Services.Gemini;
 using CourseManagementService.Services.Grpc.UserService;
+using CourseManagementService.Services.NotificationManagement.Schemas;
 using Microsoft.EntityFrameworkCore;
 using TblComment = CourseManagementService.Database.Schemas.DiscussionEntities.Comment;
 using TblReaction = CourseManagementService.Database.Schemas.DiscussionEntities.Reaction;
@@ -84,6 +88,8 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
             ?? throw new ArgumentNullException(nameof(ICacheService));
         private readonly IUserContentValidationService _userContentValidationService = serviceProvider.GetService<IUserContentValidationService>()
             ?? throw new ArgumentNullException(nameof(IUserContentValidationService));
+        private readonly CommonProducer _commonProducer = serviceProvider.GetRequiredService<CommonProducer>()
+            ?? throw new InvalidOperationException(ServiceInjectionError("CommonProducer"));
 
         public async Task<ResponseInfo> GetCommentDetail(Guid commentId)
         {
@@ -242,7 +248,9 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                     .Where(x => x.Id == commentCreateDto.DiscussionId)
                     .Select(x => new
                     {
-                        x.CourseId
+                        x.CourseId,
+                        x.LessonId,
+                        OwnerId = x.CreatedBy,
                     })
                     .FirstOrDefaultAsync();
 
@@ -309,7 +317,35 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                 }
 
                 responseInfo.Data.Add("comment", commentDto);
+
                 await _cacheService.RemoveDataByPattern($"DiscussionInCourse:{discussionInfo.CourseId}:{currentUser.UserId}_ReplyByMe");
+                await _commonProducer.EnqueueDataAsync(new BackgroundJobData()
+                {
+                    JobType = BackgroundJobType.CreateNotification,
+                    Data = new Dictionary<string, dynamic>
+                    {
+                        {"notificationCreateDto", new NotificationCreateDto()
+                        {
+                            Type = commentCreateDto.MentionedUserId.HasValue ? NotificationType.Mention : NotificationType.CommentInDiscussion,
+                            ReceiverId = discussionInfo.OwnerId,
+                            SenderInfo = new SenderInfo()
+                            {
+                                Id = currentUser.UserId,
+                                FullName = currentUser.FullName,
+                                IsSystem = false,
+                                IsTeacher = commentEntity.RoleOfUser == "Teacher"
+                            },
+                            RelatedEntityId = commentEntity.Id.ToString(),
+                            RelatedEntityType = RelatedEntityType.Comment,
+                            CourseId = discussionInfo.CourseId,
+                            MetaData = new Dictionary<string, string>
+                            {
+                                {"DiscussionId", commentCreateDto.DiscussionId.ToString()},
+                                {"LessonId", discussionInfo.LessonId.ToString()}
+                            }
+                        }}
+                    }
+                });
 
                 return responseInfo;
             }
@@ -382,7 +418,11 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                     .Where(x => x.Id == commentId)
                     .Select(x => new
                     {
-                        x.ParentId
+                        x.ParentId,
+                        x.DiscussionId,
+                        x.CreatedBy,
+                        x.Discussion.CourseId,
+                        x.Discussion.LessonId
                     })
                     .FirstOrDefaultAsync();
 
@@ -405,6 +445,33 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                         };
 
                         await _context.Reactions.AddAsync(newReactionEntity);
+                        await _commonProducer.EnqueueDataAsync(new BackgroundJobData()
+                        {
+                            JobType = BackgroundJobType.CreateNotification,
+                            Data = new Dictionary<string, dynamic>
+                            {
+                                {"notificationCreateDto", new NotificationCreateDto()
+                                {
+                                    Type = NotificationType.Reaction,
+                                    ReceiverId = commentEntity.CreatedBy,
+                                    SenderInfo = new SenderInfo()
+                                    {
+                                        Id = currentUser.UserId,
+                                        FullName = currentUser.FullName,
+                                        IsSystem = false,
+                                        IsTeacher = currentUser.IsTeacher
+                                    },
+                                    RelatedEntityId = commentId.ToString(),
+                                    RelatedEntityType = RelatedEntityType.Comment,
+                                    CourseId = commentEntity.CourseId,
+                                    MetaData = new Dictionary<string, string>
+                                    {
+                                        {"DiscussionId", commentEntity.ParentId.ToString()},
+                                        {"LessonId", commentEntity.LessonId.ToString()}
+                                    }
+                                }}
+                            }
+                        });
                     }
                     else
                     {

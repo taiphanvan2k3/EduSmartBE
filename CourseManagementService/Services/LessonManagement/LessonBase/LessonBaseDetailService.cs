@@ -1,7 +1,11 @@
+using CourseManagementService.BackgroundServices;
 using CourseManagementService.Common;
+using CourseManagementService.Database.Schemas.NotificationEntities;
 using CourseManagementService.Enumerations;
 using CourseManagementService.Services.Cache;
 using CourseManagementService.Services.LessonManagement.LessonBase.Schemas;
+using CourseManagementService.Services.NotificationManagement;
+using CourseManagementService.Services.NotificationManagement.Schemas;
 using Microsoft.EntityFrameworkCore;
 using TblLessonTracking = CourseManagementService.Database.Schemas.LessonTracking;
 
@@ -132,6 +136,15 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
         /// <para>Created by: TaiPV</para>
         /// </summary>
         public Task<ResponseInfo> UpdateLessonProgress(LessonProgressUpdateRequest request);
+
+        /// <summary>
+        /// Notify the students when the new lesson is added
+        /// <para>Created at: 2024/12/26</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="lessonAddedNotificationData">Contains the information of the notification</param>
+        /// <returns></returns>
+        public Task NotifyWhenLessonAdded(LessonAddedNotificationData lessonAddedNotificationData);
     }
 
     public class LessonBaseDetailService(IServiceProvider serviceProvider, ILogger<LessonBaseDetailService> logger)
@@ -139,6 +152,8 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
     {
         private readonly ICacheService _cacheService = serviceProvider.GetService<ICacheService>()
             ?? throw new InvalidDataException(ServiceInjectionError(nameof(ICacheService)));
+        private readonly CommonProducer _commonProducer = serviceProvider.GetService<CommonProducer>()
+            ?? throw new InvalidDataException(ServiceInjectionError(nameof(CommonProducer)));
 
         public async Task<bool> IsExistLesson(Guid lessonId)
         {
@@ -715,6 +730,45 @@ namespace CourseManagementService.Services.LessonManagement.LessonBase
             {
                 LogError(e, methodName);
                 throw;
+            }
+        }
+
+        public async Task NotifyWhenLessonAdded(LessonAddedNotificationData lessonAddedNotificationData)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+
+                var notificationCreateDto = new NotificationCreateDto()
+                {
+                    Type = NotificationType.NewLesson,
+                    RelatedEntityId = lessonAddedNotificationData.LessonId.ToString(),
+                    RelatedEntityType = RelatedEntityType.Lesson,
+                    CourseId = lessonAddedNotificationData.CourseId,
+                    MetaData = new Dictionary<string, string>()
+                    {
+                        { "LessonName", lessonAddedNotificationData.LessonName }
+                    },
+                };
+
+                await _commonProducer.EnqueueDataAsync(new BackgroundJobData()
+                {
+                    JobType = BackgroundJobType.CreateNotification,
+                    Data = new Dictionary<string, dynamic>()
+                    {
+                        { "notificationCreateDto", notificationCreateDto }
+                    }
+                });
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+            finally
+            {
+                LogInfo("End", methodName);
             }
         }
 
