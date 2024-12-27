@@ -17,6 +17,90 @@ const {
 const { saveAchievementLocally } = require("../../helpers/utils");
 
 /**
+ * Get the exported achievement of a student in a course
+ * @author TaiPV
+ * @createdDate 2024/12/27
+ * @param {Guid} courseId
+ * @param {number} studentId
+ */
+const getAchievementExportStatus = async (courseId, studentId) => {
+    const caller = "getAchievementExportStatus";
+    try {
+        logInfo(caller, "Start");
+
+        const checkStudentCompleteCourseResponse =
+            await checkStudentCompletedCourse(courseId, studentId);
+
+        if (!checkStudentCompleteCourseResponse.isSuccess) {
+            return createEarlyErrorResponse(
+                500,
+                "Internal Server Error",
+                checkStudentCompleteCourseResponse.message
+            );
+        }
+
+        if (!checkStudentCompleteCourseResponse.isCompleted) {
+            return createResponseInfo("exportStatus", {
+                canExport: false,
+                achievement: null,
+                achievementExportInfo: null
+            });
+        }
+
+        const achievementExportStatus = {
+            canExport: true,
+            exportedAchievement: null,
+            achievementExportInfo: null
+        };
+
+        const query = `
+            SELECT "AchievementURL", "CreatedAt"
+            FROM "StudentAchievements"
+            WHERE "CourseId" = $1 AND "StudentId" = $2
+        `;
+
+        const { rows } = await pool.query(query, [courseId, studentId]);
+        if (rows.length == 0) {
+            // Nếu chưa export thì trả về thông tin để FE export
+            const defaultTemplateResponse =
+                await getDefaultCourseTemplateInCourse(courseId);
+
+            const defaultTemplate = defaultTemplateResponse.data.courseTemplate;
+            if (!defaultTemplate) {
+                return createEarlyErrorResponse(
+                    404,
+                    "Not Found",
+                    "Your teacher has not created any template for this course"
+                );
+            }
+
+            achievementExportStatus.achievementExportInfo = {
+                templateId: defaultTemplate.templateId,
+                templateURL: defaultTemplate.templateURL,
+                studentNameTextStyle: defaultTemplate.studentNameTextStyle,
+                courseNameTextStyle: defaultTemplate.courseNameTextStyle,
+                dateTextStyle: defaultTemplate.dateTextStyle,
+                teacherNameTextStyle: defaultTemplate.teacherNameTextStyle,
+                courseName: checkStudentCompleteCourseResponse.courseName,
+                studentName: checkStudentCompleteCourseResponse.studentName,
+                teacherName: checkStudentCompleteCourseResponse.teacherName
+            };
+        } else {
+            achievementExportStatus.exportedAchievement = {
+                achievementURL: rows[0].AchievementURL,
+                createdAt: rows[0].CreatedAt
+            };
+        }
+
+        return createResponseInfo("exportStatus", achievementExportStatus);
+    } catch (error) {
+        logError(caller, error);
+    } finally {
+        logInfo(caller, "End");
+    }
+};
+
+/**
  * Generate achievement for student who completed the course
  * @author TaiPV
  * @createdDate 2024/12/21
@@ -200,61 +284,6 @@ const saveExportedStudentAchievement = async (
     }
 };
 
-/**
- * Get the exported achievement of a student in a course
- * @author TaiPV
- * @createdDate 2024/12/22
- * @param {Guid} courseId
- * @param {number} studentId
- */
-const checkAchievementExportStatus = async (courseId, studentId) => {
-    const caller = "checkAchievementExportStatus";
-    try {
-        logInfo(caller, "Start");
-
-        const isCompletedCourseResponse = await validateCompletedCourse(
-            courseId,
-            studentId
-        );
-
-        if (isCompletedCourseResponse.statusCode === 500)
-            return isCompletedCourseResponse;
-
-        if (isCompletedCourseResponse.statusCode === 400) {
-            return createResponseInfo("exportStatus", {
-                canExport: false,
-                achievement: null
-            });
-        }
-
-        const achievementExportStatus = {
-            canExport: true
-        };
-
-        const query = `
-            SELECT "AchievementURL", "CreatedAt"
-            FROM "StudentAchievements"
-            WHERE "CourseId" = $1 AND "StudentId" = $2
-        `;
-
-        const { rows } = await pool.query(query, [courseId, studentId]);
-        if (rows.length == 0) {
-            achievementExportStatus.achievement = null;
-        } else {
-            achievementExportStatus.achievement = {
-                achievementURL: rows[0].AchievementURL,
-                createdAt: rows[0].CreatedAt
-            };
-        }
-
-        return createResponseInfo("exportStatus", achievementExportStatus);
-    } catch (error) {
-        logError(caller, error);
-    } finally {
-        logInfo(caller, "End");
-    }
-};
-
 const checkIsExportedAchievement = async (courseId, studentId) => {
     const caller = "checkIsExportedAchievement";
     try {
@@ -296,5 +325,5 @@ module.exports = {
     generateAchievement,
     saveExportedStudentAchievement,
     saveExportedStudentAchievementFromWeb,
-    checkAchievementExportStatus
+    getAchievementExportStatus
 };
