@@ -2,7 +2,7 @@ namespace CourseManagementService.Enumerations
 {
     public enum NotificationType
     {
-        UpdateCourseDetail,
+        CourseDetailModification,
         NewLesson,
         Mention,
         CommentInDiscussion,
