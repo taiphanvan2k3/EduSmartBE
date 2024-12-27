@@ -3,7 +3,7 @@
  * @author TaiPV
  * @createdDate 2024/12/21
  *
- * @param {string} statusCode
+ * @param {number} statusCode
  * @param {string} error
  * @param {string} message
  * @returns

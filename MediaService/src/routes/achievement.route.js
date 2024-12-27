@@ -17,7 +17,7 @@ const achievementController = require("../controllers/achievement.controller");
  * /media-service/api/achievements/my-achievements/in-course/{courseId}:
  *   get:
  *     summary: |
- *       Student get the achievement export status in a course
+ *       Retrieve the achievement export information and details for a specific course.
  *       Created At: 2024/12/21
  *       Created by: TaiPV
  *     tags:
@@ -29,8 +29,10 @@ const achievementController = require("../controllers/achievement.controller");
  *         schema:
  *           type: string
  *           format: uuid
+ *         description: Id of course.
  *     responses:
  *       200:
+ *         description: Achievement export information and details.
  *         content:
  *           application/json:
  *             schema:
@@ -42,17 +44,96 @@ const achievementController = require("../controllers/achievement.controller");
  *                     canExport:
  *                       type: boolean
  *                       example: true
- *                     achievement:
+ *                       description: Indicates if the achievement can be exported.
+ *                     exportedAchievement:
  *                       type: object
  *                       nullable: true
+ *                       description: Details of the exported achievement, if available.
  *                       properties:
  *                         achievementURL:
  *                           type: string
  *                           example: "https://example.com/achievement"
+ *                           description: URL to the exported achievement.
  *                         createdAt:
  *                           type: string
  *                           format: date-time
  *                           example: "2024-12-25T06:35:04.456Z"
+ *                           description: Timestamp when the achievement was created.
+ *                     achievementExportInfo:
+ *                       type: object
+ *                       description: Detailed configuration for the exportable achievement.
+ *                       properties:
+ *                         templateId:
+ *                           type: integer
+ *                           example: 1
+ *                           description: Template ID used for exporting the achievement.
+ *                         templateURL:
+ *                           type: string
+ *                         studentNameTextStyle:
+ *                           type: object
+ *                           description: Text style for the student's name.
+ *                           properties:
+ *                             color:
+ *                               type: string
+ *                               example: "#86358e"
+ *                             fontSize:
+ *                               type: string
+ *                               example: "60px"
+ *                             fontFamily:
+ *                               type: string
+ *                               example: "Dancing Script"
+ *                         courseNameTextStyle:
+ *                           type: object
+ *                           description: Text style for the course name.
+ *                           properties:
+ *                             color:
+ *                               type: string
+ *                               example: "#333"
+ *                             fontSize:
+ *                               type: string
+ *                               example: "48px"
+ *                             fontFamily:
+ *                               type: string
+ *                               example: "Petrona"
+ *                         dateTextStyle:
+ *                           type: object
+ *                           description: Text style for the date.
+ *                           properties:
+ *                             color:
+ *                               type: string
+ *                               example: "#333"
+ *                             fontSize:
+ *                               type: string
+ *                               example: "24px"
+ *                             fontFamily:
+ *                               type: string
+ *                               example: "Petrona"
+ *                         teacherNameTextStyle:
+ *                           type: object
+ *                           description: Text style for the teacher's name.
+ *                           properties:
+ *                             color:
+ *                               type: string
+ *                               example: "#333"
+ *                             fontSize:
+ *                               type: string
+ *                               example: "24px"
+ *                             fontFamily:
+ *                               type: string
+ *                               example: "Alex Brush"
+ *                         courseName:
+ *                           type: string
+ *                           description: Name of the course.
+ *                         studentName:
+ *                           type: string
+ *                           description: Name of the student.
+ *                         teacherName:
+ *                           type: string
+ *                           description: Name of the teacher.
+ *       401:
+ *         description: Unauthorized access. Missing or invalid token.
+ *       404:
+ *         description: Achievement not found for the given courseId.
  *     security:
  *       - BearerAuth: []
  */
