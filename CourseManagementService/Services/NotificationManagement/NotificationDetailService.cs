@@ -59,7 +59,10 @@ namespace CourseManagementService.Services.NotificationManagement
                         await CreateReactionNotification(notificationCreateDto);
                         break;
                     case NotificationType.NewLesson:
-                        await CreateNewLessonNotification(notificationCreateDto);
+                        await PrepareAndSendCourseNotification(notificationCreateDto);
+                        break;
+                    case NotificationType.CourseDetailModification:
+                        await CreateNotificationForCourseModification(notificationCreateDto);
                         break;
                 }
 
@@ -89,8 +92,9 @@ namespace CourseManagementService.Services.NotificationManagement
 
                 var metaData = JsonConvert.SerializeObject(new
                 {
-                    LessonName = notificationByBatchData.NotificationCreateDto.MetaData["LessonName"]
-                });
+                    LessonName = notificationByBatchData.NotificationCreateDto.MetaData.TryGetValue("LessonName", out var lessonName) ? lessonName : null,
+                    CourseName = notificationByBatchData.NotificationCreateDto.MetaData.TryGetValue("CourseName", out var courseName) ? courseName : null
+                }, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
 
                 var userNotifications = notificationByBatchData.UserIdsInBatch.Select(userId =>
                 {
@@ -104,8 +108,21 @@ namespace CourseManagementService.Services.NotificationManagement
                 await _context.UserNotifications.AddRangeAsync(userNotifications);
                 await _context.SaveChangesAsync();
 
+                // Send notification to users
+                var notificationSample = userNotifications.FirstOrDefault();
+                var notificationData = new
+                {
+                    notificationSample.SenderInfo,
+                    notificationType = notificationSample.Type.ToString(),
+                    notificationSample.RelatedEntityId,
+                    relatedType = notificationSample.RelatedEntityType.ToString(),
+                    notificationSample.CourseId,
+                    notificationSample.MetaData
+                };
+
                 await _hubContext.Clients.Users(notificationByBatchData.UserIdsInBatch.Select(id => id.ToString()).ToList())
-                    .SendAsync("ReceiveNotification", userNotifications);
+                    .SendAsync("ReceiveNotification", notificationData);
+
                 LogInfo("Sent notification to users", methodName);
             }
             catch (Exception e)
@@ -155,7 +172,12 @@ namespace CourseManagementService.Services.NotificationManagement
                 .SendAsync("ReceiveNotification", userNotification);
         }
 
-        private async Task CreateNewLessonNotification(NotificationCreateDto notificationCreateDto)
+        private async Task CreateNotificationForCourseModification(NotificationCreateDto notificationCreateDto)
+        {
+            await PrepareAndSendCourseNotification(notificationCreateDto);
+        }
+
+        private async Task PrepareAndSendCourseNotification(NotificationCreateDto notificationCreateDto)
         {
             var courseInfo = await _context.Courses
                 .Where(c => c.Id == notificationCreateDto.CourseId)
