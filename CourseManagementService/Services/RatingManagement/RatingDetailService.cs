@@ -5,11 +5,20 @@ using CourseManagementService.Services.RatingManagement.Schemas;
 using TblLessonRating = CourseManagementService.Database.Schemas.LessonRating;
 using TblCourseRating = CourseManagementService.Database.Schemas.CourseRating;
 using Microsoft.EntityFrameworkCore;
+using CourseManagementService.Services.Grpc.UserService;
 
 namespace CourseManagementService.Services.RatingManagement
 {
     public interface IRatingDetailService
     {
+        /// <summary>
+        /// Get lesson rating of a student
+        /// <para>Created at: 2024/12/28</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="courseId">Id of the course</param>
+        public Task<ResponseInfo> GetCourseRatingOfStudent(Guid courseId);
+
         /// <summary>
         /// Create a course rating
         /// <para>Created at: 2024/12/01</para>
@@ -88,6 +97,48 @@ namespace CourseManagementService.Services.RatingManagement
             ?? throw new InvalidDataException(ServiceInjectionError(nameof(ILessonBaseDetailService)));
         private readonly IMapper _mapper = serviceProvider.GetService<IMapper>()
             ?? throw new InvalidDataException(ServiceInjectionError(nameof(IMapper)));
+        private readonly IGrpcUserService _grpcUserService = serviceProvider.GetService<IGrpcUserService>()
+            ?? throw new InvalidDataException(ServiceInjectionError(nameof(IGrpcUserService)));
+
+        public async Task<ResponseInfo> GetCourseRatingOfStudent(Guid courseId)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var currentUser = GetCurrentUser();
+
+                var coursePermissionResponse = await _lessonBaseDetailService.CheckCoursePermission(courseId,
+                    currentUser.UserId);
+                if (!coursePermissionResponse.IsSuccess)
+                {
+                    return coursePermissionResponse;
+                }
+
+                var courseRating = await _context.CourseRatings
+                    .FirstOrDefaultAsync(x => x.CourseId == courseId && x.UserId == currentUser.UserId);
+                if (courseRating != null)
+                {
+                    var courseRatingDto = _mapper.Map<CourseRatingDetail>(courseRating);
+                    var userInfo = await _grpcUserService.GetUserInfoWithRole(currentUser.UserId);
+                    courseRatingDto.User = userInfo;
+                    return new ResponseInfo("myCourseRating", courseRatingDto);
+                }
+                else
+                {
+                    return new ResponseInfo("myCourseRating", null);
+                }
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+            finally
+            {
+                LogInfo("End", methodName);
+            }
+        }
 
         public async Task<ResponseInfo> CreateCourseRating(CourseRatingCreateDto courseRatingCreate)
         {
@@ -102,6 +153,12 @@ namespace CourseManagementService.Services.RatingManagement
                 if (!coursePermissionResponse.IsSuccess)
                 {
                     return coursePermissionResponse;
+                }
+
+                if (await _context.CourseRatings.AnyAsync(x => x.CourseId == courseRatingCreate.CourseId
+                    && x.UserId == currentUser.UserId))
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status400BadRequest, "You have already rated this course");
                 }
 
                 var courseRatingEntity = _mapper.Map<TblCourseRating>(courseRatingCreate);
