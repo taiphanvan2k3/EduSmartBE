@@ -22,6 +22,10 @@ namespace CourseManagementService.Services.CourseManagement.Student.Schemas
 
         public long TimeSpent { get; set; }
 
+        public double? AverageRating { get; set; }
+
+        public double? MyRating { get; set; }
+
         public LookupDto VisibilityStatus { get; set; }
 
         public TeacherDetail Teacher { get; set; }
