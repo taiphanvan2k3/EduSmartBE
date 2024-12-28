@@ -31,6 +31,14 @@ namespace CourseManagementService.Services.CourseManagement.Student
         /// <para>Created by: TaiPV</para>
         /// </summary>
         public Task UnlockFirstLesson(Guid courseId, int userId);
+
+        /// <summary>
+        /// Get list of unlocked lessons in a course of a student
+        /// <para>Created at: 2024/12/24</para>
+        /// <para>Created by: TaiPV</para> 
+        /// </summary>
+        /// <returns></returns>
+        public Task<ResponseInfo> GetUnlockedLessons(Guid courseId);
     }
 
     public class StudentCourseDetailService(IServiceProvider serviceProvider, ILogger<StudentCourseDetailService> logger)
@@ -40,6 +48,48 @@ namespace CourseManagementService.Services.CourseManagement.Student
             ?? throw new ArgumentNullException(ServiceInjectionError("ICacheService"));
         private readonly ILessonBaseDetailService _lessonBaseDetailService = serviceProvider.GetService<ILessonBaseDetailService>()
             ?? throw new ArgumentNullException(ServiceInjectionError("ILessonBaseDetailService"));
+
+        public async Task<ResponseInfo> GetUnlockedLessons(Guid courseId)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var currentUser = GetCurrentUser();
+
+                var canAccessCourse = await _context.CourseEnrollments
+                    .Where(x => x.CourseId == courseId && x.StudentId == currentUser.UserId)
+                    .Select(x => new
+                    {
+                        IsLeft = x.LeaveDate.HasValue,
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (canAccessCourse == null)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status403Forbidden,
+                        "You are not enrolled in this course");
+                }
+
+                if (canAccessCourse.IsLeft)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status403Forbidden,
+                        "Cannot access course that you have left");
+                }
+
+                var unlockedLessons = await _lessonBaseDetailService.GetUnlockedLessons(courseId, currentUser.UserId);
+                return CreateResponseInfo("unlockedLessons", unlockedLessons);
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+            finally
+            {
+                LogInfo("End", methodName);
+            }
+        }
 
         public async Task<bool> IsCourseEnrolled(Guid courseId)
         {
