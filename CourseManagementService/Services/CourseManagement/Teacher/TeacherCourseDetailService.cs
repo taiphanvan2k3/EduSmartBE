@@ -471,7 +471,7 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
                 courseDto.CurrencyCode = currencyTask.Result.Code;
                 response.Data.Add("Course", courseDto);
 
-                await NotifyWhenLessonAdded(id);
+                await NotifyWhenCourseUpdated(id);
                 return response;
             }
             catch (Exception e)
@@ -844,7 +844,7 @@ namespace CourseManagementService.Services.CourseManagement.Teacher
             _cacheService.RemoveDataByPatternUsingLuaScript(prefixOwnedCoursesCacheKey);
         }
 
-        private async Task NotifyWhenLessonAdded(Guid courseId)
+        private async Task NotifyWhenCourseUpdated(Guid courseId)
         {
             var methodName = GetActualAsyncMethodName();
             try
