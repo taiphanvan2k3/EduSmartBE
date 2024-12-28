@@ -56,6 +56,8 @@ namespace CourseManagementService.Services.CourseManagement.Public.Schemas
 
         public bool IsPublished { get; set; }
 
+        public double? AverageRating { get; set; }
+
         public LookupDto Type { get; set; }
 
         public CategoryDto Category { get; set; }

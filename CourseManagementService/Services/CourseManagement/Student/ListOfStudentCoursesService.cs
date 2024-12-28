@@ -174,7 +174,8 @@ namespace CourseManagementService.Services.CourseManagement.Student
                             Teacher = new TeacherDetail()
                             {
                                 Id = x.TeacherId
-                            }
+                            },
+                            AverageRating = x.Ratings.Any() ? x.Ratings.Average(r => r.Rating) : null
                         })
                         .ToListAsync();
                 }
@@ -199,14 +200,20 @@ namespace CourseManagementService.Services.CourseManagement.Student
                             Teacher = new TeacherDetail()
                             {
                                 Id = x.Course.TeacherId
-                            }
+                            },
+                            AverageRating = x.Course.Ratings.Any() ? x.Course.Ratings.Average(r => r.Rating) : null,
+                            MyRating = currentUser.UserId == x.StudentId
+                                ? (x.Course.Ratings.Any(r => r.UserId == currentUser.UserId)
+                                    ? x.Course.Ratings.FirstOrDefault(r => r.UserId == currentUser.UserId).Rating
+                                    : null
+                                ) : null
                         })
                         .ToListAsync();
                 }
 
                 listOfEnrolledCourses.UserInfo = targetUserProfile;
                 listOfEnrolledCourses.Courses = courses;
-                
+
                 await FillTeachersInfo(listOfEnrolledCourses.Courses);
                 if (targetUserProfile.Roles.Contains(Constants.Role.STUDENT))
                 {

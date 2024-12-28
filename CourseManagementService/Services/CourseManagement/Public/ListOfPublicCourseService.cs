@@ -407,7 +407,8 @@ namespace CourseManagementService.Services.CourseManagement.Public
                     },
                     IsRegistered = currentUser != null && (
                         c.TeacherId == currentUser.UserId || c.Enrollments.Any(x => x.StudentId == currentUser.UserId)
-                    )
+                    ),
+                    AverageRating = c.Ratings.Any() ? c.Ratings.Average(x => x.Rating) : null,
                 })
                 .ToPaginatedListAsync(condition.CurrentPage, condition.PageSize);
 

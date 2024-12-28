@@ -35,6 +35,30 @@ namespace CourseManagementService.Controllers
         }
 
         /// <summary>
+        /// Student uses this API to get their rating of a course
+        /// <para>Created at: 2024/12/01</para>
+        /// <para>Created by: TaiPV</para> 
+        /// </summary>
+        /// <param name="courseId">Id of the course</param>
+        /// <returns></returns>
+        [HttpGet("courses/{courseId}/my-rating")]
+        public async Task<IActionResult> GetMyCourseRating([FromRoute] Guid courseId)
+        {
+            var responseInfo = await _ratingDetailService.GetCourseRatingOfStudent(courseId);
+            if (responseInfo.IsSuccess)
+            {
+                return Ok(new
+                {
+                    myRating = responseInfo.Data["myCourseRating"]
+                });
+            }
+            else
+            {
+                return HandleResponseInfo(responseInfo);
+            }
+        }
+
+        /// <summary>
         /// [Teacher Only] Get a list of chapters with their rated lessons in a course
         /// <para>Created at: 2024/12/03</para>
         /// <para>Created by: TaiPV</para>
