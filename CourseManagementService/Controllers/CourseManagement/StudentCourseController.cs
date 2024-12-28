@@ -2,6 +2,7 @@ using CourseManagementService.Common.Helpers;
 using CourseManagementService.Services.CourseManagement.Public.Schemas;
 using CourseManagementService.Services.CourseManagement.Student;
 using CourseManagementService.Services.CourseManagement.Student.Schemas;
+using CourseManagementService.Services.LessonManagement.LessonBase.Schemas;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -30,6 +31,20 @@ namespace CourseManagementService.Controllers.CourseManagement
         {
             var responseInfo = await _listOfStudentCoursesService.GetEnrolledCourses();
             return HandleResponseInfo(responseInfo, resourceName: "courses");
+        }
+
+        /// <summary>
+        /// Get list of unlocked lessons in a course of a student
+        /// <para>Created at: 2024/12/28</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="courseId">Id of the course</param>
+        [HttpGet("{courseId}/unlocked-lessons")]
+        [ProducesResponseType(typeof(List<LessonTrackingDetail>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetUnlockedLessons([FromRoute] Guid courseId)
+        {
+            var responseInfo = await _studentCourseDetailService.GetUnlockedLessons(courseId);
+            return HandleResponseInfo(responseInfo, resourceName: "unlockedLessons", isWrapperInObject: false);
         }
 
         /// <summary>
