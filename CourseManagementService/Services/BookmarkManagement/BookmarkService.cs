@@ -1,4 +1,5 @@
 using CourseManagementService.Common;
+using CourseManagementService.Services.BookmarkManagement.Schemas;
 using CourseManagementService.Services.Cache;
 using CourseManagementService.Services.LessonManagement.LessonBase;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +24,13 @@ namespace CourseManagementService.Services.BookmarkManagement
         /// <para>Created by: TaiPV</para>
         /// </summary>
         public Task<List<Guid>> GetBookmarkedLessonIds(Guid courseId);
+
+        /// <summary>
+        /// Get list of bookmarked lesson ids
+        /// <para>Created at: 2024/12/04</para>
+        /// <para>Created by: ManhTD</para>
+        /// </summary>
+        public Task<List<Bookmark>> GetBookmarkedLessonIdsAsBookmarks(Guid courseId);
     }
 
     public class BookmarkService(IServiceProvider serviceProvider, ILogger<BookmarkService> logger)
@@ -54,6 +62,42 @@ namespace CourseManagementService.Services.BookmarkManagement
                     .ToListAsync();
 
                 _cacheService.SetData(cachedKey, lessonIds, DateTimeOffset.Now.AddMinutes(CacheManager.Bookmark.ExpireTimeInMinutes));
+                LogInfo("End", method);
+                return lessonIds;
+            }
+            catch (Exception e)
+            {
+                LogError(e, method);
+                throw;
+            }
+            finally
+            {
+                LogInfo("End", method);
+            }
+        }
+
+        public async Task<List<Bookmark>> GetBookmarkedLessonIdsAsBookmarks(Guid courseId)
+        {
+            var method = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", method);
+                var currentUser = GetCurrentUser();
+
+                var lessonIds = await _context.Bookmarks
+                    .Where(b => b.UserId == currentUser.UserId && b.CourseId == courseId)
+                    .Select(b => new Bookmark
+                    {
+                        LessonId = b.LessonId,
+                        LessonType = new LookupDto
+                        {
+                            Id = b.Lesson.LessonType.ToString(),
+                            Name = b.Lesson.LessonType.ToString()
+                        }
+                    })
+                    .ToListAsync();
+
+                _cacheService.SetData(null, lessonIds, DateTimeOffset.Now.AddMinutes(CacheManager.Bookmark.ExpireTimeInMinutes));
                 LogInfo("End", method);
                 return lessonIds;
             }
