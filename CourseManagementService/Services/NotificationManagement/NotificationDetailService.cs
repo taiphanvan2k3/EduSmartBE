@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using TblUserNotification = CourseManagementService.Database.Schemas.NotificationEntities.UserNotification;
+using TblNotificationBellClickLog = CourseManagementService.Database.Schemas.NotificationEntities.NotificationBellClickLog;
 
 namespace CourseManagementService.Services.NotificationManagement
 {
@@ -25,9 +26,35 @@ namespace CourseManagementService.Services.NotificationManagement
 
         /// <summary>
         /// Save the notification to the database and send it to the receiver
+        /// <para>Created at: 2024/12/26</para>
+        /// <para>Created by: TaiPV</para> 
         /// </summary>
         /// <returns></returns>
         public Task NotifyUsersInCourseByBatch(NotificationByBatchData notificationByBatchData);
+
+        /// <summary>
+        /// Mark a notification as read
+        /// <para>Created at: 2024/12/28</para>
+        /// <para>Created by: TaiPV</para>  
+        /// </summary>
+        /// <returns></returns>
+        public Task<ResponseInfo> MarkNotificationAsRead(Guid notificationId);
+
+        /// <summary>
+        /// Check whether a user has new notifications
+        /// <para>Created at: 2024/12/29</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <returns></returns>
+        public Task<bool> HasNewNotification();
+
+        /// <summary>
+        /// Update the last clicked on bell time of the current user
+        /// <para>Created at: 2024/12/29</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <returns></returns>
+        public Task<ResponseInfo> UpdateLastClickedOnBellAsync();
     }
 
     public class NotificationDetailService(IServiceProvider serviceProvider, ILogger<NotificationDetailService> logger)
@@ -39,6 +66,77 @@ namespace CourseManagementService.Services.NotificationManagement
             ?? throw new ArgumentNullException(ServiceInjectionError(nameof(IHubContext<NotificationHub>)));
         private readonly INotificationQueue<NotificationByBatchData> _notificationQueue = serviceProvider.GetRequiredService<INotificationQueue<NotificationByBatchData>>()
             ?? throw new ArgumentNullException(ServiceInjectionError(nameof(INotificationQueue<NotificationByBatchData>)));
+
+        public async Task<ResponseInfo> MarkNotificationAsRead(Guid notificationId)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var notificationEntity = await _context.UserNotifications.FindAsync(notificationId);
+                var currentUser = GetCurrentUser();
+
+                if (notificationEntity == null)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status404NotFound, "Notification not found");
+                }
+
+                if (notificationEntity.ReceiverId != currentUser.UserId)
+                {
+                    return CreateEarlyResponseInfo(StatusCodes.Status403Forbidden, "You are not authorized to access this resource.");
+                }
+
+                notificationEntity.IsRead = true;
+                await _context.SaveChangesAsync();
+
+                LogInfo("End", methodName);
+                return CreateResponseInfo("readingStatus", new
+                {
+                    notificationId,
+                    isRead = true
+                });
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+        }
+
+
+        public async Task<bool> HasNewNotification()
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var currentUser = GetCurrentUser();
+                var lastNotificationDateTime = await _context.UserNotifications
+                    .Where(n => n.ReceiverId == currentUser.UserId)
+                    .OrderByDescending(n => n.CreatedAt)
+                    .Select(n => n.CreatedAt)
+                    .FirstOrDefaultAsync();
+
+                if (lastNotificationDateTime != default)
+                {
+                    var lastClickedOnBellDateTime = await _context.NotificationBellClickLogs
+                        .Where(l => l.UserId == currentUser.UserId)
+                        .OrderByDescending(l => l.LastClickedAt)
+                        .Select(l => l.LastClickedAt)
+                        .FirstOrDefaultAsync();
+
+                    return lastNotificationDateTime > lastClickedOnBellDateTime;
+                }
+
+                LogInfo("Start", methodName);
+                return false;
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+        }
 
         public async Task CreateNotificationAsync(NotificationCreateDto notificationCreateDto)
         {
@@ -124,6 +222,46 @@ namespace CourseManagementService.Services.NotificationManagement
                     .SendAsync("ReceiveNotification", notificationData);
 
                 LogInfo("Sent notification to users", methodName);
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+        }
+
+        public async Task<ResponseInfo> UpdateLastClickedOnBellAsync()
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var currentUser = GetCurrentUser();
+
+                var existRecord = await _context.NotificationBellClickLogs.FirstOrDefaultAsync(l => l.UserId == currentUser.UserId);
+
+                if (existRecord != null)
+                {
+                    existRecord.LastClickedAt = DateTimeOffset.UtcNow;
+                }
+                else
+                {
+                    var newRecord = new TblNotificationBellClickLog
+                    {
+                        UserId = currentUser.UserId,
+                        LastClickedAt = DateTime.UtcNow
+                    };
+
+                    await _context.NotificationBellClickLogs.AddAsync(newRecord);
+                }
+
+                await _context.SaveChangesAsync();
+
+                LogInfo("End", methodName);
+                return CreateResponseInfo("bellClickMilestone", new
+                {
+                    LastClickedAt = DateTimeOffset.UtcNow
+                });
             }
             catch (Exception e)
             {
