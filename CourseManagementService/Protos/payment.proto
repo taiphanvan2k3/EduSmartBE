@@ -7,6 +7,7 @@ service Payment {
     rpc CreateCoursePaymentTransaction(CoursePaymentTransactionRequest) returns (CoursePaymentTransactionResponse);
     rpc GetExchangeRate(google.protobuf.Empty) returns (ExchangeRate);
     rpc GetCurrentStoringAmount(UserInfo) returns (StorageInfoResponse);
+    rpc GetAchievementURLInCompletedCourses(CompletedCourses) returns (CompletedCourses);
 }
 
 enum Currency {
@@ -56,4 +57,17 @@ message StorageInfoResponse {
     int64 usedStorage = 2;
     string message = 3;
     bool isSuccess = 4;
+}
+
+message CompletedCourses {
+    int32 userId = 1;
+    repeated CompletedCourseInfo completedCourseInfo = 2;
+    string message = 3;
+    bool isSuccess = 4;
+}
+
+message CompletedCourseInfo {
+    string id = 1;
+    string name = 2;
+    string achievementURL = 3;
 }
