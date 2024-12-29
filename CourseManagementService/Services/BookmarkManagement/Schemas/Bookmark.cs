@@ -6,6 +6,8 @@ namespace CourseManagementService.Services.BookmarkManagement.Schemas
     {
         public Guid LessonId { get; set; }
 
+        public string LessonName { get; set; }
+
         public LookupDto LessonType { get; set; }
     }
 }

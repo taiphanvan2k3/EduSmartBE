@@ -102,5 +102,39 @@ namespace CourseManagementService.Controllers.CourseManagement
             var responseInfo = await _listOfStudentCoursesService.UpdateAllCourseVisibilityStatus(request);
             return HandleResponseInfo(responseInfo, resourceName: "currentStatus");
         }
+
+        /// <summary>
+        /// Get all completed courses of a student
+        /// <para>Created at: 2024/12/29</para>
+        /// <para>Created by: ManhTD</para>
+        /// </summary>
+        /// <response code="200">Return list of courses</response>
+        /// <response code="404">Return error message</response>
+        /// <response code="500">Return error message</response>
+        [HttpGet("courses/completed")]
+        [ProducesResponseType(typeof(List<CompletedCourseInfo>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ErrorResponse>), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetCompletedCourses()
+        {
+            var responseInfo = await _listOfStudentCoursesService.GetCompletedCourses();
+            return HandleResponseInfo(responseInfo, resourceName: "completedCourses");
+        }
+
+        /// <summary>
+        /// Get completed course info
+        /// <para>Created at: 2024/12/29</para>
+        /// <para>Created by: ManhTD</para>
+        /// </summary>
+        /// <response code="200">Return course info</response>
+        /// <response code="404">Return error message</response>
+        /// <response code="500">Return error message</response>
+        [HttpGet("courses/{courseId}/completed")]
+        [ProducesResponseType(typeof(CompletedCourseInfo), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ErrorResponse>), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetCompletedCourse([FromRoute] Guid courseId)
+        {
+            var responseInfo = await _studentCourseDetailService.GetCompletedCourse(courseId);
+            return HandleResponseInfo(responseInfo, resourceName: "completedCourse");
+        }
     }
 }

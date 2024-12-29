@@ -4,6 +4,7 @@ using CourseManagementService.Services.Grpc.PaymentService.Schemas;
 using CourseManagementService.Services.Grpc.UserService;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Net.Client;
+using CompletedCourseInfoService = CourseManagementService.Services.CourseManagement.Student.Schemas.CompletedCourseInfo;
 using CurrencyEnumGrpc = CourseManagementService.GrpcServices.Currency;
 using UserInfoGrpc = CourseManagementService.GrpcServices.UserInfo;
 
@@ -32,6 +33,14 @@ namespace CourseManagementService.Services.Grpc.PaymentService
         /// </summary>
         /// <returns></returns>
         public Task<ResponseInfo> GetCurrentStorageInfo(int userId);
+
+        /// <summary>
+        /// Get achievement URL in completed courses
+        /// <para>Created at: 2024/12/29</para>
+        /// <para>Created by: ManhTD</para>
+        /// </summary>
+        /// <returns></returns>
+        public Task<List<CompletedCourseInfoService>> GetAchievementURLInCompletedCourses(List<CompletedCourseInfoService> completedCourseInfos, int userId);
     }
 
     public class GrpcPaymentService : BaseService, IGrpcPaymentService
@@ -159,6 +168,52 @@ namespace CourseManagementService.Services.Grpc.PaymentService
 
                 LogInfo("End", methodName);
                 return responseInfo;
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+        }
+
+        public async Task<List<CompletedCourseInfoService>> GetAchievementURLInCompletedCourses(List<CompletedCourseInfoService> completedCourseInfos, int userId)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var responseInfo = new ResponseInfo();
+
+                var client = new Payment.PaymentClient(_channel);
+                var completedCoursesResponse = await client.GetAchievementURLInCompletedCoursesAsync(new CompletedCourses
+                {
+                    UserId = userId,
+                    CompletedCourseInfo = { completedCourseInfos.Select(x => new CompletedCourseInfo
+                    {
+                        Id = x.Id.ToString(),
+                        Name = x.Name,
+                        // AchievementURL = x.AchievementURL
+                    })}
+                });
+
+                var completedCourseInfosResponse = new List<CompletedCourseInfoService>();
+                
+                if (completedCoursesResponse.IsSuccess)
+                {
+                    completedCourseInfosResponse = new List<CompletedCourseInfoService>(completedCoursesResponse.CompletedCourseInfo.Select(x => new CompletedCourseInfoService
+                    {
+                        Id = Guid.Parse(x.Id),
+                        Name = x.Name,
+                        AchievementURL = x.AchievementURL
+                    }));
+                }
+                else
+                {
+                    completedCourseInfosResponse = completedCourseInfos;
+                }
+
+                LogInfo("End", methodName);
+                return completedCourseInfosResponse;
             }
             catch (Exception e)
             {
