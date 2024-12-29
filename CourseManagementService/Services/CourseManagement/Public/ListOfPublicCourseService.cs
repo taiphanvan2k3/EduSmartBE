@@ -206,7 +206,8 @@ namespace CourseManagementService.Services.CourseManagement.Public
                         Teacher = new TeacherDetail()
                         {
                             Id = c.TeacherId
-                        }
+                        },
+                        AverageRating = c.Ratings.Any() ? c.Ratings.Average(x => x.Rating) : null,
                     })
                     .ToPaginatedListAsync(currentPage: 1, _maxPopularCourses);
 
@@ -295,7 +296,8 @@ namespace CourseManagementService.Services.CourseManagement.Public
                         Teacher = new TeacherDetail()
                         {
                             Id = c.TeacherId
-                        }
+                        },
+                        AverageRating = c.Ratings.Any() ? c.Ratings.Average(x => x.Rating) : null,
                     })
                     .ToPaginatedListAsync(currentPage: 1, _maxRecommendedCourses);
 
