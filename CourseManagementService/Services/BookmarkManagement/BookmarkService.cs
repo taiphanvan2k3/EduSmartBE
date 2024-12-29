@@ -89,6 +89,7 @@ namespace CourseManagementService.Services.BookmarkManagement
                     .Select(b => new Bookmark
                     {
                         LessonId = b.LessonId,
+                        LessonName = b.Lesson.Title,
                         LessonType = new LookupDto
                         {
                             Id = b.Lesson.LessonType.ToString(),

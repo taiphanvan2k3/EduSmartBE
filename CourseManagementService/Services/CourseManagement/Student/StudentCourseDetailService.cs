@@ -3,6 +3,7 @@ using CourseManagementService.Common.Helpers;
 using CourseManagementService.Services.BookmarkManagement;
 using CourseManagementService.Services.Cache;
 using CourseManagementService.Services.CourseManagement.Student.Schemas;
+using CourseManagementService.Services.Grpc.PaymentService;
 using CourseManagementService.Services.LessonManagement.LessonBase;
 using Microsoft.EntityFrameworkCore;
 using TblLessonTracking = CourseManagementService.Database.Schemas.LessonTracking;
@@ -48,6 +49,8 @@ namespace CourseManagementService.Services.CourseManagement.Student
         /// </summary>
         /// <returns></returns>
         public Task<ResponseInfo> GetBookmarkedLessons(Guid courseId);
+
+        public Task<ResponseInfo> GetCompletedCourse(Guid courseId);
     }
 
     public class StudentCourseDetailService(IServiceProvider serviceProvider, ILogger<StudentCourseDetailService> logger)
@@ -59,6 +62,9 @@ namespace CourseManagementService.Services.CourseManagement.Student
             ?? throw new ArgumentNullException(ServiceInjectionError("ILessonBaseDetailService"));
         private readonly IBookmarkService _bookmarkService = serviceProvider.GetService<IBookmarkService>()
             ?? throw new ArgumentNullException(ServiceInjectionError("IBookmarkService"));
+
+        private readonly IGrpcPaymentService _grpcPaymentService = serviceProvider.GetService<IGrpcPaymentService>()
+            ?? throw new ArgumentNullException(ServiceInjectionError("IGrpcPaymentService"));
 
         public async Task<ResponseInfo> GetBookmarkedLessons(Guid courseId)
         {
@@ -81,6 +87,65 @@ namespace CourseManagementService.Services.CourseManagement.Student
             {
                 LogError(e, methodName);
                 throw;
+            }
+        }
+
+        public async Task<ResponseInfo> GetCompletedCourse(Guid courseId)
+        {
+            var method = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", method);
+
+                var currentUser = GetCurrentUser();
+                // var cacheKey = CacheManager.EnrolledCourses.Key(currentUser.UserId);
+
+                // var cachedData = _cacheService.GetData<CompletedCourseInfo>(cacheKey);
+                // if (cachedData != null)
+                // {
+                //     return CreateResponseInfo("completedCourse", cachedData);
+                // }
+
+                var completedCourse = await _context.CourseEnrollments
+                    .Where(x => x.StudentId == currentUser.UserId && x.CourseId == courseId && x.IsCompleted)
+                    .Select(x => new CompletedCourseInfo
+                    {
+                        Id = x.CourseId,
+                        Name = x.Course.Name,
+                    })
+                    .FirstOrDefaultAsync();
+                
+                if(completedCourse == null)
+                {
+                    completedCourse = await _context.CourseEnrollments
+                        .Where(x => x.StudentId == currentUser.UserId && x.CourseId == courseId && x.IsCompleted)
+                        .Select(x => new CompletedCourseInfo
+                        {
+                            Id = x.CourseId,
+                            Name = x.Course.Name,
+                            CreateAt = x.CompletionDate
+                        })
+                        .FirstOrDefaultAsync();
+                }
+                else
+                {
+                    var completedCourseInfos = new List<CompletedCourseInfo> { completedCourse };
+                    var completedCourseInfosWithAchievementURL = await _grpcPaymentService.GetAchievementURLInCompletedCourses(completedCourseInfos, currentUser.UserId);
+                    completedCourse = completedCourseInfosWithAchievementURL.FirstOrDefault();
+                }
+
+                // _cacheService.SetData(cacheKey, completedCourse, DateTimeOffset.Now.AddMinutes(
+                //     CacheManager.EnrolledCourses.ExpireTimeInMinutes));
+                return CreateResponseInfo("completedCourse", completedCourse);
+            }
+            catch (Exception e)
+            {
+                LogError(e, method);
+                throw;
+            }
+            finally
+            {
+                LogInfo("End", method);
             }
         }
 
