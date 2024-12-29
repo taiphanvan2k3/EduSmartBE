@@ -48,6 +48,20 @@ namespace CourseManagementService.Controllers.CourseManagement
         }
 
         /// <summary>
+        /// Get list of unlocked lessons in a course of a student
+        /// <para>Created at: 2024/12/28</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <param name="courseId">Id of the course</param>
+        [HttpGet("{courseId}/bookmarked-lessons")]
+        [ProducesResponseType(typeof(List<LessonTrackingDetail>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetBookmarkedLessons([FromRoute] Guid courseId)
+        {
+            var responseInfo = await _studentCourseDetailService.GetBookmarkedLessons(courseId);
+            return HandleResponseInfo(responseInfo, resourceName: "bookmarkedLessons", isWrapperInObject: false);
+        }
+
+        /// <summary>
         /// View course progress of a student
         /// <para>Created at: 2024/11/24</para>
         /// <para>Created by: TaiPV</para>
