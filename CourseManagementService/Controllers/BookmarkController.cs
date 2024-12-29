@@ -37,7 +37,7 @@ namespace CourseManagementService.Controllers
         [HttpGet("courses/{courseId}/bookmarked-lessons")]
         public async Task<IActionResult> GetBookmarkedLessonsByCourse([FromRoute] Guid courseId)
         {
-            var bookmarkedLessons = await _bookmarkService.GetBookmarkedLessonIds(courseId);
+            var bookmarkedLessons = await _bookmarkService.GetBookmarkedLessonIdsAsBookmarks(courseId);
             return Ok(bookmarkedLessons);
         }
     }
