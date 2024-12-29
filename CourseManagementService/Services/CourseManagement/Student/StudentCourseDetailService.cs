@@ -1,5 +1,6 @@
 using CourseManagementService.Common;
 using CourseManagementService.Common.Helpers;
+using CourseManagementService.Services.BookmarkManagement;
 using CourseManagementService.Services.Cache;
 using CourseManagementService.Services.CourseManagement.Student.Schemas;
 using CourseManagementService.Services.LessonManagement.LessonBase;
@@ -39,6 +40,14 @@ namespace CourseManagementService.Services.CourseManagement.Student
         /// </summary>
         /// <returns></returns>
         public Task<ResponseInfo> GetUnlockedLessons(Guid courseId);
+
+        /// <summary>
+        /// Get list of bookmarked lesson ids in a course of a student
+        /// <para>Created at: 2024/12/24</para>
+        /// <para>Created by: TaiPV</para> 
+        /// </summary>
+        /// <returns></returns>
+        public Task<ResponseInfo> GetBookmarkedLessons(Guid courseId);
     }
 
     public class StudentCourseDetailService(IServiceProvider serviceProvider, ILogger<StudentCourseDetailService> logger)
@@ -48,6 +57,32 @@ namespace CourseManagementService.Services.CourseManagement.Student
             ?? throw new ArgumentNullException(ServiceInjectionError("ICacheService"));
         private readonly ILessonBaseDetailService _lessonBaseDetailService = serviceProvider.GetService<ILessonBaseDetailService>()
             ?? throw new ArgumentNullException(ServiceInjectionError("ILessonBaseDetailService"));
+        private readonly IBookmarkService _bookmarkService = serviceProvider.GetService<IBookmarkService>()
+            ?? throw new ArgumentNullException(ServiceInjectionError("IBookmarkService"));
+
+        public async Task<ResponseInfo> GetBookmarkedLessons(Guid courseId)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var currentUser = GetCurrentUser();
+
+                var canAccessCourseResponse = await CanAccessCourse(courseId, currentUser.UserId);
+                if (!canAccessCourseResponse.IsSuccess)
+                {
+                    return canAccessCourseResponse;
+                }
+
+                var bookmarkedLessons = await _bookmarkService.GetBookmarkedLessonIds(courseId);
+                return CreateResponseInfo("bookmarkedLessons", bookmarkedLessons);
+            }
+            catch (Exception e)
+            {
+                LogError(e, methodName);
+                throw;
+            }
+        }
 
         public async Task<ResponseInfo> GetUnlockedLessons(Guid courseId)
         {
@@ -57,24 +92,10 @@ namespace CourseManagementService.Services.CourseManagement.Student
                 LogInfo("Start", methodName);
                 var currentUser = GetCurrentUser();
 
-                var canAccessCourse = await _context.CourseEnrollments
-                    .Where(x => x.CourseId == courseId && x.StudentId == currentUser.UserId)
-                    .Select(x => new
-                    {
-                        IsLeft = x.LeaveDate.HasValue,
-                    })
-                    .FirstOrDefaultAsync();
-
-                if (canAccessCourse == null)
+                var canAccessCourseResponse = await CanAccessCourse(courseId, currentUser.UserId);
+                if (!canAccessCourseResponse.IsSuccess)
                 {
-                    return CreateEarlyResponseInfo(StatusCodes.Status403Forbidden,
-                        "You are not enrolled in this course");
-                }
-
-                if (canAccessCourse.IsLeft)
-                {
-                    return CreateEarlyResponseInfo(StatusCodes.Status403Forbidden,
-                        "Cannot access course that you have left");
+                    return canAccessCourseResponse;
                 }
 
                 var unlockedLessons = await _lessonBaseDetailService.GetUnlockedLessons(courseId, currentUser.UserId);
@@ -182,6 +203,31 @@ namespace CourseManagementService.Services.CourseManagement.Student
                 LogError(e, methodName);
                 throw;
             }
+        }
+
+        private async Task<ResponseInfo> CanAccessCourse(Guid courseId, int userId)
+        {
+            var canAccessCourse = await _context.CourseEnrollments
+                .Where(x => x.CourseId == courseId && x.StudentId == userId)
+                .Select(x => new
+                {
+                    IsLeft = x.LeaveDate.HasValue,
+                })
+                .FirstOrDefaultAsync();
+
+            if (canAccessCourse == null)
+            {
+                return CreateEarlyResponseInfo(StatusCodes.Status403Forbidden,
+                    "You are not enrolled in this course");
+            }
+
+            if (canAccessCourse.IsLeft)
+            {
+                return CreateEarlyResponseInfo(StatusCodes.Status403Forbidden,
+                    "Cannot access course that you have left");
+            }
+
+            return new ResponseInfo();
         }
     }
 }
