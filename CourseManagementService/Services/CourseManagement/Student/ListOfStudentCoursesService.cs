@@ -4,6 +4,7 @@ using CourseManagementService.Enumerations;
 using CourseManagementService.Services.Cache;
 using CourseManagementService.Services.CourseManagement.Student.Schemas;
 using CourseManagementService.Services.CourseManagement.Teacher.Schemas;
+using CourseManagementService.Services.Grpc.PaymentService;
 using CourseManagementService.Services.Grpc.UserService;
 using Microsoft.EntityFrameworkCore;
 
@@ -34,6 +35,8 @@ namespace CourseManagementService.Services.CourseManagement.Student
         /// </summary>
         /// <returns></returns>
         public Task<ResponseInfo> UpdateAllCourseVisibilityStatus(UpdateAllVisibilityStatus request);
+
+        public Task<ResponseInfo> GetCompletedCourses();
     }
 
     public class ListOfStudentCoursesService(IServiceProvider serviceProvider, ILogger<ListOfStudentCoursesService> logger)
@@ -41,6 +44,8 @@ namespace CourseManagementService.Services.CourseManagement.Student
     {
         private readonly IGrpcUserService _grpcUserService = serviceProvider.GetService<IGrpcUserService>()
             ?? throw new ArgumentNullException(ServiceInjectionError("IGrpcUserService"));
+        private readonly IGrpcPaymentService _grpcPaymentService = serviceProvider.GetService<IGrpcPaymentService>()
+            ?? throw new ArgumentNullException(ServiceInjectionError("IGrpcPaymentService"));
         private readonly ICacheService _cacheService = serviceProvider.GetService<ICacheService>()
             ?? throw new ArgumentNullException(ServiceInjectionError("ICacheService"));
 
@@ -308,6 +313,48 @@ namespace CourseManagementService.Services.CourseManagement.Student
                     course.Teacher.Email = teacherInfo.Email;
                     course.Teacher.AvatarURL = teacherInfo.AvatarURL;
                 }
+            }
+        }
+
+        public async Task<ResponseInfo> GetCompletedCourses()
+        {
+            var method = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", method);
+
+                var currentUser = GetCurrentUser();
+                // var cacheKey = CacheManager.EnrolledCourses.Key(currentUser.UserId);
+
+                // var cachedData = _cacheService.GetData<List<CompletedCourseInfo>>(cacheKey);
+                // if (cachedData != null)
+                // {
+                //     return CreateResponseInfo("completedCourses", cachedData);
+                // }
+
+                var enrolledCourses = await _context.CourseEnrollments
+                    .Where(x => x.StudentId == currentUser.UserId && x.IsCompleted)
+                    .Select(x => new CompletedCourseInfo
+                    {
+                        Id = x.CourseId,
+                        Name = x.Course.Name,
+                        CreateAt = x.CompletionDate
+                    })
+                    .ToListAsync();
+                enrolledCourses = await _grpcPaymentService.GetAchievementURLInCompletedCourses(enrolledCourses, currentUser.UserId);
+
+                // _cacheService.SetData(cacheKey, enrolledCourses, DateTimeOffset.Now.AddMinutes(
+                //     CacheManager.EnrolledCourses.ExpireTimeInMinutes));
+                return CreateResponseInfo("completedCourses", enrolledCourses);
+            }
+            catch (Exception e)
+            {
+                LogError(e, method);
+                throw;
+            }
+            finally
+            {
+                LogInfo("End", method);
             }
         }
     }
