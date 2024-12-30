@@ -40,10 +40,11 @@ message CoursePaymentTransactionRequest {
     string username = 3;
     string fullName = 4;
     string email = 5;
-    double amount = 6;
-    int32 receiverId = 7;
-    Currency currency = 8;
-    string relatedInfo = 9;
+    string avatarURL = 6;
+    double amount = 7;
+    int32 receiverId = 8;
+    Currency currency = 9;
+    string relatedInfo = 10;
 }
 
 message CoursePaymentTransactionResponse {

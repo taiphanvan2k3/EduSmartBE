@@ -311,7 +311,8 @@ namespace CourseManagementService.Services.CourseManagement.Public
                         Id = currentUser.UserId,
                         Username = currentUser.UserName,
                         FullName = currentUserInfo.FullName,
-                        Email = currentUserInfo.Email
+                        Email = currentUserInfo.Email,
+                        AvatarURL = currentUserInfo.AvatarURL
                     },
                     ReceiverId = course.TeacherId,
                     TransactionCode = transactionCode,

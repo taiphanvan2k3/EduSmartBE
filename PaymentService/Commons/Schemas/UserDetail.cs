@@ -9,5 +9,7 @@ namespace PaymentService.Commons.Schemas
         public string FullName { get; set; }
 
         public string Email { get; set; }
+
+        public string AvatarURL { get; set; }
     }
 }
