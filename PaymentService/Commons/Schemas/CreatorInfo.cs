@@ -12,5 +12,8 @@ namespace PaymentService.Commons.Schemas
 
         [JsonPropertyName("email")]
         public string Email { get; set; }
+
+        [JsonPropertyName("avatarURL")]
+        public string AvatarURL { get; set; }
     }
 }
