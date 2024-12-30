@@ -244,6 +244,51 @@ namespace PaymentService.GrpcServices
             }
         }
 
+        public override async Task<CompletedCourses> GetAchievementURLInCompletedCourses(CompletedCourses completedCourses, ServerCallContext context)
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                _logger.LogInformation("[GrpcPaymentService] [{Method}] Start", methodName);
+
+                var completedCourseResult = new CompletedCourses
+                {
+                    UserId = completedCourses.UserId,
+                };
+
+                foreach (var completedCourse in completedCourses.CompletedCourseInfo)
+                {
+                    var course = await _context.StudentAchievements
+                        .Where(x => x.CourseId == Guid.Parse(completedCourse.Id) && x.StudentId == completedCourses.UserId)
+                        .Select(x => new CompletedCourseInfo
+                        {
+                            Id = x.CourseId.ToString(),
+                            Name = completedCourse.Name,
+                            AchievementURL = x.AchievementURL
+                        })
+                        .FirstOrDefaultAsync();
+
+                    if (course != null)
+                    {
+                        completedCourseResult.CompletedCourseInfo.Add(course);
+                    }
+                    else
+                    {
+                        completedCourseResult.CompletedCourseInfo.Add(completedCourse);
+                    }
+                }
+                completedCourseResult.IsSuccess = true;
+
+                _logger.LogInformation("[GrpcPaymentService] [{Method}] End", methodName);
+                return completedCourseResult;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[GrpcPaymentService] [{Method}] Error", methodName);
+                throw;
+            }
+        }
+
         private static ExchangeRate GetExchangeRate()
         {
             return new ExchangeRate

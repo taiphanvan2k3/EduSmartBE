@@ -324,13 +324,6 @@ namespace CourseManagementService.Services.CourseManagement.Student
                 LogInfo("Start", method);
 
                 var currentUser = GetCurrentUser();
-                // var cacheKey = CacheManager.EnrolledCourses.Key(currentUser.UserId);
-
-                // var cachedData = _cacheService.GetData<List<CompletedCourseInfo>>(cacheKey);
-                // if (cachedData != null)
-                // {
-                //     return CreateResponseInfo("completedCourses", cachedData);
-                // }
 
                 var enrolledCourses = await _context.CourseEnrollments
                     .Where(x => x.StudentId == currentUser.UserId && x.IsCompleted)
@@ -343,8 +336,6 @@ namespace CourseManagementService.Services.CourseManagement.Student
                     .ToListAsync();
                 enrolledCourses = await _grpcPaymentService.GetAchievementURLInCompletedCourses(enrolledCourses, currentUser.UserId);
 
-                // _cacheService.SetData(cacheKey, enrolledCourses, DateTimeOffset.Now.AddMinutes(
-                //     CacheManager.EnrolledCourses.ExpireTimeInMinutes));
                 return CreateResponseInfo("completedCourses", enrolledCourses);
             }
             catch (Exception e)
