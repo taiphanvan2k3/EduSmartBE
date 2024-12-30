@@ -98,13 +98,6 @@ namespace CourseManagementService.Services.CourseManagement.Student
                 LogInfo("Start", method);
 
                 var currentUser = GetCurrentUser();
-                // var cacheKey = CacheManager.EnrolledCourses.Key(currentUser.UserId);
-
-                // var cachedData = _cacheService.GetData<CompletedCourseInfo>(cacheKey);
-                // if (cachedData != null)
-                // {
-                //     return CreateResponseInfo("completedCourse", cachedData);
-                // }
 
                 var completedCourse = await _context.CourseEnrollments
                     .Where(x => x.StudentId == currentUser.UserId && x.CourseId == courseId && x.IsCompleted)
@@ -134,8 +127,6 @@ namespace CourseManagementService.Services.CourseManagement.Student
                     completedCourse = completedCourseInfosWithAchievementURL.FirstOrDefault();
                 }
 
-                // _cacheService.SetData(cacheKey, completedCourse, DateTimeOffset.Now.AddMinutes(
-                //     CacheManager.EnrolledCourses.ExpireTimeInMinutes));
                 return CreateResponseInfo("completedCourse", completedCourse);
             }
             catch (Exception e)

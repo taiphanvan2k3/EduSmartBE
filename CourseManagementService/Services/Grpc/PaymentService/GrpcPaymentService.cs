@@ -192,7 +192,6 @@ namespace CourseManagementService.Services.Grpc.PaymentService
                     {
                         Id = x.Id.ToString(),
                         Name = x.Name,
-                        // AchievementURL = x.AchievementURL
                     })}
                 });
 
