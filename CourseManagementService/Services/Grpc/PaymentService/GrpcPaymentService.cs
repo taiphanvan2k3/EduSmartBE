@@ -107,6 +107,7 @@ namespace CourseManagementService.Services.Grpc.PaymentService
                     Username = data.CreatedBy.Username,
                     FullName = data.CreatedBy.FullName,
                     Email = data.CreatedBy.Email,
+                    AvatarURL = data.CreatedBy.AvatarURL,
                     Amount = data.Amount,
                     RelatedInfo = data.RelatedInfo,
                     Currency = ConvertStringToCurrencyEnum(data.CurrencyCode),
@@ -196,7 +197,7 @@ namespace CourseManagementService.Services.Grpc.PaymentService
                 });
 
                 var completedCourseInfosResponse = new List<CompletedCourseInfoService>();
-                
+
                 if (completedCoursesResponse.IsSuccess)
                 {
                     completedCourseInfosResponse = new List<CompletedCourseInfoService>(completedCoursesResponse.CompletedCourseInfo.Select(x => new CompletedCourseInfoService

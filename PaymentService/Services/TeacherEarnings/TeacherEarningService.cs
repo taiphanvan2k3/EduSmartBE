@@ -228,7 +228,8 @@ namespace PaymentService.Services.TeacherEarnings
                             Id = x.UserId,
                             Username = x.CreatorInfo.Username,
                             FullName = x.CreatorInfo.FullName,
-                            Email = x.CreatorInfo.Email
+                            Email = x.CreatorInfo.Email,
+                            AvatarURL = x.CreatorInfo.AvatarURL
                         },
                         CourseInfo = new CourseDetail()
                         {

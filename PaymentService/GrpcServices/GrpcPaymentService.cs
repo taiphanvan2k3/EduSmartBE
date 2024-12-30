@@ -97,7 +97,8 @@ namespace PaymentService.GrpcServices
                     {
                         Username = request.Username,
                         FullName = request.FullName,
-                        Email = request.Email
+                        Email = request.Email,
+                        AvatarURL = request.AvatarURL
                     },
                     Amount = (decimal)request.Amount,
                     Currency = currencyType,
