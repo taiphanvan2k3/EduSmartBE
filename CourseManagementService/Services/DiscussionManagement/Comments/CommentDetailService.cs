@@ -337,6 +337,7 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                                     Id = currentUser.UserId,
                                     Username = currentUser.UserName,
                                     FullName = currentUser.FullName,
+                                    AvatarURL = currentUser.AvatarURL,
                                     IsSystem = false,
                                     IsTeacher = commentEntity.RoleOfUser == "Teacher"
                                 },
@@ -465,6 +466,7 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                                         Id = currentUser.UserId,
                                         Username = currentUser.UserName,
                                         FullName = currentUser.FullName,
+                                        AvatarURL = currentUser.AvatarURL,
                                         IsSystem = false,
                                         IsTeacher = currentUser.IsTeacher
                                     },

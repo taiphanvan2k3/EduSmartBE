@@ -78,6 +78,7 @@ namespace CourseManagementService.Services
                 UserId = int.Parse(currentUser.FindFirst("userId")?.Value ?? "0"),
                 UserName = currentUser.FindFirst("username")?.Value,
                 FullName = currentUser.FindFirst("fullName")?.Value,
+                AvatarURL = currentUser.FindFirst("avatarURL")?.Value,
                 Email = currentUser.FindFirst(ClaimTypes.Email)?.Value,
                 Roles = currentUser.FindFirst(ClaimTypes.Role)?.Value.Split(',').ToList()
             };

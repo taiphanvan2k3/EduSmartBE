@@ -197,6 +197,7 @@ namespace AuthService.Services.Auth
             {
                 new("username", userInfo.Username),
                 new("fullName", $"{userInfo.FirstName} {userInfo.LastName}"),
+                new("avatarURL", userInfo.AvatarURL),
                 new(ClaimTypes.Email, userInfo.Email),
                 new("userId", userInfo.Id.ToString()),
                 new("iss", _jwtSetting.Issuer),
