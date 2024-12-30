@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using TblUserNotification = CourseManagementService.Database.Schemas.NotificationEntities.UserNotification;
 using TblNotificationBellClickLog = CourseManagementService.Database.Schemas.NotificationEntities.NotificationBellClickLog;
+using Newtonsoft.Json.Serialization;
 
 namespace CourseManagementService.Services.NotificationManagement
 {
@@ -192,7 +193,11 @@ namespace CourseManagementService.Services.NotificationManagement
                 {
                     LessonName = notificationByBatchData.NotificationCreateDto.MetaData.TryGetValue("LessonName", out var lessonName) ? lessonName : null,
                     CourseName = notificationByBatchData.NotificationCreateDto.MetaData.TryGetValue("CourseName", out var courseName) ? courseName : null
-                }, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+                }, new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Ignore,
+                    ContractResolver = new CamelCasePropertyNamesContractResolver()
+                });
 
                 var userNotifications = notificationByBatchData.UserIdsInBatch.Select(userId =>
                 {
@@ -276,11 +281,29 @@ namespace CourseManagementService.Services.NotificationManagement
             var discussionId = notificationCreateDto.MetaData["DiscussionId"];
             var lessonId = notificationCreateDto.MetaData["LessonId"];
 
+            var discussionAndLessonInfo = await _context.Discussions
+                .Where(d => d.Id == Guid.Parse(discussionId))
+                .Select(d => new
+                {
+                    DiscussionTitle = d.Title,
+                    LessonTitle = d.Lesson.Title
+                })
+                .FirstOrDefaultAsync();
+
+            if (discussionAndLessonInfo == null)
+            {
+                LogError(GetActualAsyncMethodName(), "Discussion not found");
+                return;
+            }
+
+            // Serialize metadata camelCase
             userNotification.MetaData = JsonConvert.SerializeObject(new
             {
                 DiscussionId = discussionId,
-                LessonId = lessonId
-            });
+                LessonId = lessonId,
+                discussionAndLessonInfo.DiscussionTitle,
+                discussionAndLessonInfo.LessonTitle
+            }, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
 
             await _context.UserNotifications.AddAsync(userNotification);
             await _hubContext.Clients.User(notificationCreateDto.ReceiverId.ToString())
@@ -295,6 +318,21 @@ namespace CourseManagementService.Services.NotificationManagement
                 .Where(r => r.CommentId == Guid.Parse(notificationCreateDto.RelatedEntityId) && r.UserId != notificationCreateDto.SenderInfo.Id)
                 .CountAsync();
 
+            var discussionAndLessonInfo = await _context.Discussions
+                .Where(d => d.Id == Guid.Parse(notificationCreateDto.MetaData["DiscussionId"]))
+                .Select(d => new
+                {
+                    DiscussionTitle = d.Title,
+                    LessonTitle = d.Lesson.Title
+                })
+                .FirstOrDefaultAsync();
+
+            if (discussionAndLessonInfo == null)
+            {
+                LogError(GetActualAsyncMethodName(), "Discussion not found");
+                return;
+            }
+
             var discussionId = notificationCreateDto.MetaData["DiscussionId"];
             var lessonId = notificationCreateDto.MetaData["LessonId"];
 
@@ -302,8 +340,10 @@ namespace CourseManagementService.Services.NotificationManagement
             {
                 DiscussionId = discussionId,
                 LessonId = lessonId,
+                discussionAndLessonInfo.DiscussionTitle,
+                discussionAndLessonInfo.LessonTitle,
                 OtherReactionsCount = reactionCount
-            });
+            }, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
 
             await _context.UserNotifications.AddAsync(userNotification);
             await _hubContext.Clients.User(notificationCreateDto.ReceiverId.ToString())
@@ -340,6 +380,7 @@ namespace CourseManagementService.Services.NotificationManagement
             notificationCreateDto.SenderInfo = new SenderInfo()
             {
                 Id = 0,
+                Username = "System",
                 FullName = courseInfo.Name,
                 AvatarURL = courseInfo.PreviewVideoURL,
                 IsSystem = true
