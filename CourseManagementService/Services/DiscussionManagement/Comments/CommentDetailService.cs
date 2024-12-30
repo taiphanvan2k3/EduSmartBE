@@ -319,33 +319,38 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                 responseInfo.Data.Add("comment", commentDto);
 
                 await _cacheService.RemoveDataByPattern($"DiscussionInCourse:{discussionInfo.CourseId}:{currentUser.UserId}_ReplyByMe");
-                await _commonProducer.EnqueueDataAsync(new BackgroundJobData()
+
+                var receiverId = commentCreateDto.MentionedUserId ?? discussionInfo.OwnerId;
+                if (receiverId != currentUser.UserId)
                 {
-                    JobType = BackgroundJobType.CreateNotification,
-                    Data = new Dictionary<string, dynamic>
+                    await _commonProducer.EnqueueDataAsync(new BackgroundJobData()
                     {
-                        {"notificationCreateDto", new NotificationCreateDto()
+                        JobType = BackgroundJobType.CreateNotification,
+                        Data = new Dictionary<string, dynamic>
                         {
-                            Type = commentCreateDto.MentionedUserId.HasValue ? NotificationType.Mention : NotificationType.CommentInDiscussion,
-                            ReceiverId = discussionInfo.OwnerId,
-                            SenderInfo = new SenderInfo()
+                            {"notificationCreateDto", new NotificationCreateDto()
                             {
-                                Id = currentUser.UserId,
-                                FullName = currentUser.FullName,
-                                IsSystem = false,
-                                IsTeacher = commentEntity.RoleOfUser == "Teacher"
-                            },
-                            RelatedEntityId = commentEntity.Id.ToString(),
-                            RelatedEntityType = RelatedEntityType.Comment,
-                            CourseId = discussionInfo.CourseId,
-                            MetaData = new Dictionary<string, string>
-                            {
-                                {"DiscussionId", commentCreateDto.DiscussionId.ToString()},
-                                {"LessonId", discussionInfo.LessonId.ToString()}
-                            }
-                        }}
-                    }
-                });
+                                Type = commentCreateDto.MentionedUserId.HasValue ? NotificationType.Mention : NotificationType.CommentInDiscussion,
+                                ReceiverId = commentCreateDto.MentionedUserId ?? discussionInfo.OwnerId,
+                                SenderInfo = new SenderInfo()
+                                {
+                                    Id = currentUser.UserId,
+                                    FullName = currentUser.FullName,
+                                    IsSystem = false,
+                                    IsTeacher = commentEntity.RoleOfUser == "Teacher"
+                                },
+                                RelatedEntityId = commentEntity.Id.ToString(),
+                                RelatedEntityType = RelatedEntityType.Comment,
+                                CourseId = discussionInfo.CourseId,
+                                MetaData = new Dictionary<string, string>
+                                {
+                                    {"DiscussionId", commentCreateDto.DiscussionId.ToString()},
+                                    {"LessonId", discussionInfo.LessonId.ToString()}
+                                }
+                            }}
+                        }
+                    });
+                }
 
                 return responseInfo;
             }
