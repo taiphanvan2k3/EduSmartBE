@@ -10,6 +10,8 @@ namespace CourseManagementService.Services.AppState.Schemas
 
         public string FullName { get; set; }
 
+        public string AvatarURL { get; set; }
+
         public List<string> Roles { get; set; }
 
         public bool IsAdmin => Roles.Contains("Admin");

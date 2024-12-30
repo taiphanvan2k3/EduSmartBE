@@ -362,7 +362,7 @@ namespace CourseManagementService.Services.NotificationManagement
                 .Select(c => new
                 {
                     c.Name,
-                    c.PreviewVideoURL,
+                    c.ThumbnailURL,
                     UserIdsInCourse = c.Enrollments
                         .Where(ce => !ce.LeaveDate.HasValue)
                         .Select(ce => ce.StudentId)
@@ -382,7 +382,7 @@ namespace CourseManagementService.Services.NotificationManagement
                 Id = 0,
                 Username = "System",
                 FullName = courseInfo.Name,
-                AvatarURL = courseInfo.PreviewVideoURL,
+                AvatarURL = courseInfo.ThumbnailURL,
                 IsSystem = true
             };
 
