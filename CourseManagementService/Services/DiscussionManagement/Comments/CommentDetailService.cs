@@ -335,6 +335,7 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                                 SenderInfo = new SenderInfo()
                                 {
                                     Id = currentUser.UserId,
+                                    Username = currentUser.UserName,
                                     FullName = currentUser.FullName,
                                     IsSystem = false,
                                     IsTeacher = commentEntity.RoleOfUser == "Teacher"
@@ -462,6 +463,7 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                                     SenderInfo = new SenderInfo()
                                     {
                                         Id = currentUser.UserId,
+                                        Username = currentUser.UserName,
                                         FullName = currentUser.FullName,
                                         IsSystem = false,
                                         IsTeacher = currentUser.IsTeacher
@@ -471,7 +473,7 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                                     CourseId = commentEntity.CourseId,
                                     MetaData = new Dictionary<string, string>
                                     {
-                                        {"DiscussionId", commentEntity.ParentId.ToString()},
+                                        {"DiscussionId", commentEntity.DiscussionId.ToString()},
                                         {"LessonId", commentEntity.LessonId.ToString()}
                                     }
                                 }}
