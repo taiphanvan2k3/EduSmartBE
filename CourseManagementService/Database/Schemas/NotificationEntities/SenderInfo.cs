@@ -4,6 +4,8 @@ namespace CourseManagementService.Database.Schemas.NotificationEntities
     {
         public int Id { get; set; }
 
+        public string Username { get; set; }
+
         public string FullName { get; set; }
 
         public string AvatarURL { get; set; }
