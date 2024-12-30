@@ -284,7 +284,7 @@ namespace CourseManagementService.Services.NotificationManagement
 
             await _context.UserNotifications.AddAsync(userNotification);
             await _hubContext.Clients.User(notificationCreateDto.ReceiverId.ToString())
-                .SendAsync("ReceiveNotification", userNotification);
+                .SendAsync("ReceiveNotification", ConvertEntityToSignalRData(userNotification));
         }
 
         private async Task CreateReactionNotification(NotificationCreateDto notificationCreateDto)
@@ -307,7 +307,7 @@ namespace CourseManagementService.Services.NotificationManagement
 
             await _context.UserNotifications.AddAsync(userNotification);
             await _hubContext.Clients.User(notificationCreateDto.ReceiverId.ToString())
-                .SendAsync("ReceiveNotification", userNotification);
+                .SendAsync("ReceiveNotification", ConvertEntityToSignalRData(userNotification));
         }
 
         private async Task CreateNotificationForCourseModification(NotificationCreateDto notificationCreateDto)
@@ -363,6 +363,19 @@ namespace CourseManagementService.Services.NotificationManagement
 
                 await _notificationQueue.EnqueueAsync(notificationByBatchData);
             }
+        }
+
+        private static NotificationSignalRData ConvertEntityToSignalRData(TblUserNotification notification)
+        {
+            return new NotificationSignalRData
+            {
+                SenderInfo = notification.SenderInfo,
+                NotificationType = notification.Type.ToString(),
+                RelatedEntityId = notification.RelatedEntityId,
+                RelatedEntityType = notification.RelatedEntityType.ToString(),
+                CourseId = notification.CourseId,
+                MetaData = notification.MetaData
+            };
         }
     }
 }
