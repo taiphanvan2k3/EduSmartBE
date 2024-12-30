@@ -107,6 +107,9 @@ namespace AuthService.Services.Auth
                         Id = x.Id,
                         Username = x.UserName,
                         Email = x.Email,
+                        FirstName = x.FirstName,
+                        LastName = x.LastName,
+                        AvatarURL = x.AvatarURL
                     })
                     .FirstOrDefaultAsync();
 
