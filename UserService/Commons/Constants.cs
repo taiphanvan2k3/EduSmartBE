@@ -10,7 +10,7 @@ namespace UserService.Commons
 
         public static readonly string SERVICE_NAME = (typeof(Constants).Namespace ?? "UserService").Split('.')[0];
 
-        public static readonly string CONNECTION_STRING = "Host=edu-smart.postgres.database.azure.com;Database=EduSmart.UserService;Username=pbl6duter;Password=Edusmartk21;Trust Server Certificate=true";
+        public static readonly string CONNECTION_STRING = "Host=edusmart.info.vn;Port=5432;Database=EduSmart.UserService;Username=pbl6duter;Password=Edusmartk21;Trust Server Certificate=true";
 
         public static readonly string TEACHER_ROLE = "Teacher";
 
