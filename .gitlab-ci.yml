@@ -16,7 +16,6 @@ restore_and_build_service:
       - PaymentService/obj/
   script:
     - dotnet restore edusmartbe.sln --packages .nuget/packages
-    - ls -la .nuget/packages/  # List directory contents to verify packages have been restored
     - |
       services=("AuthService" "UserService" "CourseManagementService" "PaymentService")
       for service in "${services[@]}"; do
