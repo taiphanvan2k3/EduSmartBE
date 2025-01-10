@@ -14,6 +14,6 @@ namespace AuthService.Services.Permission.Schemas.Function
         public string ScreenId { get; set; }
 
         [Required]
-        public int Order { get; set; }        
+        public required int Order { get; set; }
     }
 }

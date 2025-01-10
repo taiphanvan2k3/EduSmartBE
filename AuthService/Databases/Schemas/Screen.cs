@@ -15,6 +15,6 @@ namespace AuthService.Databases.Schemas
 
         public int Order { get; set; }
 
-        public ICollection<Function> Functions { get; set; }
+        public ICollection<Function> Functions { get; }
     }
 }
