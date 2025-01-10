@@ -8,7 +8,7 @@ namespace PaymentService.Commons
 
         public static readonly string SERVICE_NAME = (typeof(Constants).Namespace ?? "PaymentService").Split('.')[0];
 
-        public static readonly string CONNECTION_STRING = "Host=edu-smart.postgres.database.azure.com;Database=EduSmart.PaymentService;Username=pbl6duter;Password=Edusmartk21;SSL Mode=Require;Trust Server Certificate=true";
+        public static readonly string CONNECTION_STRING = "Host=edusmart.info.vn;Port=5432;Database=EduSmart.PaymentService;Username=pbl6duter;Password=Edusmartk21;Trust Server Certificate=true";
 
         public static readonly int EXCHANGE_RATE_USD_TO_VND = 25397;
 

@@ -1,7 +1,10 @@
 using System.Net.Http.Headers;
+
 using AuthService.Services.Auth.Schemas;
 using AuthService.Settings;
+
 using Microsoft.Extensions.Options;
+
 using Newtonsoft.Json;
 
 namespace AuthService.Services.Auth
@@ -52,8 +55,8 @@ namespace AuthService.Services.Auth
 
             try
             {
-                var tokenResponse = await _httpClient.PostAsync("https://oauth2.googleapis.com/token",
-                    new FormUrlEncodedContent(tokenRequestBody));
+                using var content = new FormUrlEncodedContent(tokenRequestBody);
+                var tokenResponse = await _httpClient.PostAsync(new Uri("https://oauth2.googleapis.com/token"), content);
                 tokenResponse.EnsureSuccessStatusCode();
 
                 var tokenResponseContent = await tokenResponse.Content.ReadAsStringAsync();
@@ -76,7 +79,7 @@ namespace AuthService.Services.Auth
             try
             {
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-                var userInfoResponse = await httpClient.GetAsync("https://www.googleapis.com/oauth2/v1/userinfo");
+                var userInfoResponse = await httpClient.GetAsync(new Uri("https://www.googleapis.com/oauth2/v1/userinfo"));
                 userInfoResponse.EnsureSuccessStatusCode();
 
                 var userInfoResponseContent = await userInfoResponse.Content.ReadAsStringAsync();

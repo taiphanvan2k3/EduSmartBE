@@ -20,8 +20,8 @@ namespace AuthService.Databases.Schemas
 
         public Screen Screen { get; set; }
 
-        public ICollection<Permission> Permissions { get; set; }
+        public ICollection<Permission> Permissions { get; }
 
-        public ICollection<CoursePermission> CoursePermissions { get; set; }
+        public ICollection<CoursePermission> CoursePermissions { get; }
     }
 }

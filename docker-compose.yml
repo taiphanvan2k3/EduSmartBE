@@ -101,9 +101,29 @@ services:
     networks:
       - microservices-network
 
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: pbl6duter
+      POSTGRES_PASSWORD: Edusmartk21
+    restart: always
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d postgres" ]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - microservices-network
+
 networks:
   microservices-network:
     driver: bridge
 
 volumes:
   rabbitmq_data:
+  postgres_data:

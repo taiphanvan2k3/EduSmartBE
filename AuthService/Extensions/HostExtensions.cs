@@ -1,7 +1,10 @@
 using System.Reflection;
+
 using AuthService.Services.AppState;
+
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+
 using Serilog;
 
 namespace AuthService.Extensions
@@ -34,7 +37,7 @@ namespace AuthService.Extensions
                     // Tự động đăng ký các Model nằm trong thư mục Models
                     var assembly = Assembly.GetExecutingAssembly();
                     containerBuilder.RegisterAssemblyTypes(assembly)
-                        .Where(t => t.Name.EndsWith("Service") && t.Namespace.Contains("Services"))
+                        .Where(t => t.Name.EndsWith("Service", StringComparison.Ordinal) && t.Namespace.Contains("Services", StringComparison.Ordinal))
                         .AsImplementedInterfaces()
                         .InstancePerLifetimeScope(); // lifetime scope
 

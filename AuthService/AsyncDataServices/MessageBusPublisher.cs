@@ -35,6 +35,7 @@ namespace AuthService.AsyncDataServices
                     Password = _configuration["RabbitMQ:Password"]
                 };
 
+
                 var connected = false;
                 var retryCount = 5;
 
@@ -85,7 +86,7 @@ namespace AuthService.AsyncDataServices
 
         public void PublishMessage<T>(string eventType, T message)
         {
-            var payload = JsonSerializer.Serialize(new
+            string payload = JsonSerializer.Serialize(new
             {
                 type = eventType,
                 data = message
@@ -104,7 +105,7 @@ namespace AuthService.AsyncDataServices
 
         private void SendMessage(string routingKey, string message)
         {
-            var body = Encoding.UTF8.GetBytes(message);
+            byte[] body = Encoding.UTF8.GetBytes(message);
 
             // Dùng thêm exchange, routingKey để đến đúng chỗ subscriber
             _channel.BasicPublish(exchange: "main_exchange",
