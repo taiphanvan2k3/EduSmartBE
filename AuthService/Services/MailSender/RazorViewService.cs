@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
 namespace AuthService.Services.MailSender
@@ -34,7 +35,7 @@ namespace AuthService.Services.MailSender
                 new ActionDescriptor());
 
                 using var writer = new StringWriter();
-                var viewResult = _viewEngine.GetView(executingFilePath: null, viewPath, isMainPage: false);
+                ViewEngineResult viewResult = _viewEngine.GetView(executingFilePath: null, viewPath, isMainPage: false);
                 if (viewResult.View == null)
                 {
                     throw new ArgumentNullException($"{viewPath} does not match any available view");
@@ -59,7 +60,7 @@ namespace AuthService.Services.MailSender
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Error when rendering view to string with error: {0}", e.Message);
+                _logger.LogError(e, "Error when rendering view to string with error: {Message}", e.Message);
                 throw;
             }
         }

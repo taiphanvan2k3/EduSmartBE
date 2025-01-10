@@ -1,7 +1,10 @@
 using AuthService.Services.MailSender.Schemas;
 using AuthService.Settings;
+
 using MailKit.Net.Smtp;
+
 using Microsoft.Extensions.Options;
+
 using MimeKit;
 
 namespace AuthService.Services.MailSender
@@ -34,6 +37,7 @@ namespace AuthService.Services.MailSender
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Send mail confirm account to {ToEmail} FAILED", mailBody.ToEmail);
+                throw;
             }
         }
 
@@ -68,7 +72,7 @@ namespace AuthService.Services.MailSender
             try
             {
                 _logger.LogInformation("{ActionName}: Send email to {Email}", actionName, mailBody.ToEmail);
-                var emailMessage = new MimeMessage();
+                using var emailMessage = new MimeMessage();
                 emailMessage.From.Add(new MailboxAddress(_mailSettings.DisplayName, _mailSettings.Mail));
                 emailMessage.To.Add(new MailboxAddress(mailBody.ToUserName, mailBody.ToEmail));
                 emailMessage.Subject = mailBody.Subject;
