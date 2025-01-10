@@ -7,11 +7,11 @@ namespace AuthService.Services
 {
     public class BaseService
     {
-        protected readonly DataContext _context;
-        protected ILogger _logger;
-        protected IHttpContextAccessor _httpContextAccessor;
-        protected readonly IDbContextFactory<DataContext> _dbContextFactory;
-        protected readonly AppStateService _appStateService;
+        internal readonly DataContext _context;
+        internal ILogger _logger;
+        internal IHttpContextAccessor _httpContextAccessor;
+        internal readonly IDbContextFactory<DataContext> _dbContextFactory;
+        internal readonly AppStateService _appStateService;
         protected static string GetActualAsyncMethodName([CallerMemberName] string name = null) => name;
 
         public BaseService() { }
@@ -45,7 +45,7 @@ namespace AuthService.Services
         {
             return $"Service injection error: {serviceName} is null";
         }
-        
+
         protected virtual void LogInfo(string message, [CallerMemberName] string method = null)
         {
             _logger?.LogInformation("[{Type}] [{Method}] {Message}", GetType().Name, method, message);

@@ -26,12 +26,12 @@ namespace PaymentService.Services.PaymentTransactions.Course
 
         public async Task<ResponseInfo> BuyCourse(CoursePaymentRequest coursePaymentRequest)
         {
-            var methodName = GetActualAsyncMethodName();
+            string methodName = GetActualAsyncMethodName();
             try
             {
                 LogInfo("Start", methodName);
 
-                var responseInfo = await _grpcCourseService.EnrollCourse(new CourseEnrollmentDto
+                ResponseInfo responseInfo = await _grpcCourseService.EnrollCourse(new CourseEnrollmentDto
                 {
                     CourseId = coursePaymentRequest.CourseId.ToString(),
                     StudentId = coursePaymentRequest.BuyerId,

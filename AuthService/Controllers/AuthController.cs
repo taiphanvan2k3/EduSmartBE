@@ -967,12 +967,9 @@ namespace AuthService.Controllers
             try
             {
                 var response = _authService.ValidateOtpCode(otpContentBase.OtpType, otpContentBase.Email, otpContentBase.OtpCode);
-                if (response.StatusCode == StatusCodes.Status200OK)
-                {
-                    return Ok(new SuccessResponse(response.Message));
-                }
-
-                return StatusCode(response.StatusCode, ErrorResponseHelper.GetContentOfAnyError(
+                return response.StatusCode == StatusCodes.Status200OK
+                    ? Ok(new SuccessResponse(response.Message))
+                    : (IActionResult)StatusCode(response.StatusCode, ErrorResponseHelper.GetContentOfAnyError(
                     response.StatusCode, response.Error, response.Message));
             }
             catch (Exception e)

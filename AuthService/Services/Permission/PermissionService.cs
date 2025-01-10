@@ -58,7 +58,7 @@ namespace AuthService.Services.Permission
 
                 // Chỉ có admin mới xem được tất cả các Permission của các Role khác
                 // Còn lại chỉ xem được Permission của Role mà nó có
-                if (!currentRoleNames.Contains("Admin") && !currentRoleNames.Contains(requestedRole.Name))
+                if (!currentRoleNames.Contains("Admin", StringComparison.Ordinal) && !currentRoleNames.Contains(requestedRole.Name, StringComparison.OrdinalIgnoreCase))
                 {
                     responseInfo.Message = "You don't have permission to get permissions of this role";
                     responseInfo.StatusCode = StatusCodes.Status403Forbidden;
