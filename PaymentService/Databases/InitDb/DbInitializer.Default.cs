@@ -11,6 +11,7 @@ namespace PaymentService.Databases.InitDb
         {
             await SeedDataForBanks();
             await SeedDataForAchievementTemplates();
+            await SeedAdminBankAccount();
             await _context.SaveChangesAsync();
         }
 
@@ -41,6 +42,24 @@ namespace PaymentService.Databases.InitDb
             {
                 _logger.LogError(e, "Error while seeding banks data");
                 throw;
+            }
+        }
+
+        private async Task SeedAdminBankAccount()
+        {
+            if (!await _context.BankAccounts.AnyAsync())
+            {
+                var adminBankAccount = new BankAccount
+                {
+                    UserId = 1,
+                    AccountNumber = "SEPSMARTEDU2003",
+                    BankId = 26, // OCB
+                    AccountName = "Phan Văn Tài",
+                    IsPrimary = true,
+                    IsAdminAccount = true,
+                };
+
+                await _context.BankAccounts.AddAsync(adminBankAccount);
             }
         }
 

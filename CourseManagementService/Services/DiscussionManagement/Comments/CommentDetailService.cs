@@ -452,35 +452,38 @@ namespace CourseManagementService.Services.DiscussionManagement.Comments
                         };
 
                         await _context.Reactions.AddAsync(newReactionEntity);
-                        await _commonProducer.EnqueueDataAsync(new BackgroundJobData()
+                        if (commentEntity.CreatedBy != currentUser.UserId)
                         {
-                            JobType = BackgroundJobType.CreateNotification,
-                            Data = new Dictionary<string, dynamic>
+                            await _commonProducer.EnqueueDataAsync(new BackgroundJobData()
                             {
-                                {"notificationCreateDto", new NotificationCreateDto()
+                                JobType = BackgroundJobType.CreateNotification,
+                                Data = new Dictionary<string, dynamic>
                                 {
-                                    Type = NotificationType.Reaction,
-                                    ReceiverId = commentEntity.CreatedBy,
-                                    SenderInfo = new SenderInfo()
+                                    {"notificationCreateDto", new NotificationCreateDto()
                                     {
-                                        Id = currentUser.UserId,
-                                        Username = currentUser.UserName,
-                                        FullName = currentUser.FullName,
-                                        AvatarURL = currentUser.AvatarURL,
-                                        IsSystem = false,
-                                        IsTeacher = currentUser.IsTeacher
-                                    },
-                                    RelatedEntityId = commentId.ToString(),
-                                    RelatedEntityType = RelatedEntityType.Comment,
-                                    CourseId = commentEntity.CourseId,
-                                    MetaData = new Dictionary<string, string>
-                                    {
-                                        {"DiscussionId", commentEntity.DiscussionId.ToString()},
-                                        {"LessonId", commentEntity.LessonId.ToString()}
-                                    }
-                                }}
-                            }
-                        });
+                                        Type = NotificationType.Reaction,
+                                        ReceiverId = commentEntity.CreatedBy,
+                                        SenderInfo = new SenderInfo()
+                                        {
+                                            Id = currentUser.UserId,
+                                            Username = currentUser.UserName,
+                                            FullName = currentUser.FullName,
+                                            AvatarURL = currentUser.AvatarURL,
+                                            IsSystem = false,
+                                            IsTeacher = currentUser.IsTeacher
+                                        },
+                                        RelatedEntityId = commentId.ToString(),
+                                        RelatedEntityType = RelatedEntityType.Comment,
+                                        CourseId = commentEntity.CourseId,
+                                        MetaData = new Dictionary<string, string>
+                                        {
+                                            {"DiscussionId", commentEntity.DiscussionId.ToString()},
+                                            {"LessonId", commentEntity.LessonId.ToString()}
+                                        }
+                                    }}
+                                }
+                            });
+                        }
                     }
                     else
                     {
