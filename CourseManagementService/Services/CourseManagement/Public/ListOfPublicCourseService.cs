@@ -96,7 +96,10 @@ namespace CourseManagementService.Services.CourseManagement.Public
                         Name = c.Name,
                         ThumbnailURL = c.ThumbnailURL,
                         TotalStudents = c.Enrollments.Count,
-                        TotalLessons = c.Chapters.Sum(x => x.Lessons.Count),
+                        TotalLessons = c.Chapters
+                            .Where(ch => ch.IsPublished)
+                            .SelectMany(ch => ch.Lessons)
+                            .Count(l => l.IsPublished),
                         TotalSecondsPerChapter = c.Chapters.Select(x => x.Lessons.Sum(y => y.DurationInSeconds)).ToList(),
                         Teacher = new TeacherDetail()
                         {
@@ -201,13 +204,21 @@ namespace CourseManagementService.Services.CourseManagement.Public
                         .ToList(),
                         ThumbnailURL = c.ThumbnailURL,
                         TotalStudents = c.Enrollments.Count,
-                        TotalLessons = c.Chapters.Sum(x => x.Lessons.Count),
-                        TotalSecondsByChapter = c.Chapters.Select(x => x.Lessons.Sum(y => y.DurationInSeconds)).ToList(),
+                        TotalLessons = c.Chapters
+                            .Where(ch => (currentUser != null && currentUser.UserId == c.TeacherId) || ch.IsPublished)
+                            .SelectMany(ch => ch.Lessons)
+                            .Count(l => (currentUser != null && currentUser.UserId == c.TeacherId) || l.IsPublished),
+                        TotalSecondsByChapter = c.Chapters
+                            .Where(ch => (currentUser != null && currentUser.UserId == c.TeacherId) || ch.IsPublished)
+                            .Select(x => x.Lessons
+                                .Where(l => (currentUser != null && currentUser.UserId == c.TeacherId) || l.IsPublished)
+                                .Sum(y => y.DurationInSeconds))
+                            .ToList(),
                         Teacher = new TeacherDetail()
                         {
                             Id = c.TeacherId
                         },
-                        AverageRating = c.Ratings.Any() ? c.Ratings.Average(x => x.Rating) : null,
+                        AverageRating = c.Ratings.Count == 0 ? c.Ratings.Average(x => x.Rating) : null,
                     })
                     .ToPaginatedListAsync(currentPage: 1, _maxPopularCourses);
 
@@ -291,13 +302,21 @@ namespace CourseManagementService.Services.CourseManagement.Public
                         .ToList(),
                         ThumbnailURL = c.ThumbnailURL,
                         TotalStudents = c.Enrollments.Count,
-                        TotalLessons = c.Chapters.Sum(x => x.Lessons.Count),
-                        TotalSecondsByChapter = c.Chapters.Select(x => x.Lessons.Sum(y => y.DurationInSeconds)).ToList(),
+                        TotalLessons = c.Chapters
+                            .Where(ch => (currentUser != null && currentUser.UserId == c.TeacherId) || ch.IsPublished)
+                            .SelectMany(ch => ch.Lessons)
+                            .Count(l => (currentUser != null && currentUser.UserId == c.TeacherId) || l.IsPublished),
+                        TotalSecondsByChapter = c.Chapters
+                            .Where(ch => (currentUser != null && currentUser.UserId == c.TeacherId) || ch.IsPublished)
+                            .Select(x => x.Lessons
+                                .Where(l => (currentUser != null && currentUser.UserId == c.TeacherId) || l.IsPublished)
+                                .Sum(y => y.DurationInSeconds))
+                            .ToList(),
                         Teacher = new TeacherDetail()
                         {
                             Id = c.TeacherId
                         },
-                        AverageRating = c.Ratings.Any() ? c.Ratings.Average(x => x.Rating) : null,
+                        AverageRating = c.Ratings.Count == 0 ? c.Ratings.Average(x => x.Rating) : null,
                     })
                     .ToPaginatedListAsync(currentPage: 1, _maxRecommendedCourses);
 
@@ -401,8 +420,16 @@ namespace CourseManagementService.Services.CourseManagement.Public
                     .ToList(),
                     ThumbnailURL = c.ThumbnailURL,
                     TotalStudents = c.Enrollments.Count,
-                    TotalLessons = c.Chapters.Sum(x => x.Lessons.Count),
-                    TotalSecondsByChapter = c.Chapters.Select(x => x.Lessons.Sum(y => y.DurationInSeconds)).ToList(),
+                    TotalLessons = c.Chapters
+                        .Where(ch => (currentUser != null && currentUser.UserId == c.TeacherId) || ch.IsPublished)
+                        .SelectMany(ch => ch.Lessons)
+                        .Count(l => (currentUser != null && currentUser.UserId == c.TeacherId) || l.IsPublished),
+                    TotalSecondsByChapter = c.Chapters
+                        .Where(ch => (currentUser != null && currentUser.UserId == c.TeacherId) || ch.IsPublished)
+                        .Select(x => x.Lessons
+                            .Where(l => (currentUser != null && currentUser.UserId == c.TeacherId) || l.IsPublished)
+                            .Sum(y => y.DurationInSeconds))
+                        .ToList(),
                     Teacher = new TeacherDetail()
                     {
                         Id = c.TeacherId
@@ -410,7 +437,7 @@ namespace CourseManagementService.Services.CourseManagement.Public
                     IsRegistered = currentUser != null && (
                         c.TeacherId == currentUser.UserId || c.Enrollments.Any(x => x.StudentId == currentUser.UserId)
                     ),
-                    AverageRating = c.Ratings.Any() ? c.Ratings.Average(x => x.Rating) : null,
+                    AverageRating = c.Ratings.Count == 0 ? c.Ratings.Average(x => x.Rating) : null,
                 })
                 .ToPaginatedListAsync(condition.CurrentPage, condition.PageSize);
 

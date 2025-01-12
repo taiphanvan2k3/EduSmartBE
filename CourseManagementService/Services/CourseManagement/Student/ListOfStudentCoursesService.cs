@@ -80,7 +80,10 @@ namespace CourseManagementService.Services.CourseManagement.Student
                             Id = ((int)Enum.Parse(visibilityEnumType, x.VisibilityStatus.ToString())).ToString(),
                             Name = Utils.GetEnumName(x.VisibilityStatus)
                         },
-                        TotalLessons = x.Course.Chapters.Sum(ch => ch.Lessons.Count),
+                        TotalLessons = x.Course.Chapters
+                            .Where(ch => ch.IsPublished)
+                            .SelectMany(ch => ch.Lessons)
+                            .Count(l => l.IsPublished),
                         Teacher = new TeacherDetail()
                         {
                             Id = x.Course.TeacherId
@@ -175,12 +178,15 @@ namespace CourseManagementService.Services.CourseManagement.Student
                                 Id = ((int)Enum.Parse(visibilityEnumType, CourseProgressVisibility.Public.ToString())).ToString(),
                                 Name = Utils.GetEnumName(CourseProgressVisibility.Public)
                             },
-                            TotalLessons = x.Chapters.Sum(ch => ch.Lessons.Count),
+                            TotalLessons = x.Chapters
+                                .Where(ch => ch.IsPublished)
+                                .SelectMany(ch => ch.Lessons)
+                                .Count(l => l.IsPublished),
                             Teacher = new TeacherDetail()
                             {
                                 Id = x.TeacherId
                             },
-                            AverageRating = x.Ratings.Any() ? x.Ratings.Average(r => r.Rating) : null
+                            AverageRating = x.Ratings.Count == 0 ? x.Ratings.Average(r => r.Rating) : null
                         })
                         .ToListAsync();
                 }
@@ -201,12 +207,16 @@ namespace CourseManagementService.Services.CourseManagement.Student
                                 Id = ((int)Enum.Parse(visibilityEnumType, x.VisibilityStatus.ToString())).ToString(),
                                 Name = Utils.GetEnumName(x.VisibilityStatus)
                             },
-                            TotalLessons = x.Course.Chapters.Sum(ch => ch.Lessons.Count),
+                            TotalLessons = x.Course.Chapters
+                                .Where(ch => ch.IsPublished)
+                                .SelectMany(ch => ch.Lessons)
+                                .Count(l => l.IsPublished),
                             Teacher = new TeacherDetail()
                             {
                                 Id = x.Course.TeacherId
                             },
-                            AverageRating = x.Course.Ratings.Any() ? x.Course.Ratings.Average(r => r.Rating) : null,
+                            AverageRating = x.Course.Ratings.Count == 0
+                                ? x.Course.Ratings.Average(r => r.Rating) : null,
                             MyRating = currentUser.UserId == x.StudentId
                                 ? (x.Course.Ratings.Any(r => r.UserId == currentUser.UserId)
                                     ? x.Course.Ratings.FirstOrDefault(r => r.UserId == currentUser.UserId).Rating
