@@ -163,8 +163,16 @@ namespace CourseManagementService.Services.CourseManagement.Public
                             ThumbnailURL = x.ThumbnailURL,
                             PreviewVideoURL = x.PreviewVideoURL,
                             TotalStudents = x.Enrollments.Count,
-                            TotalLessons = x.Chapters.SelectMany(x => x.Lessons).Count(),
-                            TotalSecondsByChapter = x.Chapters.Select(c => c.Lessons.Sum(l => l.DurationInSeconds)).ToList(),
+                            TotalLessons = x.Chapters
+                                .Where(c => currentUser.UserId == x.TeacherId || c.IsPublished)
+                                .SelectMany(c => c.Lessons)
+                                .Count(l => currentUser.UserId == x.TeacherId || l.IsPublished),
+                            TotalSecondsByChapter = x.Chapters
+                                .Where(c => currentUser.UserId == x.TeacherId || c.IsPublished)
+                                .Select(c => c.Lessons
+                                    .Where(l => currentUser.UserId == x.TeacherId || l.IsPublished)
+                                    .Sum(l => l.DurationInSeconds))
+                                .ToList(),
                             IsRegistered = currentUser != null && (
                                 x.Enrollments.Any(e => e.StudentId == currentUser.UserId)
                                 || x.TeacherId == currentUser.UserId
