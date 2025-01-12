@@ -69,5 +69,18 @@ namespace CourseManagementService.Controllers
             var responseInfo = await _notificationDetailService.UpdateLastClickedOnBellAsync();
             return HandleResponseInfo(responseInfo, resourceName: "bellClickMilestone");
         }
+
+        /// <summary>
+        /// Mark all notifications as read
+        /// <para>Created at: 2025/01/12</para>
+        /// <para>Created by: TaiPV</para>
+        /// </summary>
+        /// <returns></returns>
+        [HttpPut("mark-all-as-read")]
+        public async Task<IActionResult> MarkAllAsRead()
+        {
+            var responseInfo = await _listOfNotificationsService.MarkAllAsRead();
+            return HandleResponseInfo(responseInfo, resourceName: "updatedNotifications");
+        }
     }
 }
