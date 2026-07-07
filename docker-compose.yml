@@ -27,8 +27,10 @@ services:
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_USER=guest
       - RABBITMQ_PASS=guest
+      - ConnectionStrings__RedisConnection=redis.dev.bkhightech.vn:2114,password=w3qF6UnZ2TybmWSc,defaultDatabase=0
     depends_on:
       - rabbitmq
+      - postgres
     networks:
       - microservices-network
 
@@ -45,8 +47,13 @@ services:
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_USER=guest
       - RABBITMQ_PASS=guest
+      - MINIO_HOST=minio.dev.bkhightech.vn
+      - MINIO_ACCESS_KEY=hxudUT06uE0gSAyqKZud
+      - MINIO_SECRET_KEY=yrtZ5gD1OjHNam2L620AMQSsKcmSUCfGumIx61FN
+      - MINIO_BUCKET=digitization-dev
     depends_on:
       - rabbitmq
+      - postgres
     networks:
       - microservices-network
 
@@ -62,8 +69,14 @@ services:
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_USER=guest
       - RABBITMQ_PASS=guest
+      - MINIO_HOST=minio.dev.bkhightech.vn
+      - MINIO_ACCESS_KEY=hxudUT06uE0gSAyqKZud
+      - MINIO_SECRET_KEY=yrtZ5gD1OjHNam2L620AMQSsKcmSUCfGumIx61FN
+      - MINIO_BUCKET=digitization-dev
+      - ConnectionStrings__RedisConnection=redis.dev.bkhightech.vn:2114,password=w3qF6UnZ2TybmWSc,defaultDatabase=0
     depends_on:
       - rabbitmq
+      - postgres
     networks:
       - microservices-network
   
@@ -81,6 +94,7 @@ services:
       - RABBITMQ_PASS=guest
     depends_on:
       - rabbitmq
+      - postgres
     networks:
       - microservices-network
 
@@ -102,7 +116,7 @@ services:
       - microservices-network
 
   postgres:
-    image: postgres:15
+    image: postgres:17
     container_name: postgres
     ports:
       - "5432:5432"

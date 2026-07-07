@@ -8,6 +8,7 @@ using UserService.EventProcessing;
 using UserService.AsyncDataServices;
 using UserService.GrpcServices;
 using System.Text.Json;
+using UserService.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.UseCustomLog(Constants.SERVICE_NAME);
@@ -16,6 +17,7 @@ builder.AddAutoFact();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGenWithAuth();
 builder.Services.AddCloudinarySettings(builder.Configuration);
+builder.Services.AddMinioSettings(builder.Configuration);
 
 builder.Services.AddSingleton<IEventProcessor, EventProcessor>();
 builder.Services.AddHostedService<MessageBusSubscriber>();
