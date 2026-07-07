@@ -91,3 +91,66 @@ Tài liệu này ghi nhận các lỗi hệ thống gặp phải trong quá trì
   COPY --from=build /app/publish .
   ```
 
+---
+
+## 5. Lỗi CORS khi gọi API sang `/media-service/...`
+
+* **Ngày ghi nhận**: 07/07/2026
+
+### 🛑 Triệu chứng:
+* Yêu cầu gọi API từ Front-End đến đường dẫn `https://edusmart.taiphanvan.id.vn/media-service/api/templates` bị trình duyệt chặn CORS với lỗi: `No 'Access-Control-Allow-Origin' header is present on the requested resource`.
+
+### 🔍 Nguyên nhân:
+* Thiếu cấu hình định tuyến cho `media-service` trong API Gateway (`nginx/nginx.conf`).
+* Khi Front-End gửi yêu cầu preflight `OPTIONS` đến đường dẫn không tồn tại trên Nginx, Nginx sẽ trực tiếp trả về lỗi `404 Not Found` (hoặc `405 Method Not Allowed`) mà không kèm theo các header CORS, dẫn đến việc trình duyệt báo lỗi CORS.
+
+### 💡 Giải pháp khắc phục:
+1. Thêm cấu hình upstream cho `media-service` trỏ đến cổng `7154` của container:
+   ```nginx
+   upstream media_service {
+       server mediaservice:7154;
+   }
+   ```
+2. Thêm các location blocks chuyển tiếp yêu cầu API và bảo vệ Swagger của `media-service` bằng Basic Auth:
+   ```nginx
+   location ~ ^/media-service/swagger {
+       auth_basic "Restricted area - Swagger Docs";
+       auth_basic_user_file /etc/nginx/.htpasswd;
+       proxy_pass http://media_service;
+   }
+
+   location /media-service {
+       proxy_pass http://media_service;
+   }
+   ```
+3. Chạy reload lại Nginx mà không cần restart container:
+   ```bash
+   docker exec api_gateway nginx -s reload
+   ```
+
+---
+
+## 6. Lỗi `The server does not support SSL connections` khi kết nối Database từ `media-service`
+
+* **Ngày ghi nhận**: 07/07/2026
+
+### 🛑 Triệu chứng:
+* Gọi API của `media-service` bị lỗi `500 Internal Server Error`.
+* Trong log container hiển thị lỗi: `ERROR: [getAllAchievementTemplates] Error: The server does not support SSL connections`.
+
+### 🔍 Nguyên nhân:
+* Trong tệp cấu hình kết nối [database.js](file:///home/taipv/workspace/EduSmartBE/MediaService/src/configs/database.js), thuộc tính `ssl` luôn được định nghĩa (dưới dạng object chứa `rejectUnauthorized`).
+* Thư viện `pg` (Node Postgres) khi thấy thuộc tính `ssl` được định nghĩa sẽ mặc định cố gắng đàm phán một kết nối SSL bảo mật với cơ sở dữ liệu. Tuy nhiên, container `postgres` chạy local không được bật cấu hình mã hóa SSL, dẫn đến việc Postgres từ chối và ngắt kết nối.
+
+### 💡 Giải pháp khắc phục:
+1. Cấu hình lại [database.js](file:///home/taipv/workspace/EduSmartBE/MediaService/src/configs/database.js) chỉ kích hoạt `ssl` khi biến môi trường `DB_SSL` được đặt bằng `"true"`:
+   ```javascript
+   ssl: process.env.DB_SSL === "true"
+       ? { rejectUnauthorized: process.env.DB_TRUST_CERT !== "true" }
+       : false
+   ```
+2. Thêm biến môi trường `DB_SSL=false` vào tệp cấu hình [MediaService/.env](file:///home/taipv/workspace/EduSmartBE/MediaService/.env#L12) để tắt kết nối SSL khi chạy môi trường local/docker-compose.
+3. Rebuild và khởi động lại container:
+   ```bash
+   docker compose build mediaservice && docker compose up -d mediaservice && docker compose restart api-gateway
+   ```

@@ -8,9 +8,9 @@ const pool = new Pool({
     database: process.env.DB_DATABASE_PAYMENT,
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
-    ssl: {
-        rejectUnauthorized: process.env.DB_TRUST_CERT !== "true" // Assuming DB_TRUST_CERT 'true' means trust the certificate
-    }
+    ssl: process.env.DB_SSL === "true"
+        ? { rejectUnauthorized: process.env.DB_TRUST_CERT !== "true" }
+        : false
 });
 
 module.exports = pool;
