@@ -127,7 +127,8 @@ namespace CourseManagementService.Extensions
                     builder =>
                     {
                         builder.WithOrigins("http://localhost:3000", "http://localhost:3030", "http://127.0.0.1:5500",
-                                "https://edu-smart-dut.vercel.app", "https://edu-smart-admin.vercel.app")
+                                "https://edu-smart-dut.vercel.app", "https://edu-smart-admin.vercel.app",
+                                "https://edu-smart-web-client.vercel.app")
                             .AllowAnyHeader()
                             .AllowAnyMethod()
                             .AllowCredentials(); // Cho phép client gửi cookie qua cross-origin
