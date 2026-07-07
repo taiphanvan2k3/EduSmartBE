@@ -3,6 +3,7 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using CourseManagementService.Services.AppState;
 using CourseManagementService.Services.Cache;
+using CourseManagementService.Services.Medias;
 using Serilog;
 
 namespace CourseManagementService.Extensions
@@ -41,6 +42,12 @@ namespace CourseManagementService.Extensions
 
                     // Đăng ký AppStateService mà không cần interface
                     containerBuilder.RegisterType<AppStateService>().AsSelf().InstancePerLifetimeScope();
+
+                    // Đăng ký MinioVideoService làm IVideoService (thay cho Azure VideoService)
+                    containerBuilder.RegisterType<MinioVideoService>().As<IVideoService>().InstancePerLifetimeScope();
+
+                    // Đăng ký MinioPhotoService làm IPhotoService (thay cho Cloudinary PhotoService)
+                    containerBuilder.RegisterType<MinioPhotoService>().As<IPhotoService>().InstancePerLifetimeScope();
 
                     // Chuyển lifetime scope của CacheService thành SingleInstance
                     containerBuilder.RegisterType<CacheService>()

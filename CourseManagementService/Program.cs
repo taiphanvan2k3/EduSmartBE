@@ -19,7 +19,7 @@ builder.AddAutoFact();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGenWithAuth();
 
-builder.Services.Configure<AzureBlobStorageSetting>(builder.Configuration.GetSection("AzureBlobStorageSetting"));
+builder.Services.AddMinioSettings(builder.Configuration);
 builder.Services.Configure<CloudinarySetting>(builder.Configuration.GetSection("CloudinarySettings"));
 
 builder.Services.AddHttpContextAccessor(); // Add IHttpContextAccessor for getting HttpContext in services
