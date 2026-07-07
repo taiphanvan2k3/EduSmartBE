@@ -102,7 +102,10 @@ namespace CourseManagementService.Controllers.CourseManagement
             {
                 if (!ModelState.IsValid)
                 {
-                    var modelStateErrors = ModelState.Values.SelectMany(x => x.Errors).Select(x => x.ErrorMessage).ToList();
+                    var modelStateErrors = ModelState
+                        .Where(x => x.Value.Errors.Count > 0)
+                        .Select(x => $"{x.Key}: {string.Join(", ", x.Value.Errors.Select(e => e.ErrorMessage))}")
+                        .ToList();
                     return StatusCode(400, ErrorResponseHelper.GetContentOfBadRequestResponse(modelStateErrors));
                 }
 
