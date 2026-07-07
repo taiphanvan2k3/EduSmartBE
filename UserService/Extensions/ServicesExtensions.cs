@@ -117,5 +117,21 @@ namespace UserService.Extensions
             services.Configure<CloudinarySettings>(configuration.GetSection("CloudinarySettings"));
             return services;
         }
+
+        public static IServiceCollection AddMinioSettings(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.Configure<MinioSetting>(options =>
+            {
+                var section = configuration.GetSection("MinioSetting");
+                options.Host = configuration["MINIO_HOST"] ?? section["Host"];
+                options.AccessKey = configuration["MINIO_ACCESS_KEY"] ?? section["AccessKey"];
+                options.SecretKey = configuration["MINIO_SECRET_KEY"] ?? section["SecretKey"];
+                options.Bucket = configuration["MINIO_BUCKET"] ?? section["Bucket"];
+                var sslVal = configuration["MINIO_SSL"];
+                options.SSL = !string.IsNullOrEmpty(sslVal) ? bool.Parse(sslVal) : (bool.TryParse(section["SSL"], out var result) ? result : true);
+            });
+
+            return services;
+        }
     }
 }
