@@ -48,43 +48,59 @@ namespace PaymentService.Databases.InitDb
         {
             try
             {
-                if (!await _context.AchievementTemplates.AnyAsync())
+                var existingTemplates = await _context.AchievementTemplates.ToListAsync();
+                var targetTemplates = new List<AchievementTemplate>
                 {
-                    await _context.AchievementTemplates.AddRangeAsync(new List<AchievementTemplate>
+                    new() {
+                        Name = "Template_01",
+                        ThumbnailURL = "https://res.cloudinary.com/darzeepog/image/upload/v1783443617/1_qqqxnv.png",
+                        TemplateURL = "https://res.cloudinary.com/darzeepog/image/upload/v1783443617/1_qqqxnv.png"
+                    },
+                    new() {
+                        Name = "Template_02",
+                        ThumbnailURL = "https://res.cloudinary.com/darzeepog/image/upload/v1783443618/2_fvjcpy.png",
+                        TemplateURL = "https://res.cloudinary.com/darzeepog/image/upload/v1783443618/2_fvjcpy.png"
+                    },
+                    new() {
+                        Name = "Template_03",
+                        ThumbnailURL = "https://res.cloudinary.com/darzeepog/image/upload/v1783443618/3_gw6zje.png",
+                        TemplateURL = "https://res.cloudinary.com/darzeepog/image/upload/v1783443618/3_gw6zje.png"
+                    },
+                    new() {
+                        Name = "Template_04",
+                        ThumbnailURL = "https://res.cloudinary.com/darzeepog/image/upload/v1783443617/4_doqs2y.png",
+                        TemplateURL = "https://res.cloudinary.com/darzeepog/image/upload/v1783443617/4_doqs2y.png"
+                    },
+                    new() {
+                        Name = "Template_05",
+                        ThumbnailURL = "https://res.cloudinary.com/darzeepog/image/upload/v1783443618/5_vmdpwp.png",
+                        TemplateURL = "https://res.cloudinary.com/darzeepog/image/upload/v1783443618/5_vmdpwp.png"
+                    },
+                    new() {
+                        Name = "Template_06",
+                        ThumbnailURL = "https://res.cloudinary.com/darzeepog/image/upload/v1783443619/6_kfhzcq.png",
+                        TemplateURL = "https://res.cloudinary.com/darzeepog/image/upload/v1783443619/6_kfhzcq.png"
+                    }
+                };
+
+                foreach (var target in targetTemplates)
+                {
+                    var existing = existingTemplates.FirstOrDefault(x => x.Name == target.Name);
+                    if (existing != null)
                     {
-                        new() {
-                            Name = "Template_01",
-                            ThumbnailURL = "https://res.cloudinary.com/da1aqhx1g/image/upload/c_thumb,w_200,g_face/v1733759920/1_pvlh7h.png",
-                            TemplateURL = "https://res.cloudinary.com/da1aqhx1g/image/upload/v1733759920/1_pvlh7h.png"
-                        },
-                        new() {
-                            Name = "Template_02",
-                            ThumbnailURL = "https://res.cloudinary.com/da1aqhx1g/image/upload/c_thumb,w_200,g_face/v1733759920/2_py3f5x.png",
-                            TemplateURL = "https://res.cloudinary.com/da1aqhx1g/image/upload/v1733759920/2_py3f5x.png"
-                        },
-                        new() {
-                            Name = "Template_03",
-                            ThumbnailURL = "https://res.cloudinary.com/da1aqhx1g/image/upload/c_thumb,w_200,g_face/v1733759920/3_pp5kno.png",
-                            TemplateURL = "https://res.cloudinary.com/da1aqhx1g/image/upload/v1733759920/3_pp5kno.png"
-                        },
-                        new() {
-                            Name = "Template_04",
-                            ThumbnailURL = "https://res.cloudinary.com/da1aqhx1g/image/upload/c_thumb,w_200,g_face/v1733759919/4_plshrm.png",
-                            TemplateURL = "https://res.cloudinary.com/da1aqhx1g/image/upload/v1733759919/4_plshrm.png"
-                        },
-                        new() {
-                            Name = "Template_05",
-                            ThumbnailURL = "https://res.cloudinary.com/da1aqhx1g/image/upload/c_thumb,w_200,g_face/v1733759920/5_t1xvlk.png",
-                            TemplateURL = "https://res.cloudinary.com/da1aqhx1g/image/upload/v1733759920/5_t1xvlk.png"
-                        },
-                        new() {
-                            Name = "Template_06",
-                            ThumbnailURL = "https://res.cloudinary.com/da1aqhx1g/image/upload/c_thumb,w_200,g_face/v1733759920/6_t1eehy.png",
-                            TemplateURL = "https://res.cloudinary.com/da1aqhx1g/image/upload/v1733759920/6_t1eehy.png"
+                        if (existing.ThumbnailURL != target.ThumbnailURL || existing.TemplateURL != target.TemplateURL)
+                        {
+                            existing.ThumbnailURL = target.ThumbnailURL;
+                            existing.TemplateURL = target.TemplateURL;
                         }
-                    });
+                    }
+                    else
+                    {
+                        await _context.AchievementTemplates.AddAsync(target);
+                    }
                 }
 
+                await _context.SaveChangesAsync();
             }
             catch (Exception e)
             {
