@@ -3,6 +3,7 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Serilog;
 using UserService.Services.AppState;
+using UserService.Services;
 
 namespace UserService.Extensions
 {
@@ -40,6 +41,9 @@ namespace UserService.Extensions
 
                     // Đăng ký AppStateService mà không cần interface
                     containerBuilder.RegisterType<AppStateService>().AsSelf().InstancePerLifetimeScope();
+
+                    // Đăng ký MinioPhotoService làm IPhotoService (thay cho Cloudinary PhotoService)
+                    containerBuilder.RegisterType<MinioPhotoService>().As<IPhotoService>().InstancePerLifetimeScope();
                 });
             }
             catch (Exception ex)

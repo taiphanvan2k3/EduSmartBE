@@ -8,6 +8,7 @@ using CourseManagementService.Common;
 using Microsoft.IdentityModel.Tokens;
 using CourseManagementService.Database;
 using CourseManagementService.Filters;
+using CourseManagementService.Settings;
 using System.Reflection;
 
 namespace CourseManagementService.Extensions
@@ -131,6 +132,22 @@ namespace CourseManagementService.Extensions
                             .AllowAnyMethod()
                             .AllowCredentials(); // Cho phép client gửi cookie qua cross-origin
                     });
+            });
+
+            return services;
+        }
+
+        public static IServiceCollection AddMinioSettings(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.Configure<MinioSetting>(options =>
+            {
+                var section = configuration.GetSection("MinioSetting");
+                options.Host = configuration["MINIO_HOST"] ?? section["Host"];
+                options.AccessKey = configuration["MINIO_ACCESS_KEY"] ?? section["AccessKey"];
+                options.SecretKey = configuration["MINIO_SECRET_KEY"] ?? section["SecretKey"];
+                options.Bucket = configuration["MINIO_BUCKET"] ?? section["Bucket"];
+                var sslVal = configuration["MINIO_SSL"];
+                options.SSL = !string.IsNullOrEmpty(sslVal) ? bool.Parse(sslVal) : (bool.TryParse(section["SSL"], out var result) ? result : true);
             });
 
             return services;
