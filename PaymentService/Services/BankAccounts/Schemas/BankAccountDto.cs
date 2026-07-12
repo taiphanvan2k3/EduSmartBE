@@ -6,6 +6,10 @@ namespace PaymentService.Services.BankAccounts.Schemas
 
         public int BankId  { get; set; }
 
+        public string BankName { get; set; }
+
+        public string BankShortName { get; set; }
+
         public int UserId { get; set; }
 
         public string AccountNumber { get; set; }

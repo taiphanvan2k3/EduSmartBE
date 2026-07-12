@@ -17,6 +17,13 @@ namespace PaymentService.Services.BankAccounts
         public Task<ResponseInfo> GetBankAccountAsync(Guid bankAccountId);
 
         /// <summary>
+        /// Get all bank accounts of the current user
+        /// <para>Author: TaiPV - Created at: 2026/07/12</para>
+        /// </summary>
+        /// <returns></returns>
+        public Task<ResponseInfo> GetMyBankAccountsAsync();
+
+        /// <summary>
         /// Add a new bank account
         /// <para>Author: ManhTD - Created at: 2024/11/09</para>
         /// <para>Author: TaiPV - Updated at: 2024/11/19</para>
@@ -79,6 +86,35 @@ namespace PaymentService.Services.BankAccounts
 
                 var bankAccountDto = _mapper.Map<BankAccountDto>(bankAccount);
                 response.Data.Add("bankAccount", bankAccountDto);
+
+                LogInfo("End", methodName);
+                return response;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "[PaymentService] [{Method}] Error", methodName);
+                throw;
+            }
+        }
+
+        public async Task<ResponseInfo> GetMyBankAccountsAsync()
+        {
+            var methodName = GetActualAsyncMethodName();
+            try
+            {
+                LogInfo("Start", methodName);
+                var currentUser = GetCurrentUser();
+                var response = new ResponseInfo();
+
+                var bankAccounts = await _context.BankAccounts
+                    .AsNoTracking()
+                    .Include(b => b.Bank)
+                    .Where(b => b.UserId == currentUser.UserId)
+                    .OrderByDescending(b => b.IsPrimary)
+                    .ToListAsync();
+
+                var bankAccountDtos = _mapper.Map<List<BankAccountDto>>(bankAccounts);
+                response.Data.Add("bankAccounts", bankAccountDtos);
 
                 LogInfo("End", methodName);
                 return response;
