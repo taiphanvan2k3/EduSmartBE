@@ -2,6 +2,7 @@ using AuthService.Commons.Helpers;
 using AuthService.Services.Account;
 using AuthService.Services.Account.Schemas;
 using AuthService.Services.Otp.Schemas.Wrappers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AuthService.Controllers
@@ -25,7 +26,7 @@ namespace AuthService.Controllers
         ///     
         /// </remarks>
         [HttpPut("{userId}/activate")]
-        [Filters.Auth(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ActivateUser([FromRoute] int userId, [FromBody] UserActivationContent activationContent)
         {
             try

@@ -14,6 +14,17 @@ namespace PaymentService.Controllers
             ?? throw new ArgumentNullException(nameof(bankAccountService));
 
         /// <summary>
+        /// Get all bank accounts of the current user
+        /// <para>Created at: 2026/07/12</para>
+        /// </summary>
+        [HttpGet("my")]
+        public async Task<ActionResult> GetMyBankAccounts()
+        {
+            var response = await _bankAccountService.GetMyBankAccountsAsync();
+            return HandleResponseInfo(response, resourceName: "bankAccounts");
+        }
+
+        /// <summary>
         /// Get bank account
         /// <para>Created at: 9/11/2024</para>
         /// <para>Created by ManhTD</para>
