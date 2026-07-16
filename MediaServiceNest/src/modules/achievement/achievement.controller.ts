@@ -28,6 +28,10 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { GetAchievementExportStatusQuery } from './queries/get-achievement-export-status.query';
 import { GenerateAchievementCommand } from './commands/generate-achievement.command';
 import { SaveAchievementFromWebCommand } from './commands/save-achievement-from-web.command';
+import {
+  AchievementExportStatusDto,
+  GeneratedAchievementDto,
+} from './dto/achievement-response.dto';
 
 @ApiTags('Achievements')
 @ApiBearerAuth('BearerAuth')
@@ -57,7 +61,7 @@ export class AchievementController {
   async getExportStatus(
     @Query('courseId') courseId: string,
     @Query('studentId') studentId: string,
-  ): Promise<unknown> {
+  ): Promise<AchievementExportStatusDto> {
     if (!courseId || !studentId) {
       throw new BadRequestException('Invalid request query');
     }
@@ -65,9 +69,10 @@ export class AchievementController {
     if (Number.isNaN(studentIdNum)) {
       throw new BadRequestException('studentId must be a valid number');
     }
-    return this.queryBus.execute(
-      new GetAchievementExportStatusQuery(courseId, studentIdNum),
-    );
+    return this.queryBus.execute<
+      GetAchievementExportStatusQuery,
+      AchievementExportStatusDto
+    >(new GetAchievementExportStatusQuery(courseId, studentIdNum));
   }
 
   @Post('generate-achievement')
@@ -76,10 +81,11 @@ export class AchievementController {
   @ApiResponse({ status: 200, description: 'Generated certificate info' })
   async generateAchievement(
     @Body() dto: GenerateAchievementDto,
-  ): Promise<unknown> {
-    return this.commandBus.execute(
-      new GenerateAchievementCommand(dto.courseId, dto.studentId),
-    );
+  ): Promise<GeneratedAchievementDto> {
+    return this.commandBus.execute<
+      GenerateAchievementCommand,
+      GeneratedAchievementDto
+    >(new GenerateAchievementCommand(dto.courseId, dto.studentId));
   }
 
   @Post('save-exported-achievement-web')

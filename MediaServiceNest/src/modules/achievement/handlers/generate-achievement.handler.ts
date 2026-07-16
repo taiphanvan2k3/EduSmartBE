@@ -7,6 +7,7 @@ import { StudentAchievement } from '../../../shared/database/entities/student-ac
 import { GrpcCourseService } from '../../../shared/grpc/grpc-course.service';
 import { CanvasService, TextStyle } from '../services/canvas.service';
 import { GetDefaultCourseTemplateQuery } from '../../course-template/queries/get-default-course-template.query';
+import { GeneratedAchievementDto } from '../dto/achievement-response.dto';
 
 interface CourseTemplateResult {
   templateId: number;
@@ -18,7 +19,10 @@ interface CourseTemplateResult {
 }
 
 @CommandHandler(GenerateAchievementCommand)
-export class GenerateAchievementHandler implements ICommandHandler<GenerateAchievementCommand> {
+export class GenerateAchievementHandler implements ICommandHandler<
+  GenerateAchievementCommand,
+  GeneratedAchievementDto
+> {
   private readonly logger = new Logger(GenerateAchievementHandler.name);
 
   constructor(
@@ -29,7 +33,9 @@ export class GenerateAchievementHandler implements ICommandHandler<GenerateAchie
     private readonly queryBus: QueryBus,
   ) {}
 
-  async execute(command: GenerateAchievementCommand) {
+  async execute(
+    command: GenerateAchievementCommand,
+  ): Promise<GeneratedAchievementDto> {
     const { courseId, studentId } = command;
 
     this.logger.log(

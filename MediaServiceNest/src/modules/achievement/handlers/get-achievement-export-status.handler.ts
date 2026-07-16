@@ -7,6 +7,7 @@ import { StudentAchievement } from '../../../shared/database/entities/student-ac
 import { GrpcCourseService } from '../../../shared/grpc/grpc-course.service';
 import { GetDefaultCourseTemplateQuery } from '../../course-template/queries/get-default-course-template.query';
 import { TextStyle } from '../services/canvas.service';
+import { AchievementExportStatusDto } from '../dto/achievement-response.dto';
 
 interface CourseTemplateResult {
   templateId: number;
@@ -18,7 +19,10 @@ interface CourseTemplateResult {
 }
 
 @QueryHandler(GetAchievementExportStatusQuery)
-export class GetAchievementExportStatusHandler implements IQueryHandler<GetAchievementExportStatusQuery> {
+export class GetAchievementExportStatusHandler implements IQueryHandler<
+  GetAchievementExportStatusQuery,
+  AchievementExportStatusDto
+> {
   constructor(
     @InjectRepository(StudentAchievement)
     private readonly studentAchievementRepository: Repository<StudentAchievement>,
@@ -26,7 +30,9 @@ export class GetAchievementExportStatusHandler implements IQueryHandler<GetAchie
     private readonly queryBus: QueryBus,
   ) {}
 
-  async execute(query: GetAchievementExportStatusQuery) {
+  async execute(
+    query: GetAchievementExportStatusQuery,
+  ): Promise<AchievementExportStatusDto> {
     const { courseId, studentId } = query;
 
     const checkStatus =
@@ -43,7 +49,7 @@ export class GetAchievementExportStatusHandler implements IQueryHandler<GetAchie
     if (!checkStatus.isCompleted) {
       return {
         canExport: false,
-        achievement: null,
+        exportedAchievement: null,
         achievementExportInfo: null,
       };
     }
