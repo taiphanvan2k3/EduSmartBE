@@ -12,7 +12,13 @@ import {
   HttpStatus,
   BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { CourseTemplateService } from './course-template.service';
 import { CreateCourseTemplateDto } from './dto/create-course-template.dto';
 import { UpdateCourseTemplateDto } from './dto/update-course-template.dto';
@@ -30,13 +36,23 @@ export class CourseTemplateController {
 
   @Get('default-template')
   @ApiOperation({ summary: 'Get the default course template for the course' })
-  @ApiQuery({ name: 'courseId', required: true, description: 'ID of the course' })
-  @ApiResponse({ status: 200, description: 'The default course template details' })
+  @ApiQuery({
+    name: 'courseId',
+    required: true,
+    description: 'ID of the course',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'The default course template details',
+  })
   async getDefaultCourseTemplate(@Query('courseId') courseId: string) {
     if (!courseId) {
       throw new BadRequestException('Invalid request query');
     }
-    const template = await this.courseTemplateService.getDefaultCourseTemplateInCourse(courseId);
+    const template =
+      await this.courseTemplateService.getDefaultCourseTemplateInCourse(
+        courseId,
+      );
     return { courseTemplate: template };
   }
 
@@ -51,9 +67,14 @@ export class CourseTemplateController {
 
   @Post()
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Teacher creates a new course template for the course' })
+  @ApiOperation({
+    summary: 'Teacher creates a new course template for the course',
+  })
   @ApiResponse({ status: 200, description: 'ID of created course template' })
-  @ApiResponse({ status: 400, description: 'Invalid body or template already exists' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid body or template already exists',
+  })
   async createCourseTemplate(@Body() dto: CreateCourseTemplateDto) {
     const id = await this.courseTemplateService.createTemplateForCourse(dto);
     return { id };
@@ -67,7 +88,10 @@ export class CourseTemplateController {
     @Param('id') id: string,
     @Body() dto: UpdateCourseTemplateDto,
   ) {
-    const template = await this.courseTemplateService.updateTemplateForCourse(id, dto);
+    const template = await this.courseTemplateService.updateTemplateForCourse(
+      id,
+      dto,
+    );
     return { courseTemplate: template };
   }
 

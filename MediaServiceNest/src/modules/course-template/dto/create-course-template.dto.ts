@@ -1,4 +1,12 @@
-import { IsBoolean, IsUUID, IsInt, Min, Max, ValidateNested, IsNotEmpty } from 'class-validator';
+import {
+  IsBoolean,
+  IsUUID,
+  IsInt,
+  Min,
+  Max,
+  ValidateNested,
+  IsNotEmpty,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { TextStyleDto } from './text-style.dto';

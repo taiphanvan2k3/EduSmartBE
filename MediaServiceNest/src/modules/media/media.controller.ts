@@ -23,6 +23,14 @@ import { CloudinaryService } from '../../shared/cloudinary/cloudinary.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
+export interface UserPayload {
+  userId: number;
+  username?: string;
+  email?: string;
+  fullName?: string;
+  role: string;
+}
+
 @ApiTags('Medias')
 @ApiBearerAuth('BearerAuth')
 @UseGuards(JwtAuthGuard)
@@ -36,7 +44,7 @@ export class MediaController {
   @Get()
   @ApiOperation({ summary: "Get user's media storage info" })
   @ApiResponse({ status: 200, description: 'Return storage details' })
-  async getMedia(@CurrentUser() user: any) {
+  async getMedia(@CurrentUser() user: UserPayload) {
     const userId = user.userId;
     return this.mediaService.getUserStorageInfo(userId);
   }
@@ -59,9 +67,12 @@ export class MediaController {
     },
   })
   @ApiResponse({ status: 200, description: 'File uploaded successfully' })
-  @ApiResponse({ status: 400, description: 'Storage capacity exceeded or invalid file' })
+  @ApiResponse({
+    status: 400,
+    description: 'Storage capacity exceeded or invalid file',
+  })
   async uploadFile(
-    @CurrentUser() user: any,
+    @CurrentUser() user: UserPayload,
     @UploadedFile() file: Express.Multer.File,
   ) {
     const userId = user.userId;

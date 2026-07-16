@@ -25,7 +25,7 @@ async function bootstrap() {
     compression({
       level: 6,
       threshold: 100 * 1000, // > 100kb
-      filter: (req: any, res: any) => {
+      filter: (req: express.Request, res: express.Response) => {
         if (req.headers && req.headers['x-no-compression']) {
           return false;
         }
@@ -78,4 +78,4 @@ async function bootstrap() {
     `Server started on port http://localhost:${port}/media-service/swagger`,
   );
 }
-bootstrap();
+void bootstrap();

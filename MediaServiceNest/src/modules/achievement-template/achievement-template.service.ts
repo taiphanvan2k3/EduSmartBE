@@ -22,8 +22,9 @@ export class AchievementTemplateService {
         thumbnailURL: row.thumbnailUrl,
         templateURL: row.templateUrl,
       }));
-    } catch (error: any) {
-      this.logger.error('Error fetching achievement templates', error.stack);
+    } catch (error: unknown) {
+      const err = error as Error;
+      this.logger.error('Error fetching achievement templates', err.stack);
       throw error;
     }
   }
