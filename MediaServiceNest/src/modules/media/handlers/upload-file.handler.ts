@@ -47,8 +47,11 @@ export class UploadFileHandler implements ICommandHandler<UploadFileCommand> {
     }
 
     // Determine resource type
-    const resourceType: 'auto' | 'raw' | 'image' | 'video' =
-      ALLOWED_RAW_MIMES.includes(file.mimetype) ? 'raw' : 'auto';
+    const resourceType: 'auto' | 'raw' | 'image' | 'video' = ALLOWED_RAW_MIMES.includes(
+      file.mimetype,
+    )
+      ? 'raw'
+      : 'auto';
 
     // Upload to Cloudinary
     const result = await this.cloudinaryService.uploadCloudinary(

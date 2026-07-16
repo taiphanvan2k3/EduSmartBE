@@ -33,14 +33,10 @@ export class GenerateAchievementHandler implements ICommandHandler<
     private readonly queryBus: QueryBus,
   ) {}
 
-  async execute(
-    command: GenerateAchievementCommand,
-  ): Promise<GeneratedAchievementDto> {
+  async execute(command: GenerateAchievementCommand): Promise<GeneratedAchievementDto> {
     const { courseId, studentId } = command;
 
-    this.logger.log(
-      `Generating achievement image for course: ${courseId}, student: ${studentId}`,
-    );
+    this.logger.log(`Generating achievement image for course: ${courseId}, student: ${studentId}`);
 
     const count = await this.studentAchievementRepository.count({
       where: { courseId, studentId },
@@ -49,15 +45,12 @@ export class GenerateAchievementHandler implements ICommandHandler<
       throw new BadRequestException('Achievement has already been exported');
     }
 
-    const checkStatus =
-      await this.grpcCourseService.checkStudentCompletedCourse(
-        courseId,
-        studentId,
-      );
+    const checkStatus = await this.grpcCourseService.checkStudentCompletedCourse(
+      courseId,
+      studentId,
+    );
     if (!checkStatus.isSuccess) {
-      throw new Error(
-        checkStatus.message || 'gRPC CheckStudentCompletedCourse call failed',
-      );
+      throw new Error(checkStatus.message || 'gRPC CheckStudentCompletedCourse call failed');
     }
 
     if (!checkStatus.isCompleted) {
@@ -69,9 +62,7 @@ export class GenerateAchievementHandler implements ICommandHandler<
     )) as unknown as CourseTemplateResult | null;
 
     if (!defaultTemplate) {
-      throw new NotFoundException(
-        'Your teacher has not created any template for this course',
-      );
+      throw new NotFoundException('Your teacher has not created any template for this course');
     }
 
     const localResult = await this.canvasService.createAchievement(

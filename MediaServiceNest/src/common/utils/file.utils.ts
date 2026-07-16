@@ -32,12 +32,7 @@ export const saveAchievementLocally = (
 ): { localPath: string; localPathInPublic: string } => {
   const date = new Date();
   const pathToProject = process.cwd();
-  const localFolderPath = path.join(
-    pathToProject,
-    'public',
-    'media-service',
-    'temp_achievements',
-  );
+  const localFolderPath = path.join(pathToProject, 'public', 'media-service', 'temp_achievements');
 
   createFolderIfNotExist(localFolderPath);
 

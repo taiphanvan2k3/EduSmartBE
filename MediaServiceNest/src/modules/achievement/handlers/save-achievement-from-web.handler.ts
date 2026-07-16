@@ -31,20 +31,15 @@ export class SaveAchievementFromWebHandler implements ICommandHandler<SaveAchiev
       where: { courseId, studentId },
     });
     if (count > 0) {
-      throw new BadRequestException(
-        'Achievement has already been exported in this course',
-      );
+      throw new BadRequestException('Achievement has already been exported in this course');
     }
 
-    const checkStatus =
-      await this.grpcCourseService.checkStudentCompletedCourse(
-        courseId,
-        studentId,
-      );
+    const checkStatus = await this.grpcCourseService.checkStudentCompletedCourse(
+      courseId,
+      studentId,
+    );
     if (!checkStatus.isSuccess) {
-      throw new Error(
-        checkStatus.message || 'gRPC CheckStudentCompletedCourse call failed',
-      );
+      throw new Error(checkStatus.message || 'gRPC CheckStudentCompletedCourse call failed');
     }
 
     if (!checkStatus.isCompleted) {
@@ -57,17 +52,10 @@ export class SaveAchievementFromWebHandler implements ICommandHandler<SaveAchiev
     setImmediate(() => {
       void (async () => {
         try {
-          await this.uploadAndSaveAchievement(
-            courseId,
-            studentId,
-            localResult.localPath,
-          );
+          await this.uploadAndSaveAchievement(courseId, studentId, localResult.localPath);
         } catch (error: unknown) {
           const err = error as Error;
-          this.logger.error(
-            `Background upload task failed for student ${studentId}`,
-            err.stack,
-          );
+          this.logger.error(`Background upload task failed for student ${studentId}`, err.stack);
         }
       })();
     });
@@ -88,9 +76,7 @@ export class SaveAchievementFromWebHandler implements ICommandHandler<SaveAchiev
     studentId: number,
     localPath: string,
   ): Promise<void> {
-    this.logger.log(
-      `Background uploading to Cloudinary from path: ${localPath}`,
-    );
+    this.logger.log(`Background uploading to Cloudinary from path: ${localPath}`);
 
     const uploadRes = await this.cloudinaryService.uploadCloudinaryFromFilePath(
       localPath,
@@ -106,8 +92,6 @@ export class SaveAchievementFromWebHandler implements ICommandHandler<SaveAchiev
     });
 
     await this.studentAchievementRepository.save(studentAchievement);
-    this.logger.log(
-      `Achievement saved to database for course: ${courseId}, student: ${studentId}`,
-    );
+    this.logger.log(`Achievement saved to database for course: ${courseId}, student: ${studentId}`);
   }
 }

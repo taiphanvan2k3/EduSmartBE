@@ -36,8 +36,7 @@ import { AchievementModule } from './modules/achievement/achievement.module';
         ssl:
           configService.get<string>('DB_SSL') === 'true'
             ? {
-                rejectUnauthorized:
-                  configService.get<string>('DB_TRUST_CERT') !== 'true',
+                rejectUnauthorized: configService.get<string>('DB_TRUST_CERT') !== 'true',
               }
             : false,
       }),

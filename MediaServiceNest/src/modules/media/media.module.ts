@@ -8,11 +8,7 @@ import { GetUserStorageInfoHandler } from './handlers/get-user-storage-info.hand
 import { UploadFileHandler } from './handlers/upload-file.handler';
 
 @Module({
-  imports: [
-    CqrsModule,
-    TypeOrmModule.forFeature([StorageInfo]),
-    CloudinaryModule,
-  ],
+  imports: [CqrsModule, TypeOrmModule.forFeature([StorageInfo]), CloudinaryModule],
   controllers: [MediaController],
   providers: [GetUserStorageInfoHandler, UploadFileHandler],
 })
