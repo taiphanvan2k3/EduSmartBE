@@ -50,16 +50,10 @@ export class GrpcCourseService implements OnModuleInit {
     this.logger.log(`Connecting to gRPC Course service at ${grpcEndpoint}...`);
 
     const proto = grpc.loadPackageDefinition(packageDefinition) as unknown as {
-      Course: new (
-        address: string,
-        credentials: grpc.ChannelCredentials,
-      ) => CourseGrpcClient;
+      Course: new (address: string, credentials: grpc.ChannelCredentials) => CourseGrpcClient;
     };
 
-    this.client = new proto.Course(
-      grpcEndpoint,
-      grpc.credentials.createInsecure(),
-    );
+    this.client = new proto.Course(grpcEndpoint, grpc.credentials.createInsecure());
   }
 
   checkStudentCompletedCourse(
@@ -76,15 +70,9 @@ export class GrpcCourseService implements OnModuleInit {
       }
       this.client.CheckStudentCompletedCourse(
         { studentId, courseId },
-        (
-          err: grpc.ServiceError | null,
-          response: CheckStudentCompletedCourseResponse,
-        ) => {
+        (err: grpc.ServiceError | null, response: CheckStudentCompletedCourseResponse) => {
           if (err) {
-            this.logger.error(
-              'gRPC CheckStudentCompletedCourse call failed',
-              err.message,
-            );
+            this.logger.error('gRPC CheckStudentCompletedCourse call failed', err.message);
             reject(err);
           } else {
             resolve(response);

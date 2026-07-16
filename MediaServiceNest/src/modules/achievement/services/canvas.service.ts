@@ -2,10 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { createCanvas, loadImage, CanvasRenderingContext2D } from 'canvas';
 import * as path from 'path';
 import * as fs from 'fs';
-import {
-  formatDateTime,
-  createFolderIfNotExist,
-} from '../../../common/utils/file.utils';
+import { formatDateTime, createFolderIfNotExist } from '../../../common/utils/file.utils';
 
 export interface TextStyle {
   fontFamily: string;
@@ -27,9 +24,7 @@ export class CanvasService {
     dateTextStyle: TextStyle,
     teacherNameTextStyle: TextStyle,
   ): Promise<{ localPath: string; localPathInPublic: string }> {
-    this.logger.log(
-      `Creating achievement image with templateId: ${templateId}...`,
-    );
+    this.logger.log(`Creating achievement image with templateId: ${templateId}...`);
     try {
       // Resolve path to templates (located in dist/assets/achievement-templates/ after build)
       const templatePath = path.join(
@@ -63,8 +58,7 @@ export class CanvasService {
       );
 
       const nameTextWidth = ctx.measureText(studentName).width;
-      const nameTextHeight =
-        ctx.measureText(studentName).actualBoundingBoxAscent;
+      const nameTextHeight = ctx.measureText(studentName).actualBoundingBoxAscent;
       const namePosition = {
         x: (image.width - nameTextWidth) / 2, // Centered
         y: (templateId === 1 ? 375 : 400) - nameTextHeight / 2,

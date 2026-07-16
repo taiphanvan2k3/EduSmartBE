@@ -13,9 +13,7 @@ function convertToDto(row: CourseAchievementTemplate) {
     id: row.id,
     courseId: row.courseId,
     templateId: row.achievementTemplateId,
-    templateURL: row.achievementTemplate
-      ? row.achievementTemplate.templateUrl
-      : null,
+    templateURL: row.achievementTemplate ? row.achievementTemplate.templateUrl : null,
     courseNameTextStyle: row.courseNameTextStyle,
     studentNameTextStyle: row.studentNameTextStyle,
     dateTextStyle: row.dateTextStyle,
@@ -60,10 +58,7 @@ export class CreateCourseTemplateHandler implements ICommandHandler<CreateCourse
       return id;
     } catch (error: unknown) {
       const err = error as Error;
-      this.logger.error(
-        `Error creating template for course ${dto.courseId}`,
-        err.stack,
-      );
+      this.logger.error(`Error creating template for course ${dto.courseId}`, err.stack);
       throw error;
     }
   }

@@ -21,10 +21,7 @@ export class GetUserStorageInfoHandler implements IQueryHandler<GetUserStorageIn
       return await this.storageInfoRepository.find({ where: { userId } });
     } catch (error: unknown) {
       const err = error as Error;
-      this.logger.error(
-        `Error fetching storage info for user ${userId}`,
-        err.stack,
-      );
+      this.logger.error(`Error fetching storage info for user ${userId}`, err.stack);
       throw new Error('Error fetching data from StorageInfo');
     }
   }

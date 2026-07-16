@@ -35,10 +35,7 @@ async function bootstrap() {
   );
 
   // Static files serving (under /media-service prefix)
-  app.use(
-    '/media-service',
-    express.static(path.join(__dirname, '..', 'public', 'media-service')),
-  );
+  app.use('/media-service', express.static(path.join(__dirname, '..', 'public', 'media-service')));
 
   // Global validation pipe using class-validator
   app.useGlobalPipes(
@@ -74,8 +71,6 @@ async function bootstrap() {
 
   const port = process.env.PORT || 7154;
   await app.listen(port, '0.0.0.0');
-  console.log(
-    `Server started on port http://localhost:${port}/media-service/swagger`,
-  );
+  console.log(`Server started on port http://localhost:${port}/media-service/swagger`);
 }
 void bootstrap();

@@ -30,20 +30,15 @@ export class GetAchievementExportStatusHandler implements IQueryHandler<
     private readonly queryBus: QueryBus,
   ) {}
 
-  async execute(
-    query: GetAchievementExportStatusQuery,
-  ): Promise<AchievementExportStatusDto> {
+  async execute(query: GetAchievementExportStatusQuery): Promise<AchievementExportStatusDto> {
     const { courseId, studentId } = query;
 
-    const checkStatus =
-      await this.grpcCourseService.checkStudentCompletedCourse(
-        courseId,
-        studentId,
-      );
+    const checkStatus = await this.grpcCourseService.checkStudentCompletedCourse(
+      courseId,
+      studentId,
+    );
     if (!checkStatus.isSuccess) {
-      throw new Error(
-        checkStatus.message || 'gRPC CheckStudentCompletedCourse call failed',
-      );
+      throw new Error(checkStatus.message || 'gRPC CheckStudentCompletedCourse call failed');
     }
 
     if (!checkStatus.isCompleted) {
@@ -74,9 +69,7 @@ export class GetAchievementExportStatusHandler implements IQueryHandler<
     )) as unknown as CourseTemplateResult | null;
 
     if (!defaultTemplate) {
-      throw new NotFoundException(
-        'Your teacher has not created any template for this course',
-      );
+      throw new NotFoundException('Your teacher has not created any template for this course');
     }
 
     return {

@@ -69,23 +69,19 @@ export class AchievementController {
     if (Number.isNaN(studentIdNum)) {
       throw new BadRequestException('studentId must be a valid number');
     }
-    return this.queryBus.execute<
-      GetAchievementExportStatusQuery,
-      AchievementExportStatusDto
-    >(new GetAchievementExportStatusQuery(courseId, studentIdNum));
+    return this.queryBus.execute<GetAchievementExportStatusQuery, AchievementExportStatusDto>(
+      new GetAchievementExportStatusQuery(courseId, studentIdNum),
+    );
   }
 
   @Post('generate-achievement')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Generate certificate image for student' })
   @ApiResponse({ status: 200, description: 'Generated certificate info' })
-  async generateAchievement(
-    @Body() dto: GenerateAchievementDto,
-  ): Promise<GeneratedAchievementDto> {
-    return this.commandBus.execute<
-      GenerateAchievementCommand,
-      GeneratedAchievementDto
-    >(new GenerateAchievementCommand(dto.courseId, dto.studentId));
+  async generateAchievement(@Body() dto: GenerateAchievementDto): Promise<GeneratedAchievementDto> {
+    return this.commandBus.execute<GenerateAchievementCommand, GeneratedAchievementDto>(
+      new GenerateAchievementCommand(dto.courseId, dto.studentId),
+    );
   }
 
   @Post('save-exported-achievement-web')
@@ -128,12 +124,7 @@ export class AchievementController {
       throw new BadRequestException('No file provided!');
     }
     return this.commandBus.execute(
-      new SaveAchievementFromWebCommand(
-        dto.courseId,
-        dto.studentId,
-        dto.studentName,
-        file,
-      ),
+      new SaveAchievementFromWebCommand(dto.courseId, dto.studentId, dto.studentName, file),
     );
   }
 }

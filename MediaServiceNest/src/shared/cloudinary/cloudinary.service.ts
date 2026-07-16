@@ -1,10 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import {
-  v2 as cloudinary,
-  UploadApiResponse,
-  UploadApiOptions,
-} from 'cloudinary';
+import { v2 as cloudinary, UploadApiResponse, UploadApiOptions } from 'cloudinary';
 
 @Injectable()
 export class CloudinaryService {
@@ -43,10 +39,7 @@ export class CloudinaryService {
       cloudinary.uploader
         .upload_stream(uploadOptions, (error, result) => {
           if (error) {
-            this.logger.error(
-              'Error uploading file to Cloudinary',
-              error.message,
-            );
+            this.logger.error('Error uploading file to Cloudinary', error.message);
             reject(new Error(error.message));
           } else {
             this.logger.log('File uploaded successfully to Cloudinary');
@@ -60,35 +53,23 @@ export class CloudinaryService {
   /**
    * Upload file from a local path to Cloudinary
    */
-  uploadCloudinaryFromFilePath(
-    filePath: string,
-    folderName: string,
-  ): Promise<UploadApiResponse> {
-    this.logger.log(
-      `Uploading file from path ${filePath} to folder: ${folderName}...`,
-    );
+  uploadCloudinaryFromFilePath(filePath: string, folderName: string): Promise<UploadApiResponse> {
+    this.logger.log(`Uploading file from path ${filePath} to folder: ${folderName}...`);
 
     const uploadOptions: UploadApiOptions = {
       folder: folderName,
     };
 
     return new Promise((resolve, reject) => {
-      void cloudinary.uploader.upload(
-        filePath,
-        uploadOptions,
-        (error, result) => {
-          if (error) {
-            this.logger.error(
-              'Error uploading file to Cloudinary',
-              error.message,
-            );
-            reject(new Error(error.message));
-          } else {
-            this.logger.log('File uploaded successfully from local path');
-            resolve(result as UploadApiResponse);
-          }
-        },
-      );
+      void cloudinary.uploader.upload(filePath, uploadOptions, (error, result) => {
+        if (error) {
+          this.logger.error('Error uploading file to Cloudinary', error.message);
+          reject(new Error(error.message));
+        } else {
+          this.logger.log('File uploaded successfully from local path');
+          resolve(result as UploadApiResponse);
+        }
+      });
     });
   }
 
@@ -96,9 +77,7 @@ export class CloudinaryService {
    * Delete resource from Cloudinary by public ID
    */
   deleteCloudinary(publicId: string): Promise<any> {
-    this.logger.log(
-      `Deleting file with public ID: ${publicId} from Cloudinary...`,
-    );
+    this.logger.log(`Deleting file with public ID: ${publicId} from Cloudinary...`);
 
     return new Promise((resolve, reject) => {
       void cloudinary.uploader.destroy(publicId, (error, result) => {

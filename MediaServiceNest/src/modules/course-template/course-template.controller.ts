@@ -13,13 +13,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import {
-  ApiTags,
-  ApiBearerAuth,
-  ApiOperation,
-  ApiResponse,
-  ApiQuery,
-} from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -53,9 +47,7 @@ export class CourseTemplateController {
     status: 200,
     description: 'The default course template details',
   })
-  async getDefaultCourseTemplate(
-    @Query('courseId') courseId: string,
-  ): Promise<unknown> {
+  async getDefaultCourseTemplate(@Query('courseId') courseId: string): Promise<unknown> {
     if (!courseId) {
       throw new BadRequestException('Invalid request query');
     }
@@ -84,9 +76,7 @@ export class CourseTemplateController {
     status: 400,
     description: 'Invalid body or template already exists',
   })
-  async createCourseTemplate(
-    @Body() dto: CreateCourseTemplateDto,
-  ): Promise<unknown> {
+  async createCourseTemplate(@Body() dto: CreateCourseTemplateDto): Promise<unknown> {
     return this.commandBus
       .execute(new CreateCourseTemplateCommand(dto))
       .then((id: unknown) => ({ id }));
