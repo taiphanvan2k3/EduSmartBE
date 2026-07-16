@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CqrsModule } from '@nestjs/cqrs';
 import { AchievementTemplateController } from './achievement-template.controller';
-import { AchievementTemplateService } from './achievement-template.service';
 import { AchievementTemplate } from '../../shared/database/entities/achievement-template.entity';
+import { GetAllTemplatesHandler } from './handlers/get-all-templates.handler';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([AchievementTemplate])],
+  imports: [CqrsModule, TypeOrmModule.forFeature([AchievementTemplate])],
   controllers: [AchievementTemplateController],
-  providers: [AchievementTemplateService],
-  exports: [AchievementTemplateService],
+  providers: [GetAllTemplatesHandler],
 })
 export class AchievementTemplateModule {}

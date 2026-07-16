@@ -12,6 +12,7 @@ import {
   HttpStatus,
   BadRequestException,
 } from '@nestjs/common';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -19,12 +20,16 @@ import {
   ApiResponse,
   ApiQuery,
 } from '@nestjs/swagger';
-import { CourseTemplateService } from './course-template.service';
-import { CreateCourseTemplateDto } from './dto/create-course-template.dto';
-import { UpdateCourseTemplateDto } from './dto/update-course-template.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { CreateCourseTemplateDto } from './dto/create-course-template.dto';
+import { UpdateCourseTemplateDto } from './dto/update-course-template.dto';
+import { GetDefaultCourseTemplateQuery } from './queries/get-default-course-template.query';
+import { GetCourseTemplateByIdQuery } from './queries/get-course-template-by-id.query';
+import { CreateCourseTemplateCommand } from './commands/create-course-template.command';
+import { UpdateCourseTemplateCommand } from './commands/update-course-template.command';
+import { DeleteCourseTemplateCommand } from './commands/delete-course-template.command';
 
 @ApiTags('Course Templates')
 @ApiBearerAuth('BearerAuth')
@@ -32,7 +37,10 @@ import { Roles } from '../../common/decorators/roles.decorator';
 @Roles('Teacher')
 @Controller('api/course-templates')
 export class CourseTemplateController {
-  constructor(private readonly courseTemplateService: CourseTemplateService) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+  ) {}
 
   @Get('default-template')
   @ApiOperation({ summary: 'Get the default course template for the course' })
@@ -45,24 +53,25 @@ export class CourseTemplateController {
     status: 200,
     description: 'The default course template details',
   })
-  async getDefaultCourseTemplate(@Query('courseId') courseId: string) {
+  async getDefaultCourseTemplate(
+    @Query('courseId') courseId: string,
+  ): Promise<unknown> {
     if (!courseId) {
       throw new BadRequestException('Invalid request query');
     }
-    const template =
-      await this.courseTemplateService.getDefaultCourseTemplateInCourse(
-        courseId,
-      );
-    return { courseTemplate: template };
+    return this.queryBus
+      .execute(new GetDefaultCourseTemplateQuery(courseId))
+      .then((template: unknown) => ({ courseTemplate: template }));
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get the course template information by ID' })
   @ApiResponse({ status: 200, description: 'Course template details' })
   @ApiResponse({ status: 404, description: 'Course template not found' })
-  async getCourseTemplateById(@Param('id') id: string) {
-    const template = await this.courseTemplateService.getCourseTemplateById(id);
-    return { courseTemplate: template };
+  async getCourseTemplateById(@Param('id') id: string): Promise<unknown> {
+    return this.queryBus
+      .execute(new GetCourseTemplateByIdQuery(id))
+      .then((template: unknown) => ({ courseTemplate: template }));
   }
 
   @Post()
@@ -75,9 +84,12 @@ export class CourseTemplateController {
     status: 400,
     description: 'Invalid body or template already exists',
   })
-  async createCourseTemplate(@Body() dto: CreateCourseTemplateDto) {
-    const id = await this.courseTemplateService.createTemplateForCourse(dto);
-    return { id };
+  async createCourseTemplate(
+    @Body() dto: CreateCourseTemplateDto,
+  ): Promise<unknown> {
+    return this.commandBus
+      .execute(new CreateCourseTemplateCommand(dto))
+      .then((id: unknown) => ({ id }));
   }
 
   @Put(':id')
@@ -87,20 +99,19 @@ export class CourseTemplateController {
   async updateCourseTemplate(
     @Param('id') id: string,
     @Body() dto: UpdateCourseTemplateDto,
-  ) {
-    const template = await this.courseTemplateService.updateTemplateForCourse(
-      id,
-      dto,
-    );
-    return { courseTemplate: template };
+  ): Promise<unknown> {
+    return this.commandBus
+      .execute(new UpdateCourseTemplateCommand(id, dto))
+      .then((template: unknown) => ({ courseTemplate: template }));
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete the course template for the course' })
   @ApiResponse({ status: 200, description: 'ID of deleted course template' })
   @ApiResponse({ status: 404, description: 'Course template not found' })
-  async deleteCourseTemplate(@Param('id') id: string) {
-    const deletedId = await this.courseTemplateService.deleteCourseTemplate(id);
-    return { id: deletedId };
+  async deleteCourseTemplate(@Param('id') id: string): Promise<unknown> {
+    return this.commandBus
+      .execute(new DeleteCourseTemplateCommand(id))
+      .then((deletedId: unknown) => ({ id: deletedId }));
   }
 }
