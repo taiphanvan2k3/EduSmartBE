@@ -252,9 +252,38 @@ class GenerateAchievementHandler {
 
 ---
 
+## 9. `Cannot find module '../build/Release/canvas.node'` – Không tìm thấy file build native của package `canvas`
+
+### Lỗi
+```
+Error: Cannot find module '../build/Release/canvas.node'
+```
+
+### Nguyên nhân
+Từ phiên bản `pnpm` v9/v10 trở đi, theo cơ chế bảo mật mặc định, `pnpm` tự động bỏ qua (ignore) các script build/install (lifecycle scripts) của các package phụ thuộc bên thứ ba. 
+Do `canvas` là một thư viện native (sử dụng C++ bên dưới), nó cần chạy script install (`prebuild-install` hoặc `node-gyp rebuild`) để tải hoặc build file binary `canvas.node`. Khi `pnpm` bỏ qua bước này, thư mục `build/Release/canvas.node` sẽ không được sinh ra, dẫn đến lỗi runtime.
+
+### Fix
+Thêm thuộc tính cấu hình `pnpm.onlyBuiltDependencies` vào file `package.json` để cho phép chạy script của package `canvas`:
+
+```json
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "canvas"
+    ]
+  }
+```
+
+Sau đó chạy lệnh để tự động tải/build lại:
+```bash
+pnpm install
+```
+
+---
+
 ## Tổng kết nhanh
 
-| Rule | Fix chính |
+| Rule / Error | Fix chính |
 |---|---|
 | `no-unsafe-return` | Khai báo `Promise<unknown>` trên method |
 | `no-unsafe-assignment` | Dùng `.then((x: unknown) => ...)` thay vì `await` + gán biến |
@@ -263,3 +292,5 @@ class GenerateAchievementHandler {
 | `no-floating-promises` | Thêm `void` trước promise, hoặc `await` nó |
 | `no-unsafe-member-access` | `catch (error: unknown)` + `const err = error as Error` |
 | Cross-module injection | Inject `QueryBus`/`CommandBus`, dispatch Query/Command thay vì import Service |
+| `Cannot find module 'canvas.node'` | Thêm `canvas` vào `pnpm.onlyBuiltDependencies` ở `package.json` và chạy `pnpm install` |
+

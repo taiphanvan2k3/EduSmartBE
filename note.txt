@@ -1,0 +1,1 @@
+npx -y @nestjs/cli new MediaServiceNest --package-manager=pnpm
