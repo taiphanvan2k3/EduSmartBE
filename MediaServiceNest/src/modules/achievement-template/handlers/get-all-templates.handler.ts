@@ -1,18 +1,20 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Logger } from '@nestjs/common';
 import { Repository } from 'typeorm';
-import { AchievementTemplate } from '../../shared/database/entities/achievement-template.entity';
+import { GetAllTemplatesQuery } from '../queries/get-all-templates.query';
+import { AchievementTemplate } from '../../../shared/database/entities/achievement-template.entity';
 
-@Injectable()
-export class AchievementTemplateService {
-  private readonly logger = new Logger(AchievementTemplateService.name);
+@QueryHandler(GetAllTemplatesQuery)
+export class GetAllTemplatesHandler implements IQueryHandler<GetAllTemplatesQuery> {
+  private readonly logger = new Logger(GetAllTemplatesHandler.name);
 
   constructor(
     @InjectRepository(AchievementTemplate)
     private readonly templateRepository: Repository<AchievementTemplate>,
   ) {}
 
-  async getAllTemplates() {
+  async execute(_: GetAllTemplatesQuery) {
     this.logger.log('Fetching all achievement templates...');
     try {
       const rows = await this.templateRepository.find();
