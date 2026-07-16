@@ -3,6 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { GrpcModule } from './grpc/grpc.module';
 
 @Module({
   imports: [
@@ -33,6 +35,10 @@ import { AppService } from './app.service';
           : false,
       }),
     }),
+    
+    CloudinaryModule,
+    
+    GrpcModule,
   ],
   controllers: [AppController],
   providers: [AppService],
