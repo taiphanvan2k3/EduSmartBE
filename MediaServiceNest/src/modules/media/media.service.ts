@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { StorageInfo } from '../database/entities/storage-info.entity';
+import { StorageInfo } from '../../shared/database/entities/storage-info.entity';
 
 @Injectable()
 export class MediaService {

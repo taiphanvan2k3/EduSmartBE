@@ -3,10 +3,12 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { CloudinaryModule } from './cloudinary/cloudinary.module';
-import { GrpcModule } from './grpc/grpc.module';
+import { CloudinaryModule } from './shared/cloudinary/cloudinary.module';
+import { GrpcModule } from './shared/grpc/grpc.module';
 import { JwtStrategy } from './common/strategies/jwt.strategy';
-import { MediaModule } from './media/media.module';
+import { MediaModule } from './modules/media/media.module';
+import { AchievementTemplateModule } from './modules/achievement-template/achievement-template.module';
+import { CourseTemplateModule } from './modules/course-template/course-template.module';
 
 @Module({
   imports: [
@@ -41,6 +43,8 @@ import { MediaModule } from './media/media.module';
     CloudinaryModule,
     GrpcModule,
     MediaModule,
+    AchievementTemplateModule,
+    CourseTemplateModule,
   ],
   controllers: [AppController],
   providers: [AppService, JwtStrategy],
