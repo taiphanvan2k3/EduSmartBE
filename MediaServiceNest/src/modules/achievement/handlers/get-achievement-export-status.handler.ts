@@ -1,12 +1,21 @@
-import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
+import { IQueryHandler, QueryHandler, QueryBus } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { GetAchievementExportStatusQuery } from '../queries/get-achievement-export-status.query';
 import { StudentAchievement } from '../../../shared/database/entities/student-achievement.entity';
 import { GrpcCourseService } from '../../../shared/grpc/grpc-course.service';
-import { CourseTemplateService } from '../../course-template/course-template.service';
+import { GetDefaultCourseTemplateQuery } from '../../course-template/queries/get-default-course-template.query';
 import { TextStyle } from '../services/canvas.service';
+
+interface CourseTemplateResult {
+  templateId: number;
+  templateURL: string | null;
+  studentNameTextStyle: TextStyle;
+  courseNameTextStyle: TextStyle;
+  dateTextStyle: TextStyle;
+  teacherNameTextStyle: TextStyle;
+}
 
 @QueryHandler(GetAchievementExportStatusQuery)
 export class GetAchievementExportStatusHandler implements IQueryHandler<GetAchievementExportStatusQuery> {
@@ -14,7 +23,7 @@ export class GetAchievementExportStatusHandler implements IQueryHandler<GetAchie
     @InjectRepository(StudentAchievement)
     private readonly studentAchievementRepository: Repository<StudentAchievement>,
     private readonly grpcCourseService: GrpcCourseService,
-    private readonly courseTemplateService: CourseTemplateService,
+    private readonly queryBus: QueryBus,
   ) {}
 
   async execute(query: GetAchievementExportStatusQuery) {
@@ -54,10 +63,10 @@ export class GetAchievementExportStatusHandler implements IQueryHandler<GetAchie
       };
     }
 
-    const defaultTemplate =
-      await this.courseTemplateService.getDefaultCourseTemplateInCourse(
-        courseId,
-      );
+    const defaultTemplate = (await this.queryBus.execute(
+      new GetDefaultCourseTemplateQuery(courseId),
+    )) as unknown as CourseTemplateResult | null;
+
     if (!defaultTemplate) {
       throw new NotFoundException(
         'Your teacher has not created any template for this course',
@@ -70,10 +79,10 @@ export class GetAchievementExportStatusHandler implements IQueryHandler<GetAchie
       achievementExportInfo: {
         templateId: defaultTemplate.templateId,
         templateURL: defaultTemplate.templateURL,
-        studentNameTextStyle: defaultTemplate.studentNameTextStyle as TextStyle,
-        courseNameTextStyle: defaultTemplate.courseNameTextStyle as TextStyle,
-        dateTextStyle: defaultTemplate.dateTextStyle as TextStyle,
-        teacherNameTextStyle: defaultTemplate.teacherNameTextStyle as TextStyle,
+        studentNameTextStyle: defaultTemplate.studentNameTextStyle,
+        courseNameTextStyle: defaultTemplate.courseNameTextStyle,
+        dateTextStyle: defaultTemplate.dateTextStyle,
+        teacherNameTextStyle: defaultTemplate.teacherNameTextStyle,
         courseName: checkStatus.courseName,
         studentName: checkStatus.studentName,
         teacherName: checkStatus.teacherName,
