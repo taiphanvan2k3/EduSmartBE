@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CqrsModule } from '@nestjs/cqrs';
 import { CourseTemplateController } from './course-template.controller';
-import { CourseTemplateService } from './course-template.service';
 import { CourseAchievementTemplate } from '../../shared/database/entities/course-achievement-template.entity';
 // Query handlers
 import {
@@ -20,14 +19,11 @@ import {
   imports: [CqrsModule, TypeOrmModule.forFeature([CourseAchievementTemplate])],
   controllers: [CourseTemplateController],
   providers: [
-    CourseTemplateService,
-    // CQRS Handlers
     GetDefaultCourseTemplateHandler,
     GetCourseTemplateByIdHandler,
     CreateCourseTemplateHandler,
     UpdateCourseTemplateHandler,
     DeleteCourseTemplateHandler,
   ],
-  exports: [CourseTemplateService],
 })
 export class CourseTemplateModule {}

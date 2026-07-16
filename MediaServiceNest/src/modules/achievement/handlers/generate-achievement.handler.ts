@@ -1,12 +1,21 @@
-import { ICommandHandler, CommandHandler } from '@nestjs/cqrs';
+import { ICommandHandler, CommandHandler, QueryBus } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BadRequestException, Logger, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { GenerateAchievementCommand } from '../commands/generate-achievement.command';
 import { StudentAchievement } from '../../../shared/database/entities/student-achievement.entity';
 import { GrpcCourseService } from '../../../shared/grpc/grpc-course.service';
-import { CourseTemplateService } from '../../course-template/course-template.service';
 import { CanvasService, TextStyle } from '../services/canvas.service';
+import { GetDefaultCourseTemplateQuery } from '../../course-template/queries/get-default-course-template.query';
+
+interface CourseTemplateResult {
+  templateId: number;
+  templateURL: string | null;
+  studentNameTextStyle: TextStyle;
+  courseNameTextStyle: TextStyle;
+  dateTextStyle: TextStyle;
+  teacherNameTextStyle: TextStyle;
+}
 
 @CommandHandler(GenerateAchievementCommand)
 export class GenerateAchievementHandler implements ICommandHandler<GenerateAchievementCommand> {
@@ -16,8 +25,8 @@ export class GenerateAchievementHandler implements ICommandHandler<GenerateAchie
     @InjectRepository(StudentAchievement)
     private readonly studentAchievementRepository: Repository<StudentAchievement>,
     private readonly grpcCourseService: GrpcCourseService,
-    private readonly courseTemplateService: CourseTemplateService,
     private readonly canvasService: CanvasService,
+    private readonly queryBus: QueryBus,
   ) {}
 
   async execute(command: GenerateAchievementCommand) {
@@ -49,10 +58,10 @@ export class GenerateAchievementHandler implements ICommandHandler<GenerateAchie
       throw new BadRequestException('Student has not completed the course');
     }
 
-    const defaultTemplate =
-      await this.courseTemplateService.getDefaultCourseTemplateInCourse(
-        courseId,
-      );
+    const defaultTemplate = (await this.queryBus.execute(
+      new GetDefaultCourseTemplateQuery(courseId),
+    )) as unknown as CourseTemplateResult | null;
+
     if (!defaultTemplate) {
       throw new NotFoundException(
         'Your teacher has not created any template for this course',
@@ -64,10 +73,10 @@ export class GenerateAchievementHandler implements ICommandHandler<GenerateAchie
       checkStatus.studentName,
       checkStatus.courseName,
       checkStatus.teacherName,
-      defaultTemplate.studentNameTextStyle as TextStyle,
-      defaultTemplate.courseNameTextStyle as TextStyle,
-      defaultTemplate.dateTextStyle as TextStyle,
-      defaultTemplate.teacherNameTextStyle as TextStyle,
+      defaultTemplate.studentNameTextStyle,
+      defaultTemplate.courseNameTextStyle,
+      defaultTemplate.dateTextStyle,
+      defaultTemplate.teacherNameTextStyle,
     );
 
     return {
