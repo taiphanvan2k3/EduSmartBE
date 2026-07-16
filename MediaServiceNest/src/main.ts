@@ -13,6 +13,9 @@ async function bootstrap() {
   // Enable CORS
   app.enableCors();
 
+  // Set global prefix to match Express base path
+  app.setGlobalPrefix('media-service');
+
   // Parse JSON and urlencoded payloads (standard Express settings)
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));

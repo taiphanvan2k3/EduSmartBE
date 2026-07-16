@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { GrpcModule } from './grpc/grpc.module';
 import { JwtStrategy } from './common/strategies/jwt.strategy';
+import { MediaModule } from './media/media.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { JwtStrategy } from './common/strategies/jwt.strategy';
     
     CloudinaryModule,
     GrpcModule,
+    MediaModule,
   ],
   controllers: [AppController],
   providers: [AppService, JwtStrategy],
