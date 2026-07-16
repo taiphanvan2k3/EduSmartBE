@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { GrpcCourseService } from './grpc-course/grpc-course.service';
+import { GrpcCourseService } from './grpc-course.service';
 
 @Module({
   providers: [GrpcCourseService],

@@ -21,7 +21,7 @@ export class GrpcCourseService implements OnModuleInit {
   constructor(private readonly configService: ConfigService) {}
 
   onModuleInit() {
-    const PROTO_PATH = path.join(__dirname, '..', '..', 'protos', 'course.proto');
+    const PROTO_PATH = path.join(__dirname, 'protos', 'course.proto');
     
     this.logger.log(`Loading proto file from: ${PROTO_PATH}`);
     

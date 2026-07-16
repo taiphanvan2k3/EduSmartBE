@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MediaController } from './media.controller';
 import { MediaService } from './media.service';
-import { StorageInfo } from '../database/entities/storage-info.entity';
-import { CloudinaryModule } from '../cloudinary/cloudinary.module';
+import { StorageInfo } from '../../shared/database/entities/storage-info.entity';
+import { CloudinaryModule } from '../../shared/cloudinary/cloudinary.module';
 
 @Module({
   imports: [

@@ -5,7 +5,7 @@
   "compilerOptions": {
     "deleteOutDir": true,
     "assets": [
-      { "include": "protos/**/*.proto", "watchAssets": true }
+      { "include": "**/*.proto", "watchAssets": true }
     ]
   }
 }

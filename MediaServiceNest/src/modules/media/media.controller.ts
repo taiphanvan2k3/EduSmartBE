@@ -19,9 +19,9 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 import { MediaService } from './media.service';
-import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { CloudinaryService } from '../../shared/cloudinary/cloudinary.service';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @ApiTags('Medias')
 @ApiBearerAuth('BearerAuth')
