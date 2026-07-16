@@ -6,10 +6,7 @@ import { StorageInfo } from '../../shared/database/entities/storage-info.entity'
 import { CloudinaryModule } from '../../shared/cloudinary/cloudinary.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([StorageInfo]),
-    CloudinaryModule,
-  ],
+  imports: [TypeOrmModule.forFeature([StorageInfo]), CloudinaryModule],
   controllers: [MediaController],
   providers: [MediaService],
   exports: [MediaService],

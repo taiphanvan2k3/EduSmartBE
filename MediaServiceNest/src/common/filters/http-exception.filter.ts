@@ -18,7 +18,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
   private readonly logDirectory = path.join(__dirname, '..', '..', 'Logs');
   private readonly logFileName = path.join(this.logDirectory, 'logs.log');
 
-  async logEvents(msg: string) {
+  logEvents(msg: string) {
     const dateTime = format(new Date(), 'dd-MM-yyyy\tHH:mm:ss');
     const contentLog = `${dateTime} ----- ${msg}\n`;
 
@@ -27,12 +27,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
         fs.mkdirSync(this.logDirectory, { recursive: true });
       }
       fs.appendFileSync(this.logFileName, contentLog);
-    } catch (error: any) {
-      this.logger.error('Error writing log file', error.message);
+    } catch (error: unknown) {
+      const err = error as Error;
+      this.logger.error('Error writing log file', err.message);
     }
   }
 
-  catch(exception: any, host: ArgumentsHost) {
+  catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
@@ -42,22 +43,27 @@ export class HttpExceptionFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const errorName =
-      exception instanceof HttpException
-        ? exception.name
-        : exception.name || 'InternalServerError';
+    let errorName = 'InternalServerError';
+    if (exception instanceof HttpException) {
+      errorName = exception.name;
+    } else if (exception instanceof Error) {
+      errorName = exception.name;
+    }
 
     // Extract message
     let message = 'An unexpected error occurred';
     if (exception instanceof HttpException) {
-      const resContent: any = exception.getResponse();
+      const resContent: unknown = exception.getResponse();
       if (typeof resContent === 'object' && resContent !== null) {
-        message = resContent.message || exception.message;
+        const resObj = resContent as Record<string, any>;
+        message = (resObj.message as string) || exception.message;
         if (Array.isArray(message)) {
           message = message.join(', '); // If validation error list, join them
         }
+      } else if (typeof resContent === 'string') {
+        message = resContent;
       } else {
-        message = resContent || exception.message;
+        message = exception.message;
       }
     } else if (exception instanceof Error) {
       message = exception.message;

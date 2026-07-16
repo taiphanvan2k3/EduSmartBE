@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
@@ -26,8 +31,12 @@ export class CourseTemplateService {
         relations: { achievementTemplate: true },
       });
       return row ? this.convertCourseTemplateToDto(row) : null;
-    } catch (error: any) {
-      this.logger.error(`Error fetching default template for course ${courseId}`, error.stack);
+    } catch (error: unknown) {
+      const err = error as Error;
+      this.logger.error(
+        `Error fetching default template for course ${courseId}`,
+        err.stack,
+      );
       throw error;
     }
   }
@@ -46,8 +55,9 @@ export class CourseTemplateService {
         throw new NotFoundException('Course template not found');
       }
       return this.convertCourseTemplateToDto(row);
-    } catch (error: any) {
-      this.logger.error(`Error fetching template ${id}`, error.stack);
+    } catch (error: unknown) {
+      const err = error as Error;
+      this.logger.error(`Error fetching template ${id}`, err.stack);
       throw error;
     }
   }
@@ -80,8 +90,12 @@ export class CourseTemplateService {
 
       await this.courseTemplateRepository.save(newTemplate);
       return id;
-    } catch (error: any) {
-      this.logger.error(`Error creating template for course ${dto.courseId}`, error.stack);
+    } catch (error: unknown) {
+      const err = error as Error;
+      this.logger.error(
+        `Error creating template for course ${dto.courseId}`,
+        err.stack,
+      );
       throw error;
     }
   }
@@ -107,15 +121,16 @@ export class CourseTemplateService {
       template.teacherNameTextStyle = dto.teacherNameTextStyle;
 
       const updated = await this.courseTemplateRepository.save(template);
-      
+
       // Fetch updated with relations
       const result = await this.courseTemplateRepository.findOne({
         where: { id: updated.id },
         relations: { achievementTemplate: true },
       });
       return this.convertCourseTemplateToDto(result!);
-    } catch (error: any) {
-      this.logger.error(`Error updating template ${id}`, error.stack);
+    } catch (error: unknown) {
+      const err = error as Error;
+      this.logger.error(`Error updating template ${id}`, err.stack);
       throw error;
     }
   }
@@ -131,8 +146,9 @@ export class CourseTemplateService {
         throw new NotFoundException('Course template not found');
       }
       return id;
-    } catch (error: any) {
-      this.logger.error(`Error deleting template ${id}`, error.stack);
+    } catch (error: unknown) {
+      const err = error as Error;
+      this.logger.error(`Error deleting template ${id}`, err.stack);
       throw error;
     }
   }
@@ -145,7 +161,9 @@ export class CourseTemplateService {
       id: row.id,
       courseId: row.courseId,
       templateId: row.achievementTemplateId,
-      templateURL: row.achievementTemplate ? row.achievementTemplate.templateUrl : null,
+      templateURL: row.achievementTemplate
+        ? row.achievementTemplate.templateUrl
+        : null,
       courseNameTextStyle: row.courseNameTextStyle,
       studentNameTextStyle: row.studentNameTextStyle,
       dateTextStyle: row.dateTextStyle,

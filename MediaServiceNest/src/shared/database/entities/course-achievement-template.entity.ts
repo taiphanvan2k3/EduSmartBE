@@ -17,16 +17,16 @@ export class CourseAchievementTemplate {
   achievementTemplate: AchievementTemplate;
 
   @Column({ name: 'CourseNameTextStyle', type: 'jsonb' })
-  courseNameTextStyle: any;
+  courseNameTextStyle: Record<string, any>;
 
   @Column({ name: 'StudentNameTextStyle', type: 'jsonb' })
-  studentNameTextStyle: any;
+  studentNameTextStyle: Record<string, any>;
 
   @Column({ name: 'DateTextStyle', type: 'jsonb' })
-  dateTextStyle: any;
+  dateTextStyle: Record<string, any>;
 
   @Column({ name: 'TeacherNameTextStyle', type: 'jsonb' })
-  teacherNameTextStyle: any;
+  teacherNameTextStyle: Record<string, any>;
 
   @Column({ name: 'IsDefault', default: false })
   isDefault: boolean;

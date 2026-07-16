@@ -22,8 +22,12 @@ export class MediaService {
         where: { userId },
       });
       return storageInfo;
-    } catch (error: any) {
-      this.logger.error(`Error fetching storage info for user ${userId}`, error.stack);
+    } catch (error: unknown) {
+      const err = error as Error;
+      this.logger.error(
+        `Error fetching storage info for user ${userId}`,
+        err.stack,
+      );
       throw new Error('Error fetching data from StorageInfo');
     }
   }
@@ -31,9 +35,14 @@ export class MediaService {
   /**
    * Update storage usage of a user
    */
-  async updateStorageInfo(userId: number, extraStorage: number): Promise<{ message: string }> {
+  async updateStorageInfo(
+    userId: number,
+    extraStorage: number,
+  ): Promise<{ message: string }> {
     try {
-      this.logger.log(`Updating storage info for user: ${userId} with extraStorage: ${extraStorage} KB`);
+      this.logger.log(
+        `Updating storage info for user: ${userId} with extraStorage: ${extraStorage} KB`,
+      );
       const storageInfo = await this.storageInfoRepository.findOne({
         where: { userId },
       });
@@ -49,18 +58,27 @@ export class MediaService {
       } else {
         throw new NotFoundException('User not found');
       }
-    } catch (error: any) {
-      this.logger.error(`Error updating StorageInfo for user ${userId}`, error.stack);
-      throw new Error('Error updating StorageInfo: ' + error.message);
+    } catch (error: unknown) {
+      const err = error as Error;
+      this.logger.error(
+        `Error updating StorageInfo for user ${userId}`,
+        err.stack,
+      );
+      throw new Error('Error updating StorageInfo: ' + err.message);
     }
   }
 
   /**
    * Check if a user has enough storage left
    */
-  async isEnoughStorage(userId: number, extraStorage: number): Promise<boolean> {
+  async isEnoughStorage(
+    userId: number,
+    extraStorage: number,
+  ): Promise<boolean> {
     try {
-      this.logger.log(`Checking storage capacity for user: ${userId} with extraStorage: ${extraStorage} KB`);
+      this.logger.log(
+        `Checking storage capacity for user: ${userId} with extraStorage: ${extraStorage} KB`,
+      );
       const storageInfo = await this.storageInfoRepository.findOne({
         where: { userId },
       });
@@ -74,8 +92,9 @@ export class MediaService {
       } else {
         throw new NotFoundException('User not found');
       }
-    } catch (error: any) {
-      this.logger.error(`Error checking storage for user ${userId}`, error.stack);
+    } catch (error: unknown) {
+      const err = error as Error;
+      this.logger.error(`Error checking storage for user ${userId}`, err.stack);
       throw new Error('Error checking storage');
     }
   }
