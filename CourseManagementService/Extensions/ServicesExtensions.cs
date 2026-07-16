@@ -25,10 +25,7 @@ namespace CourseManagementService.Extensions
                         .EnableSensitiveDataLogging() // cho phép log dữ liệu nhạy cảm
                         .EnableDetailedErrors());
 
-                services.AddScoped<DbConnection>(provider =>
-                {
-                    return new NpgsqlConnection(configuration.GetConnectionString("DefaultConnection") ?? Constants.CONNECTION_STRING);
-                });
+                services.AddScoped<DbConnection>(provider => new NpgsqlConnection(configuration.GetConnectionString("DefaultConnection") ?? Constants.CONNECTION_STRING));
 
                 // Thêm IDbContextFactory để cho phép tạo ra các instance của DbContext 
                 services.AddDbContextFactory<DataContext>(options =>

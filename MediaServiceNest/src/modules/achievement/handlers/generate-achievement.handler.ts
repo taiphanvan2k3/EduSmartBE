@@ -5,9 +5,11 @@ import { Repository } from 'typeorm';
 import { GenerateAchievementCommand } from '../commands/generate-achievement.command';
 import { StudentAchievement } from '@shared/database/entities/student-achievement.entity';
 import { GrpcCourseService } from '@shared/grpc/grpc-course.service';
-import { CanvasService, TextStyle } from '../services/canvas.service';
+import { CanvasService } from '../services/canvas.service';
 import { GetDefaultCourseTemplateQuery } from '@modules/course-template/queries/get-default-course-template.query';
 import { GeneratedAchievementDto } from '../dto/achievement-response.dto';
+import { CreateAchievementDto } from '../dto/create-achievement.dto';
+import { TextStyle } from '../services/canvas.service';
 
 interface CourseTemplateResult {
   templateId: number;
@@ -65,16 +67,17 @@ export class GenerateAchievementHandler implements ICommandHandler<
       throw new NotFoundException('Your teacher has not created any template for this course');
     }
 
-    const localResult = await this.canvasService.createAchievement(
-      defaultTemplate.templateId,
-      checkStatus.studentName,
-      checkStatus.courseName,
-      checkStatus.teacherName,
-      defaultTemplate.studentNameTextStyle,
-      defaultTemplate.courseNameTextStyle,
-      defaultTemplate.dateTextStyle,
-      defaultTemplate.teacherNameTextStyle,
-    );
+    const achievementDto: CreateAchievementDto = {
+      templateId: defaultTemplate.templateId,
+      studentName: checkStatus.studentName,
+      courseName: checkStatus.courseName,
+      teacherName: checkStatus.teacherName,
+      studentNameTextStyle: defaultTemplate.studentNameTextStyle,
+      courseNameTextStyle: defaultTemplate.courseNameTextStyle,
+      dateTextStyle: defaultTemplate.dateTextStyle,
+      teacherNameTextStyle: defaultTemplate.teacherNameTextStyle,
+    };
+    const localResult = await this.canvasService.createAchievement(achievementDto);
 
     return {
       courseId,

@@ -3,6 +3,7 @@ import { createCanvas, loadImage, CanvasRenderingContext2D } from 'canvas';
 import * as path from 'path';
 import * as fs from 'fs';
 import { formatDateTime, createFolderIfNotExist } from '../../../common/utils/file.utils';
+import { CreateAchievementDto } from '../dto/create-achievement.dto';
 
 export interface TextStyle {
   fontFamily: string;
@@ -15,15 +16,19 @@ export class CanvasService {
   private readonly logger = new Logger(CanvasService.name);
 
   async createAchievement(
-    templateId: number,
-    studentName: string,
-    courseName: string,
-    teacherName: string,
-    studentNameTextStyle: TextStyle,
-    courseNameTextStyle: TextStyle,
-    dateTextStyle: TextStyle,
-    teacherNameTextStyle: TextStyle,
+    dto: CreateAchievementDto,
   ): Promise<{ localPath: string; localPathInPublic: string }> {
+    const {
+      templateId,
+      studentName,
+      courseName,
+      teacherName,
+      studentNameTextStyle,
+      courseNameTextStyle,
+      dateTextStyle,
+      teacherNameTextStyle,
+    } = dto;
+
     this.logger.log(`Creating achievement image with templateId: ${templateId}...`);
     try {
       // Resolve path to templates (located in dist/assets/achievement-templates/ after build)
