@@ -3,10 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { BadRequestException, Logger, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { GenerateAchievementCommand } from '../commands/generate-achievement.command';
-import { StudentAchievement } from '../../../shared/database/entities/student-achievement.entity';
-import { GrpcCourseService } from '../../../shared/grpc/grpc-course.service';
+import { StudentAchievement } from '@shared/database/entities/student-achievement.entity';
+import { GrpcCourseService } from '@shared/grpc/grpc-course.service';
 import { CanvasService, TextStyle } from '../services/canvas.service';
-import { GetDefaultCourseTemplateQuery } from '../../course-template/queries/get-default-course-template.query';
+import { GetDefaultCourseTemplateQuery } from '@modules/course-template/queries/get-default-course-template.query';
 import { GeneratedAchievementDto } from '../dto/achievement-response.dto';
 
 interface CourseTemplateResult {

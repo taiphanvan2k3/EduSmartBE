@@ -4,10 +4,10 @@ import { BadRequestException, Logger } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { SaveAchievementFromWebCommand } from '../commands/save-achievement-from-web.command';
-import { StudentAchievement } from '../../../shared/database/entities/student-achievement.entity';
-import { GrpcCourseService } from '../../../shared/grpc/grpc-course.service';
-import { CloudinaryService } from '../../../shared/cloudinary/cloudinary.service';
-import { saveAchievementLocally } from '../../../common/utils/file.utils';
+import { StudentAchievement } from '@shared/database/entities/student-achievement.entity';
+import { GrpcCourseService } from '@shared/grpc/grpc-course.service';
+import { CloudinaryService } from '@shared/cloudinary/cloudinary.service';
+import { saveAchievementLocally } from '@common/utils/file.utils';
 
 @CommandHandler(SaveAchievementFromWebCommand)
 export class SaveAchievementFromWebHandler implements ICommandHandler<SaveAchievementFromWebCommand> {

@@ -3,9 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { GetAchievementExportStatusQuery } from '../queries/get-achievement-export-status.query';
-import { StudentAchievement } from '../../../shared/database/entities/student-achievement.entity';
-import { GrpcCourseService } from '../../../shared/grpc/grpc-course.service';
-import { GetDefaultCourseTemplateQuery } from '../../course-template/queries/get-default-course-template.query';
+import { StudentAchievement } from '@shared/database/entities/student-achievement.entity';
+import { GrpcCourseService } from '@shared/grpc/grpc-course.service';
+import { GetDefaultCourseTemplateQuery } from '@modules/course-template/queries/get-default-course-template.query';
 import { TextStyle } from '../services/canvas.service';
 import { AchievementExportStatusDto } from '../dto/achievement-response.dto';
 
