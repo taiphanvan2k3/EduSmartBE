@@ -11,6 +11,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
@@ -21,17 +22,22 @@ import {
   ApiConsumes,
   ApiBody,
 } from '@nestjs/swagger';
-import { AchievementService } from './achievement.service';
 import { GenerateAchievementDto } from './dto/generate-achievement.dto';
 import { SaveAchievementWebDto } from './dto/save-achievement-web.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { GetAchievementExportStatusQuery } from './queries/get-achievement-export-status.query';
+import { GenerateAchievementCommand } from './commands/generate-achievement.command';
+import { SaveAchievementFromWebCommand } from './commands/save-achievement-from-web.command';
 
 @ApiTags('Achievements')
 @ApiBearerAuth('BearerAuth')
 @UseGuards(JwtAuthGuard)
 @Controller('api/achievements')
 export class AchievementController {
-  constructor(private readonly achievementService: AchievementService) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+  ) {}
 
   @Get('export-status')
   @ApiOperation({
@@ -51,7 +57,7 @@ export class AchievementController {
   async getExportStatus(
     @Query('courseId') courseId: string,
     @Query('studentId') studentId: string,
-  ) {
+  ): Promise<unknown> {
     if (!courseId || !studentId) {
       throw new BadRequestException('Invalid request query');
     }
@@ -59,9 +65,8 @@ export class AchievementController {
     if (Number.isNaN(studentIdNum)) {
       throw new BadRequestException('studentId must be a valid number');
     }
-    return this.achievementService.getAchievementExportStatus(
-      courseId,
-      studentIdNum,
+    return this.queryBus.execute(
+      new GetAchievementExportStatusQuery(courseId, studentIdNum),
     );
   }
 
@@ -69,10 +74,11 @@ export class AchievementController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Generate certificate image for student' })
   @ApiResponse({ status: 200, description: 'Generated certificate info' })
-  async generateAchievement(@Body() dto: GenerateAchievementDto) {
-    return this.achievementService.generateAchievement(
-      dto.courseId,
-      dto.studentId,
+  async generateAchievement(
+    @Body() dto: GenerateAchievementDto,
+  ): Promise<unknown> {
+    return this.commandBus.execute(
+      new GenerateAchievementCommand(dto.courseId, dto.studentId),
     );
   }
 
@@ -111,15 +117,17 @@ export class AchievementController {
   async saveExportedStudentAchievementFromWeb(
     @Body() dto: SaveAchievementWebDto,
     @UploadedFile() file: Express.Multer.File,
-  ) {
+  ): Promise<unknown> {
     if (!file) {
       throw new BadRequestException('No file provided!');
     }
-    return this.achievementService.saveExportedStudentAchievementFromWeb(
-      dto.courseId,
-      dto.studentId,
-      dto.studentName,
-      file,
+    return this.commandBus.execute(
+      new SaveAchievementFromWebCommand(
+        dto.courseId,
+        dto.studentId,
+        dto.studentName,
+        file,
+      ),
     );
   }
 }
