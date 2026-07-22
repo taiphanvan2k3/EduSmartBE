@@ -118,3 +118,38 @@ Nếu muốn phát triển và sửa code nhanh trực tiếp bằng IDE (VS Cod
 Nếu bạn deploy dự án trên server đám mây và kết nối qua **VS Code SSH Remote**:
 * Các cổng trên host (như `7150`, `7151`, `7152`, `7153`) cần phải được **Port Forwarding** trong cửa sổ VS Code (Tab *Ports* cạnh Tab *Terminal*).
 * Sau khi forward port, bạn có thể truy cập `http://localhost:<PORT>/...` bình thường ngay trên trình duyệt máy cá nhân của mình.
+
+---
+
+## 💾 Hướng Dẫn Sao Lưu & Khôi Phục Dữ Liệu (PostgreSQL Backup & Restore)
+
+Các file backup của hệ thống được lưu trữ trong thư mục `./backups/`.
+
+### 1. Sao Lưu Dữ Liệu (Backup)
+
+* **Sao lưu toàn bộ CSDL (File tổng `.bak` / `.sql`):**
+  ```bash
+  mkdir -p ./backups
+  docker exec postgres pg_dumpall -U pbl6duter > ./backups/postgres_full_backup_$(date +%Y%m%d_%H%M%S).bak
+  ```
+
+* **Sao lưu từng CSDL dịch vụ dạng Custom Format (`.bak`):**
+  ```bash
+  docker exec postgres pg_dump -U pbl6duter -F c -d "EduSmart.AuthService" > ./backups/EduSmart.AuthService.bak
+  docker exec postgres pg_dump -U pbl6duter -F c -d "EduSmart.CourseManagementService" > ./backups/EduSmart.CourseManagementService.bak
+  docker exec postgres pg_dump -U pbl6duter -F c -d "EduSmart.PaymentManagementService" > ./backups/EduSmart.PaymentManagementService.bak
+  docker exec postgres pg_dump -U pbl6duter -F c -d "EduSmart.UserService" > ./backups/EduSmart.UserService.bak
+  ```
+
+### 2. Khôi Phục Dữ Liệu (Restore)
+
+* **Khôi phục toàn bộ từ file backup tổng:**
+  ```bash
+  docker exec -i postgres psql -U pbl6duter < ./backups/postgres_full_backup_<TIMESTAMP>.bak
+  ```
+
+* **Khôi phục từng CSDL dịch vụ từ file `.bak` custom format:**
+  ```bash
+  docker exec -i postgres pg_restore -U pbl6duter -d "EduSmart.AuthService" --clean < ./backups/EduSmart.AuthService.bak
+  ```
+
