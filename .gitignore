@@ -373,3 +373,15 @@ jspm_packages/
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# ==========================================
+# Security & Sensitive Files
+# ==========================================
+# Nginx basic auth credentials
+nginx/.htpasswd
+!nginx/.htpasswd.example
+
+# Environment variable files
+**/.env
+**/.env.*
+!**/.env.example
